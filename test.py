@@ -19,12 +19,24 @@ voltageRange = np.linspace(voltageMin, voltageMax, voltageNumber);
 
 per=int(tot/size);
 junction=Maj.NSjunction(NS_dict);
-for ii in range(per):
-    VzStep = 0.002;     
+VzStep = 0.002;    
+sendbuf=np.empty((per,voltageNumber));
+for ii in range(per):    
     NS_dict['Vz'] = (ii+rank*per)*VzStep;
-    gFile = open('G_mu'+str(NS_dict['mu'])+'_L'+str(NS_dict['wireLength'])+'_Vz'+ str(int(NS_dict['Vz']/VzStep))+'.txt','w');
-    for voltage in voltageRange:
+#    gFile = open('G_mu'+str(NS_dict['mu'])+'_L'+str(NS_dict['wireLength'])+'_Vz'+ str(int(NS_dict['Vz']/VzStep))+'.txt','w');
+    
+    for index in range(voltageNumber):
+        voltage=voltageRange(index);
         NS_dict['voltage']=voltage;        
-        gFile.write( str(Maj.conductance(NS_dict,junction)) + ',' );
-    gFile.write('\n');
-    gFile.close();
+        sendbuf[ii,index]=Maj.conductance(NS_dict,junction);
+
+if (rank==0):
+    recvbuf=np.empty((tot,voltageNumber));
+else:
+    recvbuf=None;
+comm.Gather(sendbuf,recvbuf,root=0);
+np.savetxt('G_mu'+str(NS_dict['mu'])+'_L'+str(NS_dict['wireLength'])+'_Delta'+str(NS_dict['Delta_0'])+'_alpha_R'+str(NS_dict['alpha'])+'.txt',recvbuf);
+      
+#        gFile.write( str(Maj.conductance(NS_dict,junction)) + ',' );
+#    gFile.write('\n');
+#    gFile.close();
