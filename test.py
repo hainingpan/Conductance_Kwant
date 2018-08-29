@@ -26,7 +26,7 @@ for ii in range(per):
 #    gFile = open('G_mu'+str(NS_dict['mu'])+'_L'+str(NS_dict['wireLength'])+'_Vz'+ str(int(NS_dict['Vz']/VzStep))+'.txt','w');
     
     for index in range(voltageNumber):
-        voltage=voltageRange(index);
+        voltage=voltageRange[index];
         NS_dict['voltage']=voltage;        
         sendbuf[ii,index]=Maj.conductance(NS_dict,junction);
 
