@@ -10,7 +10,7 @@ size=comm.Get_size();
 #rank=0;
 tot=512;
 
-NS_dict = {'a':1,'mu':.2,'alpha_R':5, 'Delta_0':0.2,'Delta_c':0.2,'epsilon':1,'wireLength':100, 'mu_lead':25.0, 'Nbarrier':2,'Ebarrier':10.0, 'gamma':0.001, 'QD':'no', 'VD':0.8, 'dotLength':20, 'SE':'no', 'Vz':0.0, 'voltage':0.0,'varymu':'no', 'lamd':0,'singleband':'no'};
+NS_dict = {'a':1,'mu':0,'alpha_R':2, 'Delta_0':0.2,'Delta_c':0.2,'epsilon':1,'wireLength':1000, 'mu_lead':25.0, 'Nbarrier':2,'Ebarrier':10.0, 'gamma':0.001, 'QD':'no', 'VD':0.8, 'dotLength':20, 'SE':'no', 'Vz':0.0, 'voltage':0.0,'varymu':'no', 'lamd':0,'singleband':'no'};
 
 
 np.warnings.filterwarnings('ignore');
