@@ -8,18 +8,17 @@ rank = comm.Get_rank();
 size=comm.Get_size();
 #size=1;
 #rank=0;
-tot=8;
+tot=512;
 
 NS_dict = {'a':1,'mu':.2,'alpha_R':5, 'Delta_0':0.2,'wireLength':100, 'mu_lead':25.0, 'Nbarrier':2,'Ebarrier':10.0, 'gamma':0.001, 'QD':'no', 'VD':0.8, 'dotLength':20, 'SE':'no', 'Vz':0.0, 'voltage':0.0,'varymu':'no', 'lamd':0};
 
 
 np.warnings.filterwarnings('ignore');
-voltageMin = -0.3; voltageMax = 0.3; voltageNumber = 3;
+voltageMin = -0.3; voltageMax = 0.3; voltageNumber = 1001;
 voltageRange = np.linspace(voltageMin, voltageMax, voltageNumber);
 
 per=int(tot/size);
-#VzStep = 0.002;  
-VzStep = 0.2;    
+VzStep = 0.002;  
 sendbuf=np.empty((per,voltageNumber));
 for ii in range(per):    
     NS_dict['Vz'] = (ii+rank*per)*VzStep;
