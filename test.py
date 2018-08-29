@@ -1,13 +1,13 @@
-#from mpi4py import MPI
+from mpi4py import MPI
 import numpy as np
 import Majorana_module as Maj
 
 
-#comm = MPI.COMM_WORLD;
-#rank = comm.Get_rank();
-#size=comm.Get_size();
-size=1;
-rank=0;
+comm = MPI.COMM_WORLD;
+rank = comm.Get_rank();
+size=comm.Get_size();
+#size=1;
+#rank=0;
 tot=512;
 
 NS_dict = {'a':1,'mu':.2,'alpha_R':5, 'Delta_0':0.2,'wireLength':100, 'mu_lead':25.0, 'Nbarrier':2,'Ebarrier':10.0, 'gamma':0.001, 'QD':'no', 'VD':0.8, 'dotLength':20, 'SE':'no', 'Vz':0.0, 'voltage':0.0,'varymu':'no', 'lamd':0};
