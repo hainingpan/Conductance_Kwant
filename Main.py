@@ -6,7 +6,6 @@ rank = comm.Get_rank();
 size=comm.Get_size();
 
 if (rank==0):
-#    a=np.zeros((4,4));
     sendbuf=np.ones(4)*(rank+1)
     recvbuf=np.empty((size,4));        
 else:

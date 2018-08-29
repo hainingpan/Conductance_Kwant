@@ -6,29 +6,26 @@ sx = np.array([[0.0, 1.0], [1.0, 0.0]]);
 sy = np.array([[0.0, -1j], [1j, 0.0]]);
 sz = np.array([[1.0, 0.0], [0.0, -1.0]]);
 
-t0 = np.array([[1.0, 0.0], [0.0, 1.0]]);
-tx = np.array([[0.0, 1.0], [1.0, 0.0]]);
-ty = np.array([[0.0, -1j], [1j, 0.0]]);
-tz = np.array([[1.0, 0.0], [0.0, -1.0]]);
+
+t0s0 = np.kron(s0,s0);
+t0sx = np.kron(s0,sx);
+t0sy = np.kron(s0,sy);
+t0sz = np.kron(s0,sz);
+
+txs0 = np.kron(sx,s0);
+txsx = np.kron(sx,sx);
+txsy = np.kron(sx,sy);
+txsz = np.kron(sx,sz);
+
+tys0 = np.kron(sy,s0);
+tysx = np.kron(sy,sx);
+tysy = np.kron(sy,sy);
+tysz = np.kron(sy,sz);
+
+tzs0 = np.kron(sz,s0);
+tzsx = np.kron(sz,sx);
+tzsy = np.kron(sz,sy);
+tzsz = np.kron(sz,sz);
 
 
-s0t0 = np.kron(s0,t0);
-s0tx = np.kron(s0,tx);
-s0ty = np.kron(s0,ty);
-s0tz = np.kron(s0,tz);
-
-sxt0 = np.kron(sx,t0);
-sxtx = np.kron(sx,tx);
-sxty = np.kron(sx,ty);
-sxtz = np.kron(sx,tz);
-
-syt0 = np.kron(sy,t0);
-sytx = np.kron(sy,tx);
-syty = np.kron(sy,ty);
-sytz = np.kron(sy,tz);
-
-szt0 = np.kron(sz,t0);
-sztx = np.kron(sz,tx);
-szty = np.kron(sz,ty);
-sztz = np.kron(sz,tz);
 
