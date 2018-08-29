@@ -35,7 +35,7 @@ if (rank==0):
 else:
     recvbuf=None;
 comm.Gather(sendbuf,recvbuf,root=0);
-np.savetxt('G_mu'+str(NS_dict['mu'])+'_L'+str(NS_dict['wireLength'])+'_Delta'+str(NS_dict['Delta_0'])+'_alpha_R'+str(NS_dict['alpha'])+'.txt',recvbuf);
+np.savetxt('G_mu'+str(NS_dict['mu'])+'_L'+str(NS_dict['wireLength'])+'_Delta'+str(NS_dict['Delta_0'])+'_alpha_R'+str(NS_dict['alpha_R'])+'.txt',recvbuf);
       
 #        gFile.write( str(Maj.conductance(NS_dict,junction)) + ',' );
 #    gFile.write('\n');
