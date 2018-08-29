@@ -18,12 +18,13 @@ voltageMin = -0.3; voltageMax = 0.3; voltageNumber = 1001;
 voltageRange = np.linspace(voltageMin, voltageMax, voltageNumber);
 
 per=int(tot/size);
+junction=Maj.NSjunction(NS_dict);
 for ii in range(per):
-    VzStep = 0.002; 
+    VzStep = 0.002;     
     NS_dict['Vz'] = (ii+rank*per)*VzStep;
     gFile = open('G_mu'+str(NS_dict['mu'])+'_L'+str(NS_dict['wireLength'])+'_Vz'+ str(int(NS_dict['Vz']/VzStep))+'.txt','w');
     for voltage in voltageRange:
-        NS_dict['voltage']=voltage;
-        gFile.write( str(Maj.conductance(NS_dict)) + ',' );
+        NS_dict['voltage']=voltage;        
+        gFile.write( str(Maj.conductance(NS_dict,junction)) + ',' );
     gFile.write('\n');
     gFile.close();
