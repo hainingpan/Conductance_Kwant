@@ -38,9 +38,8 @@ def NSjunction(args_dict):
     junction=junction.finalized();
     return junction
 
-def conductance(args_dict):
+def conductance(args_dict,junction):
     voltage=args_dict['voltage'];
-    junction=NSjunction(args_dict);
     S_matrix = kwant.smatrix(junction, voltage, check_hermiticity=False);
     R = S_matrix.submatrix(0,0);
     G = 2.0;
