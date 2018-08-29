@@ -10,7 +10,7 @@ size=comm.Get_size();
 #rank=0;
 tot=512;
 
-NS_dict = {'a':1,'mu':.2,'alpha_R':5, 'Delta_0':0.2,'wireLength':100, 'mu_lead':25.0, 'Nbarrier':2,'Ebarrier':10.0, 'gamma':0.001, 'QD':'no', 'VD':0.8, 'dotLength':20, 'SE':'no', 'Vz':0.0, 'voltage':0.0,'varymu':'no', 'lamd':0};
+NS_dict = {'a':1,'mu':.2,'alpha_R':5, 'Delta_0':0.2,'Delta_c':0.2,'epsilon':1,'wireLength':100, 'mu_lead':25.0, 'Nbarrier':2,'Ebarrier':10.0, 'gamma':0.001, 'QD':'no', 'VD':0.8, 'dotLength':20, 'SE':'no', 'Vz':0.0, 'voltage':0.0,'varymu':'no', 'lamd':0,'singleband':'no'};
 
 
 np.warnings.filterwarnings('ignore');
@@ -34,7 +34,7 @@ else:
     recvbuf=None;
 comm.Gather(sendbuf,recvbuf,root=0);
 if (rank==0):
-    np.savetxt('G_mu'+str(NS_dict['mu'])+'_L'+str(NS_dict['wireLength'])+'_Delta'+str(NS_dict['Delta_0'])+'_alpha_R'+str(NS_dict['alpha_R'])+'.txt',recvbuf);
+    np.savetxt('G_mu'+str(NS_dict['mu'])+'_L'+str(NS_dict['wireLength'])+'_Delta'+str(NS_dict['Delta_0'])+'_alpha_R'+str(NS_dict['alpha_R'])+'.dat',recvbuf);
       
 #        gFile.write( str(Maj.conductance(NS_dict,junction)) + ',' );
 #    gFile.write('\n');
