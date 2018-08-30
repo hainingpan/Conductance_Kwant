@@ -59,15 +59,16 @@ def conductance(args_dict,junction):
     voltage=args_dict['voltage'];
     S_matrix = kwant.smatrix(junction, voltage, check_hermiticity=False);
     R = S_matrix.submatrix(0,0);
-    G = 2.0;
     if (args_dict['singleband']=='yes'):
+        G = 2.0;
         for (i,j) in [(0,0),(0,1),(1,0),(1,1)]:
             G = G - abs(R[i,j])**2 + abs(R[2+i,j])**2;
     else:
+        G = 4.0;
         for (i,j) in [(0,0),(0,1),(1,0),(1,1)]:
 #            G = G - abs(R[i,j])**2 + abs(R[2+i,j])**2-abs(R[4+i,4+j])**2+abs(R[6+i,4+j])**2;
-            G = G - abs(R[i,j])**2 + abs(R[2+i,j])**2-abs(R[4+i,4+j])**2+abs(R[6+i,4+j])**2-abs(R[i,4+j])**2-abs(R[4+i,j])**2+abs(R[6+i,j])**2+abs(R[2+i,4+j])**2;  
- 
+#            G = G - abs(R[i,j])**2 + abs(R[2+i,j])**2-abs(R[4+i,4+j])**2+abs(R[6+i,4+j])**2-abs(R[i,4+j])**2-abs(R[4+i,j])**2+abs(R[6+i,j])**2+abs(R[2+i,4+j])**2;  
+            G=G-abs(R[i,j])**2-abs(R[2+i,j])**2-abs(R[2+i,2+j])**2-abs(R[i,2+j])**2+abs(R[2+i,j])**2+abs(R[2+i+2,j])**2+abs(R[2+i,j+2])**2+abs(R[2+i+2,j+2])**2;               
     return G;
     
 
