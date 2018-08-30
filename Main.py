@@ -5,11 +5,11 @@ comm = MPI.COMM_WORLD;
 rank = comm.Get_rank();
 size=comm.Get_size();
 
+
+ sendbuf=np.ones(4)*(rank+1)**2;
 if (rank==0):
-    sendbuf=np.ones(4)*(rank+1)
     recvbuf=np.empty((size,4));        
-else:
-    sendbuf=np.ones(4)*(rank+1)**2;
+else:   
     recvbuf=None;
     
 comm.Gather(sendbuf,recvbuf,root=0)
