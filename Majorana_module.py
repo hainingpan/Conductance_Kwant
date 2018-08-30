@@ -65,8 +65,8 @@ def conductance(args_dict,junction):
             G = G - abs(R[i,j])**2 + abs(R[2+i,j])**2;
     else:
         for (i,j) in [(0,0),(0,1),(1,0),(1,1)]:
-            G = G - abs(R[i,j])**2 + abs(R[2+i,j])**2-abs(R[4+i,4+j])**2+abs(R[6+i,4+j])**2;
-#            G = G - abs(R[i,j])**2 + abs(R[2+i,j])**2-abs(R[4+i,4+j])**2+abs(R[6+i,4+j])**2-abs(R[i,4+j])**2-abs(R[4+i,j])**2+abs(R[6+i,j])**2+abs(R[2+i,4+j])**2;  
+#            G = G - abs(R[i,j])**2 + abs(R[2+i,j])**2-abs(R[4+i,4+j])**2+abs(R[6+i,4+j])**2;
+            G = G - abs(R[i,j])**2 + abs(R[2+i,j])**2-abs(R[4+i,4+j])**2+abs(R[6+i,4+j])**2-abs(R[i,4+j])**2-abs(R[4+i,j])**2+abs(R[6+i,j])**2+abs(R[2+i,4+j])**2;  
  
     return G;
     
