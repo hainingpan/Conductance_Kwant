@@ -6,7 +6,7 @@ import re
 
 def main():
     vars=len(sys.argv);
-    NS_dict = {'a':1,'mu':1.2,'alpha_R':2, 'Delta_0':0.2,'Delta_c':0.2,'epsilon':1,'wireLength':3000, 'mu_lead':25.0, 'Nbarrier':2,'Ebarrier':10.0, 'gamma':0.0001, 'QD':'no', 'VD':0.8, 'dotLength':20, 'SE':'no', 'Vz':0.0, 'voltage':0.0,'varymu':'no', 'lamd':0,'singleband':0};
+    NS_dict = {'a':1,'mu':.2,'alpha_R':2, 'Delta_0':0.2,'Delta_c':0.2,'epsilon':1,'wireLength':3000, 'mu_lead':25.0, 'Nbarrier':2,'Ebarrier':10.0, 'gamma':0.0001, 'QD':'no', 'VD':0.8, 'dotLength':20, 'SE':'no', 'Vz':0.0, 'voltage':0.0,'varymu':'no', 'lamd':0,'singleband':0};
     if vars>1:        
         for i in range(1,vars):
             try:
@@ -26,12 +26,12 @@ def main():
     size=comm.Get_size();
 #    size=1;
 #    rank=0;
-    tot=1024;  
+    tot=512;  
     if (rank==0):
         print(NS_dict);    
         
     np.warnings.filterwarnings('ignore');
-    voltageMin = -1.2; voltageMax = 1.2; voltageNumber = 4001;
+    voltageMin = -.3; voltageMax = .3; voltageNumber = 1001;
     voltageRange = np.linspace(voltageMin, voltageMax, voltageNumber);
     
     per=int(tot/size);
