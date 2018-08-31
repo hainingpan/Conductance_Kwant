@@ -21,7 +21,14 @@
 #    
 #    
 import sys
-def main(a=1,b=2,c=3):
+import re
+def main():
+    vars=len(sys.argv);
+    dict={'a':1,'b':2,'c':3};
+    for i in range(vars):
+        nam=re.serach('(\w)+=',sys.argv[i+1]);
+        nam.group(1);
+        
     print('a=',a,'b=',b,'c=',c)
     
 if __name__=="__main__":
