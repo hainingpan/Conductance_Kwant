@@ -39,7 +39,7 @@ def main():
     sendbuf=np.empty((per,voltageNumber));
     for ii in range(per):    
         NS_dict['Vz'] = (ii+rank*per)*VzStep;
-        junction=Maj.NSjunction(NS_dict);
+        junction=Maj.NSjunction(NS_dict);   #Change this if junction is voltage dependent, e.g. in Self energy
         for index in range(voltageNumber):
             voltage=voltageRange[index];
             NS_dict['voltage']=voltage;        
