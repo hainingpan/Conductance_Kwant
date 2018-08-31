@@ -8,13 +8,13 @@ rank = comm.Get_rank();
 size=comm.Get_size();
 #size=1;
 #rank=0;
-tot=512;
+tot=1024;
 
 NS_dict = {'a':1,'mu':1.2,'alpha_R':2, 'Delta_0':0.2,'Delta_c':0.2,'epsilon':1,'wireLength':3000, 'mu_lead':25.0, 'Nbarrier':2,'Ebarrier':10.0, 'gamma':0.000, 'QD':'no', 'VD':0.8, 'dotLength':20, 'SE':'no', 'Vz':0.0, 'voltage':0.0,'varymu':'no', 'lamd':0,'singleband':'no'};
 
 
 np.warnings.filterwarnings('ignore');
-voltageMin = -0.3; voltageMax = 0.3; voltageNumber = 1001;
+voltageMin = -1.2; voltageMax = 1.2; voltageNumber = 4001;
 voltageRange = np.linspace(voltageMin, voltageMax, voltageNumber);
 
 per=int(tot/size);
@@ -34,7 +34,7 @@ else:
 comm.Gather(sendbuf,recvbuf,root=0);
 if (rank==0):
     if (NS_dict['singleband']=='yes'):
-        fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'L'+str(NS_dict['wireLength'])+'.dat';     
+        fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'L'+str(NS_dict['wireLength'])+'['+str(VzStep*tot)+','+str(voltageMax)+'].dat';     
     else:
-        fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'Deltac'+str(NS_dict['Delta_c'])+'epsilon'+str(NS_dict['epsilon'])+'L'+str(NS_dict['wireLength'])+'.dat';
+        fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'Deltac'+str(NS_dict['Delta_c'])+'epsilon'+str(NS_dict['epsilon'])+'L'+str(NS_dict['wireLength'])+'['+str(VzStep*tot)+','+str(voltageMax)+'].dat';
     np.savetxt(fn,recvbuf);      
