@@ -26,7 +26,7 @@ def main():
     vars=len(sys.argv);
     dict={'a':1,'b':2,'c':3};
 #    a=1;b=2;c=3;
-    if vars>0:        
+    if vars>1:        
         for i in range(1,vars):
             try:
                 varname=re.search('(.)*(?=\=)',sys.argv[i]).group(0);
