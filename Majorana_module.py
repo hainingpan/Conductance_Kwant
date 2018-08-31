@@ -42,7 +42,7 @@ def NSjunction(args_dict):
         return junction
     else:
         for x in range(wireLength):
-            junction[lat(x)]=(-mu+2*t)*np.kron(np.array([[1,0],[0,0]]),PM.tzs0)+(epsilon-mu+2*t)*np.kron(np.array([[0,0],[0,1]]),PM.tzs0)+Delta_0*np.kron(PM.s0,PM.txs0)+Vz*np.kron(PM.s0,PM.t0sx)-1j*gamma*np.kron(PM.s0,PM.t0s0)+Delta_c*np.kron(PM.sx,PM.t0s0);
+            junction[lat(x)]=(-mu+2*t)*np.kron(np.array([[1,0],[0,0]]),PM.tzs0)+(epsilon-mu+2*t)*np.kron(np.array([[0,0],[0,1]]),PM.tzs0)+Delta_0*np.kron(PM.s0,PM.txs0)+Vz*np.kron(PM.s0,PM.t0sx)-1j*gamma*np.kron(PM.s0,PM.t0s0)+Delta_c*np.kron(PM.sx,PM.txs0);
         for x in range(1,wireLength):
             junction[lat(x-1),lat(x)]=-t*np.kron(PM.s0,PM.tzs0)-1j*alpha*np.kron(PM.s0,PM.tzsy);
         for x in range(Nbarrier):
