@@ -25,11 +25,18 @@ import re
 def main():
     vars=len(sys.argv);
     dict={'a':1,'b':2,'c':3};
-    for i in range(vars):
-        nam=re.serach('(\w)+=',sys.argv[i+1]);
-        nam.group(1);
-        
-    print('a=',a,'b=',b,'c=',c)
+#    a=1;b=2;c=3;
+    if vars>0:        
+        for i in range(1,vars):
+            try:
+                varname=re.search('(.)*(?=\=)',sys.argv[i]).group(0);
+                varval=float(re.search('(?<=\=)(.)*',sys.argv[i]).group(0));
+                dict[varname]=varval;
+            except:
+                print('Cannot parse the input parameters',sys.argv[i]);
+                sys.exit(1);
+                
+    print('a=',dict['a'],'b=',dict['b'],'c=',dict['c']);
     
 if __name__=="__main__":
 	main()
