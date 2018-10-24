@@ -11,9 +11,12 @@ def main():
         for i in range(1,vars):
             try:
                 varname=re.search('(.)*(?=\=)',sys.argv[i]).group(0);
-                varval=float(re.search('(?<=\=)(.)*',sys.argv[i]).group(0));
+                varval=re.search('(?<=\=)(.)*',sys.argv[i]).group(0);
                 if varname in NS_dict:
-                    NS_dict[varname]=varval;
+                    if varname=='smoothpot':
+                        NS_dict[varname]=varval;
+                    else:
+                        NS_dict[varname]=float(varval);
                 else:
                     print('Cannot find the parameter',varname);
                     sys.exit(1);
@@ -26,12 +29,12 @@ def main():
     size=comm.Get_size();
 #    size=1;
 #    rank=0;
-    tot=1024;  
+    tot=2;  
     if (rank==0):
         print(NS_dict);    
         
     np.warnings.filterwarnings('ignore');
-    voltageMin = -.3; voltageMax = .3; voltageNumber = 1001;
+    voltageMin = -.3; voltageMax = .3; voltageNumber = 11;
     voltageRange = np.linspace(voltageMin, voltageMax, voltageNumber);
     
     per=int(tot/size);
