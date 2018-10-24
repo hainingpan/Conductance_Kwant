@@ -12,6 +12,7 @@ def NSjunction(args_dict):
     Delta_0 = args_dict['Delta_0'];     #Proximitized SC gap
     Delta_c=args_dict['Delta_c'];       #Coupling of two band in SC gap
     mu = args_dict['mu'];       #chemical potential with respect to band bottom
+    mumax = args_dict['mumax'];     #peak of smooth confinement
     mu_lead = args_dict['mu_lead'];     #chemical potential of lead
     wireLength = args_dict['wireLength'];       #Length of wire= $wireLength/100(um)
     Nbarrier = args_dict['Nbarrier'];   # number of barrier
@@ -22,14 +23,25 @@ def NSjunction(args_dict):
     epsilon=args_dict['epsilon'];       #difference of bands
         
     junction=kwant.Builder();
-    lat=kwant.lattice.chain(a);    
+    lat=kwant.lattice.chain(a);  
+    #smooth confinement
+    if args_dict['smoothpot']==0:
+        muset=np.ones(wireLength)*mu;
+    else:
+        if args_dict['smoothpot']=='sin':
+            muset=np.sin(np.arange(wireLength)*pi/wireLength)*mumax;
+        else:
+            if args_dict['smoothpot']=='cos':
+                muset=np.cos(np.arange(wireLength)*pi/wireLength)*mumax+mumax;        
+        
+        
     #Construct lattice  
     if args_dict['multiband']==0:
         for x in range(wireLength):
-            junction[lat(x)]=(-mu+2*t)*PM.tzs0+Delta_0*PM.txs0+Vz*PM.t0sx-1j*Gamma*PM.t0s0;
+            junction[lat(x)]=(-muset[x]+2*t)*PM.tzs0+Delta_0*PM.txs0+Vz*PM.t0sx-1j*Gamma*PM.t0s0;
     else:
         for x in range(wireLength):
-            junction[lat(x)]=(-mu+2*t)*np.kron(np.array([[1,0],[0,0]]),PM.tzs0)+(epsilon-mu+2*t)*np.kron(np.array([[0,0],[0,1]]),PM.tzs0)+Delta_0*np.kron(PM.s0,PM.txs0)+Vz*np.kron(PM.s0,PM.t0sx)-1j*Gamma*np.kron(PM.s0,PM.t0s0)+Delta_c*np.kron(PM.sx,PM.txs0);
+            junction[lat(x)]=(-muset[x]+2*t)*np.kron(np.array([[1,0],[0,0]]),PM.tzs0)+(epsilon-mu+2*t)*np.kron(np.array([[0,0],[0,1]]),PM.tzs0)+Delta_0*np.kron(PM.s0,PM.txs0)+Vz*np.kron(PM.s0,PM.t0sx)-1j*Gamma*np.kron(PM.s0,PM.t0s0)+Delta_c*np.kron(PM.sx,PM.txs0);
     #Construct hopping
     if args_dict['multiband']==0:
         for x in range(1,wireLength):
