@@ -15,45 +15,82 @@ def NSjunction(args_dict):
     mu_lead = args_dict['mu_lead'];     #chemical potential of lead
     wireLength = args_dict['wireLength'];       #Length of wire= $wireLength/100(um)
     Nbarrier = args_dict['Nbarrier'];   # number of barrier
-    Ebarrier = args_dict['Ebarrier'];   
-    gamma = args_dict['gamma'];     #dissipation
-    lamd=args_dict['lamd'];     #SM and SC coupling strength
+    Ebarrier = args_dict['Ebarrier'];  
+    gamma = args_dict['gamma'];   #SM-SC coupling strength
+    Gamma = args_dict['Gamma'];     #dissipation
     voltage=args_dict['voltage'];       #bias voltage
     epsilon=args_dict['epsilon'];       #difference of bands
         
     junction=kwant.Builder();
-    lat=kwant.lattice.chain(a);
+    lat=kwant.lattice.chain(a);    
+    #Construct lattice  
     if args_dict['multiband']==0:
         for x in range(wireLength):
-            junction[lat(x)]=(-mu+2*t)*PM.tzs0+Delta_0*PM.txs0+Vz*PM.t0sx-1j*gamma*PM.t0s0;
-            
-        for x in range(Nbarrier):
-            junction[ lat(x) ] = (2*t - mu + Ebarrier)*PM.tzs0 + Vz*PM.t0sx;
-        
-        for x in range(1,wireLength):
-            junction[lat(x-1),lat(x)]=-t*PM.tzs0-1j*alpha*PM.tzsy;
-            
-        symLeft=kwant.TranslationalSymmetry([-a]);
-        lead=kwant.Builder(symLeft);
-        lead[ lat(0) ] = (2*t - mu_lead)*PM.tzs0 + Vz*PM.t0sx;
-        lead[ lat(0), lat(1) ] = -t*PM.tzs0 - 1j*alpha*PM.tzsy;
-        junction.attach_lead(lead);
-        junction=junction.finalized();
-        return junction
+            junction[lat(x)]=(-mu+2*t)*PM.tzs0+Delta_0*PM.txs0+Vz*PM.t0sx-1j*Gamma*PM.t0s0;
     else:
         for x in range(wireLength):
-            junction[lat(x)]=(-mu+2*t)*np.kron(np.array([[1,0],[0,0]]),PM.tzs0)+(epsilon-mu+2*t)*np.kron(np.array([[0,0],[0,1]]),PM.tzs0)+Delta_0*np.kron(PM.s0,PM.txs0)+Vz*np.kron(PM.s0,PM.t0sx)-1j*gamma*np.kron(PM.s0,PM.t0s0)+Delta_c*np.kron(PM.sx,PM.txs0);
+            junction[lat(x)]=(-mu+2*t)*np.kron(np.array([[1,0],[0,0]]),PM.tzs0)+(epsilon-mu+2*t)*np.kron(np.array([[0,0],[0,1]]),PM.tzs0)+Delta_0*np.kron(PM.s0,PM.txs0)+Vz*np.kron(PM.s0,PM.t0sx)-1j*Gamma*np.kron(PM.s0,PM.t0s0)+Delta_c*np.kron(PM.sx,PM.txs0);
+    #Construct hopping
+    if args_dict['multiband']==0:
+        for x in range(wireLength):
+            junction[lat(x)]=(-mu+2*t)*PM.tzs0+Delta_0*PM.txs0+Vz*PM.t0sx-1j*Gamma*PM.t0s0;
+    else:
         for x in range(1,wireLength):
             junction[lat(x-1),lat(x)]=-t*np.kron(PM.s0,PM.tzs0)-1j*alpha*np.kron(PM.s0,PM.tzsy);
+    #Construct barrier
+    if args_dict['multiband']==0:
+        for x in range(Nbarrier):
+            junction[ lat(x) ] = (2*t - mu + Ebarrier)*PM.tzs0 + Vz*PM.t0sx;
+    else:
         for x in range(Nbarrier):
             junction[ lat(x) ] = (2*t - mu + Ebarrier)*np.kron(PM.s0,PM.tzs0) + Vz*np.kron(PM.s0,PM.t0sx);
-        symLeft=kwant.TranslationalSymmetry([-a]);
-        lead=kwant.Builder(symLeft);
+    #Consruct lead
+    symLeft=kwant.TranslationalSymmetry([-a]);
+    lead=kwant.Builder(symLeft);
+    if args_dict['multiband']==0:
+        lead[ lat(0) ] = (2*t - mu_lead)*PM.tzs0 + Vz*PM.t0sx;
+        lead[ lat(0), lat(1) ] = -t*PM.tzs0 - 1j*alpha*PM.tzsy;
+    else:
         lead[ lat(0) ] = (2*t - mu_lead)*np.kron(PM.s0,PM.tzs0) + Vz*np.kron(PM.s0,PM.t0sx);
-        lead[ lat(0), lat(1) ] = -t*np.kron(PM.s0,PM.tzs0) - 1j*alpha*np.kron(PM.s0,PM.tzsy);
-        junction.attach_lead(lead);
-        junction=junction.finalized();
-        return junction
+        lead[ lat(0), lat(1) ] = -t*np.kron(PM.s0,PM.tzs0) - 1j*alpha*np.kron(PM.s0,PM.tzsy);       
+    #Attach lead
+    junction.attach_lead(lead);
+    #Finalize
+    junction=junction.finalized();
+    return junction
+    
+#    
+#    if args_dict['multiband']==0:
+#        for x in range(wireLength):
+#            junction[lat(x)]=(-mu+2*t)*PM.tzs0+Delta_0*PM.txs0+Vz*PM.t0sx-1j*Gamma*PM.t0s0;
+#            
+#        for x in range(Nbarrier):
+#            junction[ lat(x) ] = (2*t - mu + Ebarrier)*PM.tzs0 + Vz*PM.t0sx;
+#        
+#        for x in range(1,wireLength):
+#            junction[lat(x-1),lat(x)]=-t*PM.tzs0-1j*alpha*PM.tzsy;
+#            
+#        symLeft=kwant.TranslationalSymmetry([-a]);
+#        lead=kwant.Builder(symLeft);
+#        lead[ lat(0) ] = (2*t - mu_lead)*PM.tzs0 + Vz*PM.t0sx;
+#        lead[ lat(0), lat(1) ] = -t*PM.tzs0 - 1j*alpha*PM.tzsy;
+#        junction.attach_lead(lead);
+#        junction=junction.finalized();
+#        return junction
+#    else:
+#        for x in range(wireLength):
+#            junction[lat(x)]=(-mu+2*t)*np.kron(np.array([[1,0],[0,0]]),PM.tzs0)+(epsilon-mu+2*t)*np.kron(np.array([[0,0],[0,1]]),PM.tzs0)+Delta_0*np.kron(PM.s0,PM.txs0)+Vz*np.kron(PM.s0,PM.t0sx)-1j*Gamma*np.kron(PM.s0,PM.t0s0)+Delta_c*np.kron(PM.sx,PM.txs0);
+#        for x in range(1,wireLength):
+#            junction[lat(x-1),lat(x)]=-t*np.kron(PM.s0,PM.tzs0)-1j*alpha*np.kron(PM.s0,PM.tzsy);
+#        for x in range(Nbarrier):
+#            junction[ lat(x) ] = (2*t - mu + Ebarrier)*np.kron(PM.s0,PM.tzs0) + Vz*np.kron(PM.s0,PM.t0sx);
+#        symLeft=kwant.TranslationalSymmetry([-a]);
+#        lead=kwant.Builder(symLeft);
+#        lead[ lat(0) ] = (2*t - mu_lead)*np.kron(PM.s0,PM.tzs0) + Vz*np.kron(PM.s0,PM.t0sx);
+#        lead[ lat(0), lat(1) ] = -t*np.kron(PM.s0,PM.tzs0) - 1j*alpha*np.kron(PM.s0,PM.tzsy);
+#        junction.attach_lead(lead);
+#        junction=junction.finalized();
+#        return junction
 
 def conductance(args_dict,junction):
     voltage=args_dict['voltage'];
