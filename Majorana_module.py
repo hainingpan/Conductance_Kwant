@@ -23,7 +23,7 @@ def NSjunction(args_dict):
         
     junction=kwant.Builder();
     lat=kwant.lattice.chain(a);
-    if args_dict['singleband']==1:
+    if args_dict['multiband']==0:
         for x in range(wireLength):
             junction[lat(x)]=(-mu+2*t)*PM.tzs0+Delta_0*PM.txs0+Vz*PM.t0sx-1j*gamma*PM.t0s0;
             
@@ -59,7 +59,7 @@ def conductance(args_dict,junction):
     voltage=args_dict['voltage'];
     S_matrix = kwant.smatrix(junction, voltage, check_hermiticity=False);
     R = S_matrix.submatrix(0,0);
-    if (args_dict['singleband']==1):
+    if (args_dict['multiband']==0):
         G = 2.0;
         for (i,j) in [(0,0),(0,1),(1,0),(1,1)]:
             G = G - abs(R[i,j])**2 + abs(R[2+i,j])**2;
