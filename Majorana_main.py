@@ -6,7 +6,7 @@ import re
 
 def main():
     vars=len(sys.argv);
-    NS_dict = {'a':1,'mu':.2,'mumax':1,'alpha_R':2, 'Delta_0':0.2,'Delta_c':0.2,'epsilon':1,'wireLength':3000, 'mu_lead':25.0, 'Nbarrier':2,'Ebarrier':10.0, 'Gamma':0.0001, 'QD':'no', 'VD':0.4, 'dotLength':20, 'SE':'no', 'Vz':0.0, 'voltage':0.0,'smoothpot':0, 'gamma':0,'multiband':0};
+    NS_dict = {'a':1,'mu':.2,'mumax':1,'alpha_R':2, 'Delta_0':0.2,'Delta_c':0.2,'epsilon':1,'wireLength':3000, 'mu_lead':25.0, 'Nbarrier':2,'Ebarrier':10.0, 'Gamma':0.0001, 'QD':'no', 'VD':0.4, 'dotLength':20, 'SE':'no', 'Vz':0.0, 'voltage':0.0,'smoothpot':0, 'gamma':0,'multiband':0,'leadpos':0};
     if vars>1:        
         for i in range(1,vars):
             try:
@@ -54,9 +54,9 @@ def main():
     comm.Gather(sendbuf,recvbuf,root=0);
     if (rank==0):
         if (NS_dict['multiband']==0):
-            fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'L'+str(NS_dict['wireLength'])+str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0)+'-'+str(VzStep*tot)+','+str(voltageMax)+'-.dat';     
+            fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'L'+str(NS_dict['wireLength'])+str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0)+str(NS_dict['leadpos'])+'-'+str(VzStep*tot)+','+str(voltageMax)+'-.dat';     
         else:
-            fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'Deltac'+str(NS_dict['Delta_c'])+'epsilon'+str(NS_dict['epsilon'])+'L'+str(NS_dict['wireLength'])+str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0)+'-'+str(VzStep*tot)+','+str(voltageMax)+'-.dat';
+            fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'Deltac'+str(NS_dict['Delta_c'])+'epsilon'+str(NS_dict['epsilon'])+'L'+str(NS_dict['wireLength'])+str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0)+'-'+str(VzStep*tot)+','+str(voltageMax)+str(NS_dict['leadpos'])+'-.dat';
         np.savetxt(fn,recvbuf);
         
     

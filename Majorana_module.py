@@ -58,7 +58,12 @@ def NSjunction(args_dict):
             junction[ lat(x) ] = (2*t - mu + Ebarrier)*np.kron(PM.s0,PM.tzs0) + Vz*np.kron(PM.s0,PM.t0sx);
     #Consruct lead
     symLeft=kwant.TranslationalSymmetry([-a]);
-    lead=kwant.Builder(symLeft);
+    symRight=kwant.TranslationalSymmetry([a]);
+    if args_dict['leadpos']==0:
+        lead=kwant.Builder(symLeft);
+    else:
+        lead=kwant.Builder(symRight);
+        
     if args_dict['multiband']==0:
         lead[ lat(0) ] = (2*t - mu_lead)*PM.tzs0 + Vz*PM.t0sx;
         lead[ lat(0), lat(1) ] = -t*PM.tzs0 - 1j*alpha*PM.tzsy;
