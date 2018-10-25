@@ -34,6 +34,12 @@ def NSjunction(args_dict):
         else:
             if args_dict['smoothpot']=='cos':
                 muset=np.cos(np.arange(wireLength)*pi/wireLength)*mumax+mumax;   
+            else:
+                if args_dict['smoothpot']=='sinasy':
+                    muset=np.sin(np.arange(wireLength)*2*pi/wireLength)*mumax+mumax;
+                else:
+                    if args_dict['smoothpot']=='sinsy':
+                        muset=np.abs(np.sin(np.arange(wireLength)*2*pi/wireLength))*mumax+mumax;                    
                 
 #    if args_dict['selfenergy']==0:
 #        scgapset=
