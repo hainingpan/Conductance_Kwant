@@ -21,7 +21,8 @@ def NSjunction(args_dict):
     Gamma = args_dict['Gamma'];     #dissipation
     voltage=args_dict['voltage'];       #bias voltage
     epsilon=args_dict['epsilon'];       #difference of bands
-        
+    leadpos=args_dict['leadpos'];
+    
     junction=kwant.Builder();
     lat=kwant.lattice.chain(a);  
     #smooth confinement
@@ -50,16 +51,19 @@ def NSjunction(args_dict):
         for x in range(1,wireLength):
             junction[lat(x-1),lat(x)]=-t*np.kron(PM.s0,PM.tzs0)-1j*alpha*np.kron(PM.s0,PM.tzsy);
     #Construct barrier
+    
     if args_dict['multiband']==0:
         for x in range(Nbarrier):
-            junction[ lat(x) ] = (2*t - mu + Ebarrier)*PM.tzs0 + Vz*PM.t0sx;
+            barrierindex=int(-0.5+((leadpos==0)-(leadpos==1))*(x+1))%wireLength;
+            junction[ lat(barrierindex) ] = (2*t - mu + Ebarrier)*PM.tzs0 + Vz*PM.t0sx;
     else:
         for x in range(Nbarrier):
-            junction[ lat(x) ] = (2*t - mu + Ebarrier)*np.kron(PM.s0,PM.tzs0) + Vz*np.kron(PM.s0,PM.t0sx);
+            barrierindex=int(-0.5+((leadpos==0)-(leadpos==1))*(x+1))%wireLength;
+            junction[ lat(barrierindex) ] = (2*t - mu + Ebarrier)*np.kron(PM.s0,PM.tzs0) + Vz*np.kron(PM.s0,PM.t0sx);
     #Consruct lead
     symLeft=kwant.TranslationalSymmetry([-a]);
     symRight=kwant.TranslationalSymmetry([a]);
-    if args_dict['leadpos']==0:
+    if leadpos==0:
         lead=kwant.Builder(symLeft);
     else:
         lead=kwant.Builder(symRight);

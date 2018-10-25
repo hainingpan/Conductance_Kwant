@@ -54,7 +54,7 @@ def main():
     comm.Gather(sendbuf,recvbuf,root=0);
     if (rank==0):
         if (NS_dict['multiband']==0):
-            fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'L'+str(NS_dict['wireLength'])+str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0)+str(NS_dict['leadpos'])+'-'+str(VzStep*tot)+','+str(voltageMax)+'-.dat';     
+            fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'L'+str(NS_dict['wireLength'])+str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0)+'L'*(NS_dict['leadpos']==0)+'R'*(NS_dict['leadpos']==1)+'-'+str(VzStep*tot)+','+str(voltageMax)+'-.dat';     
         else:
             fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'Deltac'+str(NS_dict['Delta_c'])+'epsilon'+str(NS_dict['epsilon'])+'L'+str(NS_dict['wireLength'])+str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0)+'-'+str(VzStep*tot)+','+str(voltageMax)+str(NS_dict['leadpos'])+'-.dat';
         np.savetxt(fn,recvbuf);
