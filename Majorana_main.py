@@ -3,6 +3,7 @@ import numpy as np
 import Majorana_module as Maj
 import sys
 import re
+import matplotlib.pyplot as plt
 
 def main():
     vars=len(sys.argv);
@@ -38,9 +39,9 @@ def main():
     voltageRange = np.linspace(voltageMin, voltageMax, voltageNumber);
     
     per=int(tot/size);
-    VzStep = 0.002;  
+    VzStep = 0.002*4;  
     sendbuf=np.empty((per,voltageNumber));
-    for ii in range(per):    
+    for ii in range(per):
         NS_dict['Vz'] = (ii+rank*per)*VzStep;
         junction=Maj.NSjunction(NS_dict);   #Change this if junction is voltage dependent, e.g. in Self energy
         for index in range(voltageNumber):
@@ -53,12 +54,26 @@ def main():
         recvbuf=None;
     comm.Gather(sendbuf,recvbuf,root=0);
     if (rank==0):
-        if (NS_dict['multiband']==0):
-            fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'L'+str(NS_dict['wireLength'])+str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0)+'L'*(NS_dict['leadpos']==0)+'R'*(NS_dict['leadpos']==1)+'-'+str(VzStep*tot)+','+str(voltageMax)+'-.dat';     
-        else:
-            fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'Deltac'+str(NS_dict['Delta_c'])+'epsilon'+str(NS_dict['epsilon'])+'L'+str(NS_dict['wireLength'])+str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0)+'-'+str(VzStep*tot)+','+str(voltageMax)+str(NS_dict['leadpos'])+'-.dat';
-        np.savetxt(fn,recvbuf);
-        
+        fn_mu='m'+str(NS_dict['mu']);
+        fn_Delta='D'+str(NS_dict['Delta_0']);
+        fn_alpha='a'+str(NS_dict['alpha_R']);
+        fn_wl='L'+str(NS_dict['wireLength']);
+        fn_Deltac=('Dc'+str(NS_dict['Delta_c']))*(NS_dict['multiband']!=0);
+        fn_epsilon=('ep'+str(NS_dict['epsilon']))*(NS_dict['multiband']!=0);
+        fn_smoothpot=str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0);
+        fn_leadpos='L'*(NS_dict['leadpos']==0)+'R'*(NS_dict['leadpos']==1);
+        fn_range='-'+str(VzStep*tot)+','+str(voltageMax)+'-';
+        fn=fn_mu+fn_Delta+fn_alpha+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_leadpos+fn_range;
+#        if (NS_dict['multiband']==0):
+#            fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'L'+str(NS_dict['wireLength'])+str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0)+'L'*(NS_dict['leadpos']==0)+'R'*(NS_dict['leadpos']==1)+'-'+str(VzStep*tot)+','+str(voltageMax)+'-.dat';     
+#        else:
+#            fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'Deltac'+str(NS_dict['Delta_c'])+'epsilon'+str(NS_dict['epsilon'])+'L'+str(NS_dict['wireLength'])+str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0)+'-'+str(VzStep*tot)+','+str(voltageMax)+str(NS_dict['leadpos'])+'-.dat';
+        np.savetxt(fn+'.dat',recvbuf);
+        magneticfieldrange=np.arange(tot)*VzStep;
+        plt.pcolormesh(magneticfieldrange,voltageRange,np.transpose(recvbuf));
+        plt.colorbar();
+#        plt.show();
+        plt.savefig(fn+'.png');
     
 if __name__=="__main__":
 	main()
