@@ -33,7 +33,10 @@ def NSjunction(args_dict):
             muset=np.sin(np.arange(wireLength)*pi/wireLength)*mumax;
         else:
             if args_dict['smoothpot']=='cos':
-                muset=np.cos(np.arange(wireLength)*pi/wireLength)*mumax+mumax;        
+                muset=np.cos(np.arange(wireLength)*pi/wireLength)*mumax+mumax;   
+                
+    if args_dict['selfenergy']==0:
+        scgapset=
         
         
     #Construct lattice  
