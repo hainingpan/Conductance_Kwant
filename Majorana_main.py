@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 def main():
     vars=len(sys.argv);
-    NS_dict = {'a':1,'mu':.2,'mumax':1,'alpha_R':2, 'Delta_0':0.2,'Delta_c':0.2,'epsilon':1,'wireLength':3000, 'mu_lead':25.0, 'Nbarrier':2,'Ebarrier':10.0, 'Gamma':0.0001, 'QD':'no', 'VD':0.4, 'dotLength':20, 'SE':'no', 'Vz':0.0, 'voltage':0.0,'smoothpot':0, 'gamma':0,'multiband':0,'leadpos':0};
+    NS_dict = {'a':1,'mu':.2,'mumax':.2,'alpha_R':2, 'Delta_0':0.2,'Delta_c':0.2,'epsilon':1,'wireLength':3000, 'mu_lead':25.0, 'Nbarrier':2,'Ebarrier':10.0, 'Gamma':0.0001, 'QD':'no', 'VD':0.4, 'dotLength':20, 'SE':'no', 'Vz':0.0, 'voltage':0.0,'smoothpot':0, 'gamma':0,'multiband':0,'leadpos':0};
     if vars>1:        
         for i in range(1,vars):
             try:
