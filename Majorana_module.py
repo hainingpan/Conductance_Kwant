@@ -25,6 +25,7 @@ def NSjunction(args_dict):
     epsilon=args_dict['epsilon'];       #difference of bands
     leadpos=args_dict['leadpos'];
     peakpos=args_dict['peakpos'];
+    sigma=args_dict['sigma'];
     
     junction=kwant.Builder();
     lat=kwant.lattice.chain(a);  
@@ -36,7 +37,8 @@ def NSjunction(args_dict):
         'sin2': lambda x: np.sin(x*2*pi/wireLength)*mumax+mu,
         'sinabs': lambda x: np.abs(np.sin(x*2*pi/wireLength))*mumax+mu,
         'lorentz': lambda x: -mumax*1.0/((x-peakpos*wireLength)**2+.5)+mu,
-        'lorentzsigmoid': lambda x: -(mumax*1.0/((x-peakpos*wireLength)**2+.5)+(4-mu)/2./(np.exp(-(x-0.5*wireLength))+1))+mu,        
+        'lorentzsigmoid': lambda x: -(mumax*1.0/((x-peakpos*wireLength)**2+.5)+(4-mu)/2./(np.exp(-(x-0.5*wireLength))+1))+mu, 
+        'exp': lambda x: -mumax*(np.exp(-(x-peakpos*wireLength)**2/sigma))+mu
     }
     muset=potential[args_dict['smoothpot']](np.arange(wireLength));                
 #                
