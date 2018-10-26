@@ -26,21 +26,29 @@ def NSjunction(args_dict):
     junction=kwant.Builder();
     lat=kwant.lattice.chain(a);  
     #smooth confinement
-    if args_dict['smoothpot']==0:
-        muset=np.ones(wireLength)*mu;
-    else:
-        if args_dict['smoothpot']=='sin':
-            muset=np.sin(np.arange(wireLength)*pi/wireLength)*mumax;
-        else:
-            if args_dict['smoothpot']=='cos':
-                muset=np.cos(np.arange(wireLength)*pi/wireLength)*mumax+mumax;   
-            else:
-                if args_dict['smoothpot']=='sinasy':
-                    muset=np.sin(np.arange(wireLength)*2*pi/wireLength)*mumax+mumax;
-                else:
-                    if args_dict['smoothpot']=='sinsy':
-                        muset=np.abs(np.sin(np.arange(wireLength)*2*pi/wireLength))*mumax+mumax;                    
-                
+    potential={
+        0: lambda x: mu,
+        'sin': lambda x: np.sin(x*pi/wireLength)*mumax,
+        'cos': lambda x: np.cos(x*pi/wireLength)*mumax+mumax,
+        'sin2': lambda x: np.sin(x*2*pi/wireLength)*mumax+mumax,
+        'sinabs': lambda x: np.abs(np.sin(x*2*pi/wireLength))*mumax+mumax        
+    }
+    muset=potential[args_dict['smoothpot']](np.arange(10));
+#    if args_dict['smoothpot']==0:
+#        muset=np.ones(wireLength)*mu;
+#    else:
+#        if args_dict['smoothpot']=='sin':
+#            muset=np.sin(np.arange(wireLength)*pi/wireLength)*mumax;
+#        else:
+#            if args_dict['smoothpot']=='cos':
+#                muset=np.cos(np.arange(wireLength)*pi/wireLength)*mumax+mumax;   
+#            else:
+#                if args_dict['smoothpot']=='sinasy':
+#                    muset=np.sin(np.arange(wireLength)*2*pi/wireLength)*mumax+mumax;
+#                else:
+#                    if args_dict['smoothpot']=='sinsy':
+#                        muset=np.abs(np.sin(np.arange(wireLength)*2*pi/wireLength))*mumax+mumax;                    
+#                
 #    if args_dict['selfenergy']==0:
 #        scgapset=
         
