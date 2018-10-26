@@ -14,7 +14,7 @@ def NSjunction(args_dict):
     mu = args_dict['mu'];       #chemical potential with respect to band bottom
     mumax = args_dict['mumax'];     #peak of smooth confinement
     mu_lead = args_dict['mu_lead'];     #chemical potential of lead
-    wireLength = args_dict['wireLength'];       #Length of wire= $wireLength/100(um)
+    wireLength = int(args_dict['wireLength']);       #Length of wire= $wireLength/100(um)
     Nbarrier = args_dict['Nbarrier'];   # number of barrier
     Ebarrier = args_dict['Ebarrier'];  
     gamma = args_dict['gamma'];   #SM-SC coupling strength
