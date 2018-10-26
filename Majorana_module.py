@@ -22,7 +22,7 @@ def NSjunction(args_dict):
     voltage=args_dict['voltage'];       #bias voltage
     epsilon=args_dict['epsilon'];       #difference of bands
     leadpos=args_dict['leadpos'];
-    peak=args_dict['peakpos'];
+    peakpos=args_dict['peakpos'];
     
     junction=kwant.Builder();
     lat=kwant.lattice.chain(a);  
