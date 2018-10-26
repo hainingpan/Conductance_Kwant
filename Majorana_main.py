@@ -74,6 +74,8 @@ def main():
         magneticfieldrange=np.arange(tot)*VzStep;
         fig=plt.figure();
         plt.pcolormesh(magneticfieldrange,voltageRange,np.transpose(recvbuf));
+        plt.xlabel('Vz(meV)');
+        plt.ylabel('V_bias(meV)');
         plt.colorbar();
 #        plt.show();
         fig.savefig(fn+'.png');
