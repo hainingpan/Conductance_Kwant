@@ -1,10 +1,10 @@
+import matplotlib
+matplotlib.use('Agg')
 from mpi4py import MPI
 import numpy as np
 import Majorana_module as Maj
 import sys
 import re
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 def main():
