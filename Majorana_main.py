@@ -32,7 +32,7 @@ def main():
     size=comm.Get_size();
 #    size=1;
 #    rank=0;
-    tot=2;  
+    tot=256;  
     if (rank==0):
         print(NS_dict);    
         
