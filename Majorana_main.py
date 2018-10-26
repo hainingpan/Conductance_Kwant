@@ -65,7 +65,8 @@ def main():
         fn_smoothpot=str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0);
         fn_leadpos='L'*(NS_dict['leadpos']==0)+'R'*(NS_dict['leadpos']==1);
         fn_range='-'+str(VzStep*tot)+','+str(voltageMax)+'-';
-        fn=fn_mu+fn_Delta+fn_alpha+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_leadpos+fn_range;
+        fn_mumax='mx'+str(NS_dict['mumax'])*(NS_dict['smoothpot']!=0);
+        fn=fn_mu+fn_Delta+fn_alpha+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_mumax+fn_leadpos+fn_range;
 #        if (NS_dict['multiband']==0):
 #            fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'L'+str(NS_dict['wireLength'])+str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0)+'L'*(NS_dict['leadpos']==0)+'R'*(NS_dict['leadpos']==1)+'-'+str(VzStep*tot)+','+str(voltageMax)+'-.dat';     
 #        else:
