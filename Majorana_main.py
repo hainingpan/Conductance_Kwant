@@ -32,7 +32,7 @@ def main():
     size=comm.Get_size();
 #    size=1;
 #    rank=0;
-    tot=256;  
+    tot=2;  
     if (rank==0):
         print(NS_dict);    
         
@@ -72,10 +72,11 @@ def main():
 #            fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'Deltac'+str(NS_dict['Delta_c'])+'epsilon'+str(NS_dict['epsilon'])+'L'+str(NS_dict['wireLength'])+str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0)+'-'+str(VzStep*tot)+','+str(voltageMax)+str(NS_dict['leadpos'])+'-.dat';
         np.savetxt(fn+'.dat',recvbuf);
         magneticfieldrange=np.arange(tot)*VzStep;
+        fig=plt.figure();
         plt.pcolormesh(magneticfieldrange,voltageRange,np.transpose(recvbuf));
         plt.colorbar();
 #        plt.show();
-        plt.savefig(fn+'.png');
+        fig.savefig(fn+'.png');
     
 if __name__=="__main__":
 	main()
