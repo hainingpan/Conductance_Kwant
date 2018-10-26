@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 def main():
     vars=len(sys.argv);
-    NS_dict = {'a':1,'mu':.2,'mumax':1,'alpha_R':2, 'Delta_0':0.2,'Delta_c':0.2,'epsilon':1,'wireLength':3000, 'mu_lead':25.0, 'Nbarrier':2,'Ebarrier':10.0, 'Gamma':0.0001, 'QD':'no', 'VD':0.4, 'dotLength':20, 'SE':'no', 'Vz':0.0, 'voltage':0.0,'smoothpot':0, 'gamma':0,'multiband':0,'leadpos':0};
+    NS_dict = {'a':1,'mu':.2,'mumax':1,'alpha_R':5, 'Delta_0':0.2,'Delta_c':0.2,'epsilon':1,'wireLength':3000, 'mu_lead':25.0, 'Nbarrier':2,'Ebarrier':10.0, 'Gamma':0.0001, 'QD':'no', 'VD':0.4, 'dotLength':20, 'SE':'no', 'Vz':0.0, 'voltage':0.0,'smoothpot':0, 'gamma':0,'multiband':0,'leadpos':0,'peakpos':.25};
     if vars>1:        
         for i in range(1,vars):
             try:
@@ -66,6 +66,7 @@ def main():
         fn_leadpos='L'*(NS_dict['leadpos']==0)+'R'*(NS_dict['leadpos']==1);
         fn_range='-'+str(VzStep*tot)+','+str(voltageMax)+'-';
         fn_mumax='mx'+str(NS_dict['mumax'])*(NS_dict['smoothpot']!=0);
+        fn_peakpos='pk'+str(NS_dict['peakpos'])*(NS_dict['smoothpot']=='lorentz');
         fn=fn_mu+fn_Delta+fn_alpha+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_mumax+fn_leadpos+fn_range;
 #        if (NS_dict['multiband']==0):
 #            fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'L'+str(NS_dict['wireLength'])+str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0)+'L'*(NS_dict['leadpos']==0)+'R'*(NS_dict['leadpos']==1)+'-'+str(VzStep*tot)+','+str(voltageMax)+'-.dat';     
@@ -78,6 +79,7 @@ def main():
         plt.xlabel('Vz(meV)');
         plt.ylabel('V_bias(meV)');
         plt.colorbar();
+        plt.axis((0,tot*VzStep,voltageMin,voltageMax));
 #        plt.show();
         fig.savefig(fn+'.png');
     
