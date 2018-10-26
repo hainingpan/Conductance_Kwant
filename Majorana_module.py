@@ -3,6 +3,8 @@ import kwant
 import PauliMatrices as PM
 from math import pi
 from cmath import sqrt
+import numpy.linalg as LA
+
 
 def NSjunction(args_dict):
     a=args_dict['a'];   #lattice constant= 10a(nm)
@@ -28,7 +30,7 @@ def NSjunction(args_dict):
     lat=kwant.lattice.chain(a);  
     #smooth confinement
     potential={
-        0: lambda x: mu,
+        0: lambda x: mu*x**0,
         'sin': lambda x: np.sin(x*pi/wireLength)*mumax,
         'cos': lambda x: np.cos(x*pi/wireLength)*mumax+mumax,
         'sin2': lambda x: np.sin(x*2*pi/wireLength)*mumax+mu,
@@ -101,4 +103,22 @@ def conductance(args_dict,junction):
             
     return G;
     
-
+def TV(args_dict):
+    args_dict['voltage'] = 0.0; 
+    junction = NSjunction(args_dict);
+    
+    S_matrix = kwant.smatrix(junction, args_dict['voltage'], check_hermiticity=False);
+    R = S_matrix.submatrix(0,0);
+    tv0 = LA.det(R);
+    basis_wf = S_matrix.lead_info[0].wave_functions;
+    
+    normalize_dict = {0:0,1:0,2:3,3:3,4:0,5:0,6:3,7:3}
+    phase_dict = {};
+    
+    for n in range(8):
+        m = normalize_dict[n];
+        phase_dict[n]= (-1)**m*basis_wf[m,n]/abs(basis_wf[m,n]);
+        
+    tv = tv0*np.conjugate(phase_dict[0]*phase_dict[1]*phase_dict[2]*phase_dict[3])* phase_dict[4]    *phase_dict[5]*phase_dict[6]*phase_dict[7] ;
+    
+    return tv
