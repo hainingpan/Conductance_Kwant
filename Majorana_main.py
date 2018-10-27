@@ -56,7 +56,6 @@ def main():
                 sendbuf[ii,index]=Maj.conductance(NS_dict,junction);
             else:
                 sendbuf[ii,index],sendbuf2[ii,index]=Maj.ConductanceAndTV(NS_dict,junction);
-#            sendbuf2[ii,index]=Maj.TVmap(NS_dict,junction);    
     if (rank==0):
         recvbuf=np.empty((tot,voltageNumber)); 
         if NS_dict['TV']==1:
