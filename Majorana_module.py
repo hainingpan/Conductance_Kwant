@@ -26,6 +26,8 @@ def NSjunction(args_dict):
     leadpos=args_dict['leadpos'];
     peakpos=args_dict['peakpos'];
     sigma=args_dict['sigma'];
+    dotLength = args_dict['dotLength'];
+
     
     junction=kwant.Builder();
     lat=kwant.lattice.chain(a);  
@@ -54,6 +56,11 @@ def NSjunction(args_dict):
     else:
         for x in range(wireLength):
             junction[lat(x)]=(-muset[x]+2*t)*np.kron(np.array([[1,0],[0,0]]),PM.tzs0)+(epsilon-mu+2*t)*np.kron(np.array([[0,0],[0,1]]),PM.tzs0)+Delta_0*np.kron(PM.s0,PM.txs0)+Vz*np.kron(PM.s0,PM.t0sx)-1j*Gamma*np.kron(PM.s0,PM.t0s0)+Delta_c*np.kron(PM.sx,PM.txs0);
+   
+    if args_dict['QD'] == 1:
+        VD = args_dict['VD'];
+        for x in range(dotLength):
+            junction[ lat(x) ] = (2*t - mu + VD*np.exp(-x*x/(dotLength*dotLength)) )*PM.tzs0 + Vz*PM.t0sx - 1j*gamma*PM.t0s0;
     #Construct hopping
     if args_dict['multiband']==0:
         for x in range(1,wireLength):
