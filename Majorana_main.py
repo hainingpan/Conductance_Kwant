@@ -41,7 +41,7 @@ def main():
     voltageRange = np.linspace(voltageMin, voltageMax, voltageNumber);
     
     per=int(tot/size);
-    VzStep = 0.002;  
+    VzStep = 0.002*8;  
     sendbuf=np.empty((per,voltageNumber));  #conductance
     if NS_dict['TV']==1:
         sendbuf2=np.empty((per,voltageNumber)); #TV
