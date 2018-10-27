@@ -32,16 +32,16 @@ def main():
     size=comm.Get_size();
 #    size=1;
 #    rank=0;
-    tot=4;  
+    tot=256;  
     if (rank==0):
         print(NS_dict);    
         
     np.warnings.filterwarnings('ignore');
-    voltageMin = -.3; voltageMax = .3; voltageNumber = 11;
+    voltageMin = -.3; voltageMax = .3; voltageNumber = 1001;
     voltageRange = np.linspace(voltageMin, voltageMax, voltageNumber);
     
     per=int(tot/size);
-    VzStep = 0.002*8;  
+    VzStep = 0.002;  
     sendbuf=np.empty((per,voltageNumber));  #conductance
     sendbuf2=np.empty((per,voltageNumber)); #TV
 
