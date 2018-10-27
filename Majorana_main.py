@@ -32,17 +32,19 @@ def main():
     size=comm.Get_size();
 #    size=1;
 #    rank=0;
-    tot=256;  
+    tot=4;  
     if (rank==0):
         print(NS_dict);    
         
     np.warnings.filterwarnings('ignore');
-    voltageMin = -.3; voltageMax = .3; voltageNumber = 1001;
+    voltageMin = -.3; voltageMax = .3; voltageNumber = 11;
     voltageRange = np.linspace(voltageMin, voltageMax, voltageNumber);
     
     per=int(tot/size);
     VzStep = 0.002*8;  
-    sendbuf=np.empty((per,voltageNumber));
+    sendbuf=np.empty((per,voltageNumber));  #conductance
+    sendbuf2=np.empty((per,voltageNumber)); #TV
+
     for ii in range(per):
         NS_dict['Vz'] = (ii+rank*per)*VzStep;
         junction=Maj.NSjunction(NS_dict);   #Change this if junction is voltage dependent, e.g. in Self energy
@@ -50,11 +52,16 @@ def main():
             voltage=voltageRange[index];
             NS_dict['voltage']=voltage;        
             sendbuf[ii,index]=Maj.conductance(NS_dict,junction);
+            sendbuf2[ii,index]=Maj.TVmap(NS_dict,junction);    
     if (rank==0):
-        recvbuf=np.empty((tot,voltageNumber));
+        recvbuf=np.empty((tot,voltageNumber));        
+        recvbuf2=np.empty((tot,voltageNumber));
     else:
         recvbuf=None;
+        recvbuf2=None;
     comm.Gather(sendbuf,recvbuf,root=0);
+    comm.Gather(sendbuf2,recvbuf2,root=0);
+
     if (rank==0):
         fn_mu='m'+str(NS_dict['mu']);
         fn_Delta='D'+str(NS_dict['Delta_0']);
@@ -74,6 +81,8 @@ def main():
 #        else:
 #            fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'Deltac'+str(NS_dict['Delta_c'])+'epsilon'+str(NS_dict['epsilon'])+'L'+str(NS_dict['wireLength'])+str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0)+'-'+str(VzStep*tot)+','+str(voltageMax)+str(NS_dict['leadpos'])+'-.dat';
         np.savetxt(fn+'.dat',recvbuf);
+        np.savetxt(fn+'TV.dat',recvbuf2);
+
         magneticfieldrange=np.arange(tot)*VzStep;
         fig=plt.figure();
         plt.pcolormesh(magneticfieldrange,voltageRange,np.transpose(recvbuf));
@@ -81,8 +90,15 @@ def main():
         plt.ylabel('V_bias(meV)');
         plt.colorbar();
         plt.axis((0,tot*VzStep,voltageMin,voltageMax));
-#        plt.show();
         fig.savefig(fn+'.png');
+        
+        fig2=plt.figure();
+        plt.pcolormesh(magneticfieldrange,voltageRange,np.transpose(recvbuf2));
+        plt.xlabel('Vz(meV)');
+        plt.ylabel('V_bias(meV)');
+        plt.colorbar();
+        plt.axis((0,tot*VzStep,voltageMin,voltageMax));
+        fig2.savefig(fn+'TV.png');
     
 if __name__=="__main__":
 	main()
