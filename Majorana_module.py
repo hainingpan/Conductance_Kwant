@@ -33,7 +33,7 @@ def NSjunction(args_dict):
     potential={
         0: lambda x: mu*x**0,
         'sin': lambda x: np.sin(x*pi/wireLength)*mumax,
-        'cos': lambda x: np.cos(x*pi/wireLength)*mumax+mumax,
+        'cos': lambda x: np.cos(x*pi/wireLength)*mumax+mu,
         'sin2': lambda x: np.sin(x*2*pi/wireLength)*mumax+mu,
         'sinabs': lambda x: np.abs(np.sin(x*2*pi/wireLength))*mumax+mu,
         'lorentz': lambda x: mumax*1.0/((x-peakpos*wireLength)**2+.5)+mu,
