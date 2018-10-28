@@ -36,7 +36,7 @@ def NSjunction(args_dict):
     potential={
         0: lambda x: mu*x**0,
         'sin': lambda x: np.sin(x*pi/(0.1*wireLength))*mumax+mu,
-        'sintheta': lambda x: mumax*np.sin(x*pi/(wireLength/1))*(x<wireLength/1)+mu,
+        'sintheta': lambda x: mumax*np.sin(x*pi/(wireLength/10))*(x<wireLength/10)+mu,
         'cos': lambda x: np.cos(x*pi/wireLength)*mumax+mu,
         'sin2': lambda x: np.sin(x*2*pi/wireLength)*mumax+mu,
         'sinabs': lambda x: np.abs(np.sin(x*2*pi/wireLength))*mumax+mu,
