@@ -46,8 +46,8 @@ def NSjunction(args_dict):
         'sigmoid': lambda x: mu+mumax*1/(np.exp(wireLength-x-.5*wireLength)+1)
     }
     muset=potential[args_dict['smoothpot']](np.arange(wireLength));     
-    
-    plt.plot(np.arange(wireLength)/100,muset);  
+    np.savetxt('potpy.dat',muset);
+  #  plt.plot(np.arange(wireLength)/100,muset);  
 #                
 #    if args_dict['selfenergy']==0:
 #        scgapset=
