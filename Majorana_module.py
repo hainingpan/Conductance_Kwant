@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 def NSjunction(args_dict):
     a=args_dict['a'];   #lattice constant= 10a(nm)
     t = 25/(a*a);   #hopping integral
-    alpha = args_dict['alpha_R']/(2*a);     #reduced SOC alpha=(alpha_R)/(2a)
+    alpha = args_dict['alpha_R']/(2.*a);     #reduced SOC alpha=(alpha_R)/(2a)
     Vz = args_dict['Vz'];       #Zeeman field
     Delta_0 = args_dict['Delta_0'];     #Proximitized SC gap
     Delta_c=args_dict['Delta_c'];       #Coupling of two band in SC gap
