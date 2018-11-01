@@ -32,7 +32,7 @@ def main():
     size=comm.Get_size();
 #    size=1;
 #    rank=0;
-    tot=256;  
+    tot=32;  
     if (rank==0):
         print(NS_dict);    
         
@@ -92,7 +92,7 @@ def main():
 
         magneticfieldrange=np.arange(tot)*VzStep;
         fig=plt.figure();
-        plt.pcolormesh(magneticfieldrange,voltageRange,np.transpose(recvbuf));
+        plt.pcolormesh(magneticfieldrange,voltageRange,np.transpose(recvbuf), cmap='rainbow');
         plt.xlabel('Vz(meV)');
         plt.ylabel('V_bias(meV)');
         plt.colorbar();
