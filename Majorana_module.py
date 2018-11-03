@@ -40,14 +40,13 @@ def NSjunction(args_dict):
         'cos': lambda x: np.cos(x*pi/wireLength)*mumax+mu,
         'sin2': lambda x: np.sin(x*2*pi/wireLength)*mumax+mu,
         'sinabs': lambda x: np.abs(np.sin(x*2*pi/wireLength))*mumax+mu,
-        'lorentz': lambda x: mumax*1.0/(((x-peakpos*wireLength))**2+0.5)+mu,
-        'lorentzsigmoid': lambda x:  (mumax*1.0/((x-peakpos*wireLength)**2+.5)+(4-mu)/2./(np.exp(-(x-0.5*wireLength))+1))+mu, 
-        'exp': lambda x: -mumax*(np.exp(-(x-peakpos*wireLength)**2/sigma))+mu,
-        'sigmoid': lambda x: mu+mumax*1/(np.exp((wireLength-x-.5*wireLength)/(sigma*a))+1)
+        'lorentz': lambda x: mumax*1.0/(((x-peakpos*wireLength)*a)**2+0.5)+mu,
+        'lorentzsigmoid': lambda x:  (mumax*1.0/(((x-peakpos*wireLength)*a)**2+.5)+(4-mu)/2./(np.exp(-(x-0.5*wireLength)*a)+1))+mu, 
+        'exp': lambda x: -mumax*(np.exp(-((x-peakpos*wireLength)*a)**2/sigma))+mu,
+        'sigmoid': lambda x: mu+mumax*1/(np.exp((.5*wireLength-x)*a/sigma)+1)
     }
     muset=potential[args_dict['smoothpot']](np.arange(wireLength));     
-#    np.savetxt('potpy.dat',muset);
-#    plt.plot(np.arange(wireLength)/100,muset);  
+
 #                
 #    if args_dict['selfenergy']==0:
 #        scgapset=

@@ -32,16 +32,16 @@ def main():
     size=comm.Get_size();
 #    size=1;
 #    rank=0;
-    tot=256*8;  
+    tot=256;  
     if (rank==0):
         print(NS_dict);    
         
     np.warnings.filterwarnings('ignore');
-    voltageMin = -.3; voltageMax = .3; voltageNumber = 1001;
+    voltageMin = -.3; voltageMax = .3; voltageNumber = 11;
     voltageRange = np.linspace(voltageMin, voltageMax, voltageNumber);
     
     per=int(tot/size);
-    VzStep = 0.002;  
+    VzStep = 0.002*8;  
     sendbuf=np.empty((per,voltageNumber));  #conductance
     if NS_dict['TV']==1:
         sendbuf2=np.empty((per,voltageNumber)); #TV
@@ -79,8 +79,8 @@ def main():
         fn_leadpos='L'*(NS_dict['leadpos']==0)+'R'*(NS_dict['leadpos']==1);
         fn_range='-'+str(VzStep*tot)+','+str(voltageMax)+'-';
         fn_mumax=('mx'+str(NS_dict['mumax']))*(NS_dict['smoothpot']!=0);
-        fn_peakpos=('pk'+str(NS_dict['peakpos']))*(NS_dict['smoothpot']=='lorentz' or NS_dict['smoothpot']=='lorentzsigmoid');
-        fn_sigma=('sg'+str(NS_dict['sigma']))*(NS_dict['smoothpot']=='exp');
+        fn_peakpos=('pk'+str(NS_dict['peakpos']))*((NS_dict['smoothpot']=='lorentz')+( NS_dict['smoothpot']=='lorentzsigmoid'));
+        fn_sigma=('sg'+str(NS_dict['sigma']))*((NS_dict['smoothpot']=='exp')+(NS_dict['smoothpot']=='sigmoid'));
         fn=fn_mu+fn_Delta+fn_alpha+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_leadpos+fn_range;
 #        if (NS_dict['multiband']==0):
 #            fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'L'+str(NS_dict['wireLength'])+str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0)+'L'*(NS_dict['leadpos']==0)+'R'*(NS_dict['leadpos']==1)+'-'+str(VzStep*tot)+','+str(voltageMax)+'-.dat';     
