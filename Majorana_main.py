@@ -37,7 +37,7 @@ def main():
         print(NS_dict);    
         
     np.warnings.filterwarnings('ignore');
-    voltageMin = -.3; voltageMax = .3; voltageNumber = 11;
+    voltageMin = -.3; voltageMax = .3; voltageNumber = 1001;
     voltageRange = np.linspace(voltageMin, voltageMax, voltageNumber);
     
     per=int(tot/size);
