@@ -42,10 +42,13 @@ def NSjunction(args_dict):
         'sinabs': lambda x: np.abs(np.sin(x*2*pi/wireLength))*mumax+mu,
         'lorentz': lambda x: mumax*1.0/(((x-peakpos*wireLength)*a)**2+0.5)+mu,
         'lorentzsigmoid': lambda x:  (mumax*1.0/(((x-peakpos*wireLength)*a)**2+.5)+(4-mu)/2./(np.exp(-(x-0.5*wireLength)*a)+1))+mu, 
-        'exp': lambda x: mumax*(np.exp(-((x-peakpos*wireLength)*a)**2/sigma**2))+mu,
+        'exp': lambda x: mumax*(np.exp(-((x-peakpos*wireLength)*a)**2/(2*sigma**2)))+mu,
         'sigmoid': lambda x: mu+mumax*1/(np.exp((.5*wireLength-x)*a/sigma)+1)
     }
     muset=potential[args_dict['smoothpot']](np.arange(wireLength));     
+    print(muset)
+    plt.plot(muset);
+    plt.show();
 
 #                
 #    if args_dict['selfenergy']==0:
