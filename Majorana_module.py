@@ -28,6 +28,7 @@ def NSjunction(args_dict):
     peakpos=args_dict['peakpos'];
     sigma=args_dict['sigma'];
     dotLength = args_dict['dotLength'];
+    vimplist=args_dict['vimplist'];
 
     
     junction=kwant.Builder();
@@ -46,9 +47,7 @@ def NSjunction(args_dict):
         'sigmoid': lambda x: mu+mumax*1/(np.exp((.5*wireLength-x)*a/sigma)+1)
     }
     muset=potential[args_dict['smoothpot']](np.arange(wireLength));     
-    print(muset)
-    plt.plot(muset);
-    plt.show();
+    muset=muset-vimplist;
 
 #                
 #    if args_dict['selfenergy']==0:

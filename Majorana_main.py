@@ -7,41 +7,43 @@ import sys
 import re
 import matplotlib.pyplot as plt
 
-def main():
-    vars=len(sys.argv);
-    NS_dict = {'TV':0,'a':1,'mu':.2,'mumax':1,'alpha_R':5, 'Delta_0':0.2,'Delta_c':0.2,'epsilon':1,'wireLength':1000, 'mu_lead':25.0, 'Nbarrier':2,'Ebarrier':10.0, 'Gamma':0.0001, 'QD':0, 'VD':0.4, 'dotLength':20, 'SE':'no', 'Vz':0.0, 'voltage':0.0,'smoothpot':0, 'gamma':0,'multiband':0,'leadpos':0,'peakpos':0,'sigma':1};
-    if vars>1:        
-        for i in range(1,vars):
-            try:
-                varname=re.search('(.)*(?=\=)',sys.argv[i]).group(0);
-                varval=re.search('(?<=\=)(.)*',sys.argv[i]).group(0);
-                if varname in NS_dict:
-                    if varname=='smoothpot':
-                        NS_dict[varname]=varval;
-                    else:
-                        NS_dict[varname]=float(varval);
-                else:
-                    print('Cannot find the parameter',varname);
-                    sys.exit(1);
-            except:
-                print('Cannot parse the input parameters',sys.argv[i]);
-                sys.exit(1);    
-      
-    comm = MPI.COMM_WORLD;
-    rank = comm.Get_rank();
-    size=comm.Get_size();
-#    size=1;
-#    rank=0;
-    tot=256;  
+comm = MPI.COMM_WORLD;
+rank = comm.Get_rank();
+size=comm.Get_size();
+    
+def main():    
+    vars=len(sys.argv);    
+    NS_dict = {'TV':0,'a':1,'mu':.2,'mumax':1,'alpha_R':5, 'Delta_0':0.2,'Delta_c':0.2,'epsilon':1,'wireLength':1000, 'mu_lead':25.0, 'Nbarrier':2,'Ebarrier':10.0, 'Gamma':0.0001, 'QD':0, 'VD':0.4, 'dotLength':20, 'SE':'no', 'Vz':0.0, 'voltage':0.0,'smoothpot':0, 'gamma':0,'multiband':0,'leadpos':0,'peakpos':0,'sigma':1,'vimp':0,'vimplist':0,'vznum':256,'enum':1001,'VzStep': 0.002*8};
     if (rank==0):
-        print(NS_dict);    
+        if vars>1:        
+            for i in range(1,vars):
+                try:
+                    varname=re.search('(.)*(?=\=)',sys.argv[i]).group(0);
+                    varval=re.search('(?<=\=)(.)*',sys.argv[i]).group(0);
+                    if varname in NS_dict:
+                        if varname=='smoothpot':
+                            NS_dict[varname]=varval;
+                        else:
+                            NS_dict[varname]=float(varval);
+                    else:
+                        print('Cannot find the parameter',varname);
+                        sys.exit(1);
+                except:
+                    print('Cannot parse the input parameters',sys.argv[i]);
+                    sys.exit(1);                    
+    if (rank==0):
+        NS_dict['vimplist']=np.random.normal(0,NS_dict['vimp'],int(NS_dict['wireLength']));
+        print(NS_dict);   
+
         
+    NS_dict=comm.bcast(NS_dict,root=0);
+    tot=int(NS_dict['vznum']);   
     np.warnings.filterwarnings('ignore');
-    voltageMin = -.3; voltageMax = .3; voltageNumber = 1001;
+    voltageMin = -.3; voltageMax = .3; voltageNumber = int(NS_dict['enum']);
     voltageRange = np.linspace(voltageMin, voltageMax, voltageNumber);
     
     per=int(tot/size);
-    VzStep = 0.002*8*1.5;  
+    VzStep = NS_dict['VzStep'];  
     sendbuf=np.empty((per,voltageNumber));  #conductance
     if NS_dict['TV']==1:
         sendbuf2=np.empty((per,voltageNumber)); #TV
@@ -81,7 +83,8 @@ def main():
         fn_mumax=('mx'+str(NS_dict['mumax']))*(NS_dict['smoothpot']!=0);
         fn_peakpos=('pk'+str(NS_dict['peakpos']))*((NS_dict['smoothpot']=='lorentz')+( NS_dict['smoothpot']=='lorentzsigmoid'));
         fn_sigma=('sg'+str(NS_dict['sigma']))*((NS_dict['smoothpot']=='exp')+(NS_dict['smoothpot']=='sigmoid'));
-        fn=fn_mu+fn_Delta+fn_alpha+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_leadpos+fn_range;
+        fn_vimp=('v'+str(NS_dict['vimp']))*(NS_dict['vimp']!=0)
+        fn=fn_mu+fn_Delta+fn_alpha+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_leadpos+fn_vimp+fn_range;
 #        if (NS_dict['multiband']==0):
 #            fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'L'+str(NS_dict['wireLength'])+str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0)+'L'*(NS_dict['leadpos']==0)+'R'*(NS_dict['leadpos']==1)+'-'+str(VzStep*tot)+','+str(voltageMax)+'-.dat';     
 #        else:
