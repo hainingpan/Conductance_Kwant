@@ -32,7 +32,8 @@ def main():
                     print('Cannot parse the input parameters',sys.argv[i]);
                     sys.exit(1);                    
     if (rank==0):
-        NS_dict['vimplist']=np.random.normal(0,NS_dict['vimp'],int(NS_dict['wireLength']));
+        if (NS_dict['vimp']!=0):
+            NS_dict['vimplist']=np.random.normal(0,NS_dict['vimp'],int(NS_dict['wireLength']));
         print(NS_dict);   
 
         
