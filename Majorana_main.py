@@ -85,11 +85,7 @@ def main():
         fn_peakpos=('pk'+str(NS_dict['peakpos']))*((NS_dict['smoothpot']=='lorentz')+( NS_dict['smoothpot']=='lorentzsigmoid'));
         fn_sigma=('sg'+str(NS_dict['sigma']))*((NS_dict['smoothpot']=='exp')+(NS_dict['smoothpot']=='sigmoid'));
         fn_vimp=('v'+str(NS_dict['vimp']))*(NS_dict['vimp']!=0)
-        fn=fn_mu+fn_Delta+fn_alpha+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_leadpos+fn_vimp+fn_range;
-#        if (NS_dict['multiband']==0):
-#            fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'L'+str(NS_dict['wireLength'])+str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0)+'L'*(NS_dict['leadpos']==0)+'R'*(NS_dict['leadpos']==1)+'-'+str(VzStep*tot)+','+str(voltageMax)+'-.dat';     
-#        else:
-#            fn='mu'+str(NS_dict['mu'])+'Delta'+str(NS_dict['Delta_0'])+'alpha'+str(NS_dict['alpha_R'])+'Deltac'+str(NS_dict['Delta_c'])+'epsilon'+str(NS_dict['epsilon'])+'L'+str(NS_dict['wireLength'])+str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0)+'-'+str(VzStep*tot)+','+str(voltageMax)+str(NS_dict['leadpos'])+'-.dat';
+        fn=fn_mu+fn_Delta+fn_alpha+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_vimp+fn_leadpos+fn_range;
         np.savetxt(fn+'.dat',recvbuf);
         if NS_dict['TV']==1:
             np.savetxt(fn+'TV.dat',recvbuf2);
@@ -154,7 +150,7 @@ def main():
             fn_peakpos=('pk'+str(NS_dict['peakpos']))*((NS_dict['smoothpot']=='lorentz')+( NS_dict['smoothpot']=='lorentzsigmoid'));
             fn_sigma=('sg'+str(NS_dict['sigma']))*((NS_dict['smoothpot']=='exp')+(NS_dict['smoothpot']=='sigmoid'));
             fn_vimp=('v'+str(NS_dict['vimp']))*(NS_dict['vimp']!=0)
-            fn=fn_mu+fn_Delta+fn_alpha+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_leadpos+fn_vimp+fn_range;
+            fn=fn_mu+fn_Delta+fn_alpha+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_vimp+fn_leadpos+fn_range;
             np.savetxt(fn+'.dat',recvbuf);
             if NS_dict['TV']==1:
                 np.savetxt(fn+'TV.dat',recvbuf2);
