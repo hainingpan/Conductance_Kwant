@@ -21,7 +21,7 @@ def main():
                     varname=re.search('(.)*(?=\=)',sys.argv[i]).group(0);
                     varval=re.search('(?<=\=)(.)*',sys.argv[i]).group(0);
                     if varname in NS_dict:
-                        if varname=='smoothpot':
+                        if varname in ['smoothpot','vimplist']:
                             NS_dict[varname]=varval;
                         else:
                             NS_dict[varname]=float(varval);
@@ -31,9 +31,23 @@ def main():
                 except:
                     print('Cannot parse the input parameters',sys.argv[i]);
                     sys.exit(1);                    
-    if (rank==0):
-        if (NS_dict['vimp']!=0):
-            NS_dict['vimplist']=np.random.normal(0,NS_dict['vimp'],int(NS_dict['wireLength']));
+        if (isinstance(NS_dict['vimplist'],str)):
+            print('use filename:'+NS_dict['vimplist']);
+            vimpfn=NS_dict['vimplist'];
+            try:
+                dat=np.loadtxt(vimpfn);
+                try:
+                    NS_dict['vimplist']=dat;
+                except:
+                    print('Cannot assign vimplist',dat);
+                    sys.exit(1);
+            except:
+                print('Cannot find file:',vimpfn);
+                sys.exit(1);
+        else:                    
+            if (NS_dict['vimp']!=0):
+                NS_dict['vimplist']=np.random.normal(0,NS_dict['vimp'],int(NS_dict['wireLength']));
+        
         print(NS_dict);   
 
         
