@@ -99,7 +99,8 @@ def main():
         fn_peakpos=('pk'+str(NS_dict['peakpos']))*((NS_dict['smoothpot']=='lorentz')+( NS_dict['smoothpot']=='lorentzsigmoid'));
         fn_sigma=('sg'+str(NS_dict['sigma']))*((NS_dict['smoothpot']=='exp')+(NS_dict['smoothpot']=='sigmoid'));
         fn_vimp=('v'+str(NS_dict['vimp']))*(NS_dict['vimp']!=0)
-        fn=fn_mu+fn_Delta+fn_alpha+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_vimp+fn_leadpos+fn_range;
+        fn_Gamma=('G'+str(NS_dict['Gamma']))
+        fn=fn_mu+fn_Delta+fn_alpha+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_vimp+fn_Gamma+fn_leadpos+fn_range;
         np.savetxt(fn+'.dat',recvbuf);
         if NS_dict['TV']==1:
             np.savetxt(fn+'TV.dat',recvbuf2);
