@@ -27,7 +27,7 @@ def NSjunction(args_dict):
     leadpos=args_dict['leadpos'];
     peakpos=args_dict['peakpos'];
     sigma=args_dict['sigma'];
-    dotLength = args_dict['dotLength'];
+    dotLength = int(args_dict['dotLength']);
     vimplist=args_dict['vimplist'];
 
     
