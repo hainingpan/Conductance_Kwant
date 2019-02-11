@@ -73,7 +73,7 @@ def main():
                 voltage=voltageRange[index];
                 NS_dict['voltage']=voltage;
                 if NS_dict['SE']==1:
-                    junction=Maj.NSjunction(NS_dict);
+                    junction=Maj.NSjunction(NS_dict);                    
                 if NS_dict['TV']==0:
                     sendbuf[ii,index]=Maj.conductance(NS_dict,junction);
                 else:
