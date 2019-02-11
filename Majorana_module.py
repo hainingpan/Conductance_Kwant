@@ -2,7 +2,6 @@ import numpy as np
 import kwant
 import PauliMatrices as PM
 from math import pi
-from cmath import sqrt
 import numpy.linalg as LA
 import matplotlib.pyplot as plt
 
@@ -24,12 +23,12 @@ def NSjunction(args_dict):
     Gamma = args_dict['Gamma'];     #dissipation
     voltage=args_dict['voltage'];       #bias voltage
     epsilon=args_dict['epsilon'];       #difference of bands
-    leadpos=args_dict['leadpos'];
-    peakpos=args_dict['peakpos'];
-    sigma=args_dict['sigma'];
-    dotLength = int(args_dict['dotLength']);
-    vimplist=args_dict['vimplist'];
-
+    leadpos=args_dict['leadpos'];       #position of lead, 0: left; 1: right
+    peakpos=args_dict['peakpos'];   #position of the peak
+    sigma=args_dict['sigma'];   #sigma(linewidth) in smooth potential or quatnum dot
+    dotLength = int(args_dict['dotLength']);    #length of quantum dot
+    vimplist=args_dict['vimplist'];     #the spatial profile of disorder(V_impurity)
+    Vc = args_dict['Vc'];   #The point where SC gap collapses. 0 for constant Delta (Vzc=infitity). The gap collapsing curve is delta_0*sqrt(1-(Vz/Vzc)^2) 
     
     junction=kwant.Builder();
     lat=kwant.lattice.chain(a);  
@@ -49,18 +48,23 @@ def NSjunction(args_dict):
     muset=potential[args_dict['smoothpot']](np.arange(wireLength));     
     muset=muset-vimplist;
 
-                
-#    if args_dict['selfenergy']==0:
-#        scgapset=
+    if Vc!=0:
+        Delta=Delta_0*np.sqrt(1-(Vz/Vc)^2);
+    else:
+        Delta=Delta_0;            
+         
+    if args_dict['SE']==0:
+        scDelta=Delta;
+    else:
+        scDelta=-gamma*(voltage*PM.t0s0+Delta*PM.txs0)/np.sqrt(Delta**2-voltage**2-np.sign(voltage)*1e-9j);        
         
-        
-    #Construct lattice  
+    #Construct lattice  (multiband->scDelta& muset not verified)
     if args_dict['multiband']==0:
         for x in range(wireLength):
-            junction[lat(x)]=(-muset[x]+2*t)*PM.tzs0+Delta_0*PM.txs0+Vz*PM.t0sx-1j*Gamma*PM.t0s0;
+            junction[lat(x)]=(-muset[x]+2*t)*PM.tzs0+scDelta*PM.txs0+Vz*PM.t0sx-1j*Gamma*PM.t0s0;
     else:
         for x in range(wireLength):
-            junction[lat(x)]=(-muset[x]+2*t)*np.kron(np.array([[1,0],[0,0]]),PM.tzs0)+(epsilon-muset[x]+2*t)*np.kron(np.array([[0,0],[0,1]]),PM.tzs0)+Delta_0*np.kron(PM.s0,PM.txs0)+Vz*np.kron(PM.s0,PM.t0sx)-1j*Gamma*np.kron(PM.s0,PM.t0s0)+Delta_c*np.kron(PM.sx,PM.txs0);
+            junction[lat(x)]=(-muset[x]+2*t)*np.kron(np.array([[1,0],[0,0]]),PM.tzs0)+(epsilon-muset[x]+2*t)*np.kron(np.array([[0,0],[0,1]]),PM.tzs0)+scDelta*np.kron(PM.s0,PM.txs0)+Vz*np.kron(PM.s0,PM.t0sx)-1j*Gamma*np.kron(PM.s0,PM.t0s0)+Delta_c*np.kron(PM.sx,PM.txs0);
    
     if args_dict['QD'] == 1:
         VD = args_dict['VD'];
