@@ -54,81 +54,13 @@ def main():
     NS_dict=comm.bcast(NS_dict,root=0);
     tot=int(NS_dict['vznum']);   
     np.warnings.filterwarnings('ignore');
-    voltageMin = -.3; voltageMax = .3; voltageNumber = int(NS_dict['enum']);
+    voltageMin = -.3; voltageMax = .3; voltageNumber = int(NS_dict['enum']);VzStep = NS_dict['vzstep'];  
     voltageRange = np.linspace(voltageMin, voltageMax, voltageNumber);
     
-    per=int(tot/size);
-    VzStep = NS_dict['vzstep'];  
-    sendbuf=np.empty((per,voltageNumber));  #conductance
-    if NS_dict['TV']==1:
-        sendbuf2=np.empty((per,voltageNumber)); #TV
-
-    for ii in range(per):
-        NS_dict['Vz'] = (ii+rank*per)*VzStep;
-        junction=Maj.NSjunction(NS_dict);   #Change this if junction is voltage dependent, e.g. in Self energy
-        for index in range(voltageNumber):
-            voltage=voltageRange[index];
-            NS_dict['voltage']=voltage;
-            if NS_dict['TV']==0:
-                sendbuf[ii,index]=Maj.conductance(NS_dict,junction);
-            else:
-                sendbuf[ii,index],sendbuf2[ii,index]=Maj.ConductanceAndTV(NS_dict,junction);
-    if (rank==0):
-        recvbuf=np.empty((tot,voltageNumber)); 
-        if NS_dict['TV']==1:
-            recvbuf2=np.empty((tot,voltageNumber));
-    else:
-        recvbuf=None;
-        if NS_dict['TV']==1:
-            recvbuf2=None;
-    comm.Gather(sendbuf,recvbuf,root=0);
-    if NS_dict['TV']==1:
-        comm.Gather(sendbuf2,recvbuf2,root=0);
-
-    if (rank==0):
-        fn_mu='m'+str(NS_dict['mu']);
-        fn_Delta='D'+str(NS_dict['Delta_0']);
-        fn_alpha='a'+str(NS_dict['alpha_R']);
-        fn_wl='L'+str(int(NS_dict['wireLength']));
-        fn_Deltac=('Dc'+str(NS_dict['Delta_c']))*(NS_dict['multiband']!=0);
-        fn_epsilon=('ep'+str(NS_dict['epsilon']))*(NS_dict['multiband']!=0);
-        fn_smoothpot=str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0);
-        fn_leadpos='L'*(NS_dict['leadpos']==0)+'R'*(NS_dict['leadpos']==1);
-        fn_range='-'+str(VzStep*tot)+','+str(voltageMax)+'-';
-        fn_mumax=('mx'+str(NS_dict['mumax']))*(NS_dict['smoothpot']!=0);
-        fn_peakpos=('pk'+str(NS_dict['peakpos']))*((NS_dict['smoothpot']=='lorentz')+( NS_dict['smoothpot']=='lorentzsigmoid'));
-        fn_sigma=('sg'+str(NS_dict['sigma']))*((NS_dict['smoothpot']=='exp')+(NS_dict['smoothpot']=='sigmoid'));
-        fn_vimp=('v'+str(NS_dict['vimp']))*(NS_dict['vimp']!=0)
-        fn_Gamma=('G'+str(NS_dict['Gamma']));
-        fn_dotLength=('dL'+str(int(NS_dict['dotLength'])))*(NS_dict['QD']!=0);
-        fn_VD=('VD'+str(NS_dict['VD']))*(NS_dict['QD']!=0);
-        
-        fn=fn_mu+fn_Delta+fn_alpha+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_vimp+fn_VD+fn_dotLength+fn_leadpos+fn_range;
-        
-        np.savetxt(fn+'.dat',recvbuf);
-        if NS_dict['TV']==1:
-            np.savetxt(fn+'TV.dat',recvbuf2);
-
-        magneticfieldrange=np.arange(tot)*VzStep;
-        fig=plt.figure();
-        plt.pcolormesh(magneticfieldrange,voltageRange,np.transpose(recvbuf), cmap='rainbow');
-        plt.xlabel('Vz(meV)');
-        plt.ylabel('V_bias(meV)');
-        plt.colorbar();
-        plt.axis((0,tot*VzStep,voltageMin,voltageMax));
-        fig.savefig(fn+'.png');
-        
-        if NS_dict['TV']==1:
-            fig2=plt.figure();
-            plt.pcolormesh(magneticfieldrange,voltageRange,np.transpose(recvbuf2));
-            plt.xlabel('Vz(meV)');
-            plt.ylabel('V_bias(meV)');
-            plt.colorbar();
-            plt.axis((0,tot*VzStep,voltageMin,voltageMax));
-            fig2.savefig(fn+'TV.png');
-        
-    if(NS_dict['bothlead']==1):
-        NS_dict['leadpos']=1;
+    per=int(tot/size);    
+    
+    for irun in range(2):
+        NS_dict['leadpos']=irun;
         sendbuf=np.empty((per,voltageNumber));  #conductance
         if NS_dict['TV']==1:
             sendbuf2=np.empty((per,voltageNumber)); #TV
@@ -172,7 +104,7 @@ def main():
             fn_Gamma=('G'+str(NS_dict['Gamma']));
             fn_dotLength=('dL'+str(int(NS_dict['dotLength'])))*(NS_dict['QD']!=0);
             fn_VD=('VD'+str(NS_dict['VD']))*(NS_dict['QD']!=0);
-        
+            
             fn=fn_mu+fn_Delta+fn_alpha+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_vimp+fn_VD+fn_dotLength+fn_leadpos+fn_range;
             
             np.savetxt(fn+'.dat',recvbuf);
@@ -195,8 +127,78 @@ def main():
                 plt.ylabel('V_bias(meV)');
                 plt.colorbar();
                 plt.axis((0,tot*VzStep,voltageMin,voltageMax));
-                fig2.savefig(fn+'TV.png');        
-    
+                fig2.savefig(fn+'TV.png');
+        
+#    if(NS_dict['bothlead']==1):
+#        NS_dict['leadpos']=1;
+#        sendbuf=np.empty((per,voltageNumber));  #conductance
+#        if NS_dict['TV']==1:
+#            sendbuf2=np.empty((per,voltageNumber)); #TV
+#    
+#        for ii in range(per):
+#            NS_dict['Vz'] = (ii+rank*per)*VzStep;
+#            junction=Maj.NSjunction(NS_dict);   #Change this if junction is voltage dependent, e.g. in Self energy
+#            for index in range(voltageNumber):
+#                voltage=voltageRange[index];
+#                NS_dict['voltage']=voltage;
+#                if NS_dict['TV']==0:
+#                    sendbuf[ii,index]=Maj.conductance(NS_dict,junction);
+#                else:
+#                    sendbuf[ii,index],sendbuf2[ii,index]=Maj.ConductanceAndTV(NS_dict,junction);
+#        if (rank==0):
+#            recvbuf=np.empty((tot,voltageNumber)); 
+#            if NS_dict['TV']==1:
+#                recvbuf2=np.empty((tot,voltageNumber));
+#        else:
+#            recvbuf=None;
+#            if NS_dict['TV']==1:
+#                recvbuf2=None;
+#        comm.Gather(sendbuf,recvbuf,root=0);
+#        if NS_dict['TV']==1:
+#            comm.Gather(sendbuf2,recvbuf2,root=0);
+#    
+#        if (rank==0):
+#            fn_mu='m'+str(NS_dict['mu']);
+#            fn_Delta='D'+str(NS_dict['Delta_0']);
+#            fn_alpha='a'+str(NS_dict['alpha_R']);
+#            fn_wl='L'+str(int(NS_dict['wireLength']));
+#            fn_Deltac=('Dc'+str(NS_dict['Delta_c']))*(NS_dict['multiband']!=0);
+#            fn_epsilon=('ep'+str(NS_dict['epsilon']))*(NS_dict['multiband']!=0);
+#            fn_smoothpot=str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0);
+#            fn_leadpos='L'*(NS_dict['leadpos']==0)+'R'*(NS_dict['leadpos']==1);
+#            fn_range='-'+str(VzStep*tot)+','+str(voltageMax)+'-';
+#            fn_mumax=('mx'+str(NS_dict['mumax']))*(NS_dict['smoothpot']!=0);
+#            fn_peakpos=('pk'+str(NS_dict['peakpos']))*((NS_dict['smoothpot']=='lorentz')+( NS_dict['smoothpot']=='lorentzsigmoid'));
+#            fn_sigma=('sg'+str(NS_dict['sigma']))*((NS_dict['smoothpot']=='exp')+(NS_dict['smoothpot']=='sigmoid'));
+#            fn_vimp=('v'+str(NS_dict['vimp']))*(NS_dict['vimp']!=0)
+#            fn_Gamma=('G'+str(NS_dict['Gamma']));
+#            fn_dotLength=('dL'+str(int(NS_dict['dotLength'])))*(NS_dict['QD']!=0);
+#            fn_VD=('VD'+str(NS_dict['VD']))*(NS_dict['QD']!=0);
+#        
+#            fn=fn_mu+fn_Delta+fn_alpha+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_vimp+fn_VD+fn_dotLength+fn_leadpos+fn_range;
+#            
+#            np.savetxt(fn+'.dat',recvbuf);
+#            if NS_dict['TV']==1:
+#                np.savetxt(fn+'TV.dat',recvbuf2);
+#    
+#            magneticfieldrange=np.arange(tot)*VzStep;
+#            fig=plt.figure();
+#            plt.pcolormesh(magneticfieldrange,voltageRange,np.transpose(recvbuf), cmap='rainbow');
+#            plt.xlabel('Vz(meV)');
+#            plt.ylabel('V_bias(meV)');
+#            plt.colorbar();
+#            plt.axis((0,tot*VzStep,voltageMin,voltageMax));
+#            fig.savefig(fn+'.png');
+#            
+#            if NS_dict['TV']==1:
+#                fig2=plt.figure();
+#                plt.pcolormesh(magneticfieldrange,voltageRange,np.transpose(recvbuf2));
+#                plt.xlabel('Vz(meV)');
+#                plt.ylabel('V_bias(meV)');
+#                plt.colorbar();
+#                plt.axis((0,tot*VzStep,voltageMin,voltageMax));
+#                fig2.savefig(fn+'TV.png');        
+#    
 if __name__=="__main__":
 	main()
 
