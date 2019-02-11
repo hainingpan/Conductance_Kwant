@@ -59,7 +59,7 @@ def main():
     
     per=int(tot/size);    
     
-    for irun in range(2):
+    for irun in range(NS_dict['bothlead']+1):
         NS_dict['leadpos']=irun;
         sendbuf=np.empty((per,voltageNumber));  #conductance
         if NS_dict['TV']==1:
