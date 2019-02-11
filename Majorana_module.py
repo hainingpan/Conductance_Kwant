@@ -49,7 +49,7 @@ def NSjunction(args_dict):
     muset=potential[args_dict['smoothpot']](np.arange(wireLength));     
     muset=muset-vimplist;
 
-#                
+                
 #    if args_dict['selfenergy']==0:
 #        scgapset=
         
