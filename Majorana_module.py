@@ -49,7 +49,10 @@ def NSjunction(args_dict):
     muset=muset-vimplist;
 
     if Vc!=0:
-        Delta=Delta_0*np.sqrt(1-(Vz/Vc)**2);
+        if Vz<Vc:
+            Delta=Delta_0*np.sqrt(1-(Vz/Vc)**2);
+        else:
+            Delta=0;
     else:
         Delta=Delta_0;            
          
