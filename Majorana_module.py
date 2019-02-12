@@ -56,7 +56,7 @@ def NSjunction(args_dict):
     if args_dict['SE']==0:
         scDelta=Delta;
     else:
-        scDelta=-gamma*(voltage*PM.t0s0+Delta*PM.txs0)/np.sqrt(Delta**2-voltage**2-np.sign(voltage)*1e-9j);        
+        scDelta=-gamma*(voltage*PM.t0s0+Delta*PM.txs0)/np.sqrt(Delta**2-voltage**2+np.sign(voltage)*1e-9j);        
         
     #Construct lattice  (multiband->scDelta& muset not verified)
     if args_dict['multiband']==0:
@@ -69,7 +69,7 @@ def NSjunction(args_dict):
     if args_dict['QD'] == 1:
         VD = args_dict['VD'];
         for x in range(dotLength):
-            junction[ lat(x) ] = (2*t - mu + VD*np.exp(-x*x/(dotLength*dotLength)) )*PM.tzs0 + Vz*PM.t0sx - 1j*gamma*PM.t0s0;
+            junction[ lat(x) ] = (2*t - mu + VD*np.exp(-x*x/(dotLength*dotLength)) )*PM.tzs0 + Vz*PM.t0sx - 1j*Gamma*PM.t0s0;
     #Construct hopping
     if args_dict['multiband']==0:
         for x in range(1,wireLength):
