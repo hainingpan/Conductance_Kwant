@@ -54,14 +54,14 @@ def NSjunction(args_dict):
         Delta=Delta_0;            
          
     if args_dict['SE']==0:
-        scDelta=Delta;
+        scDelta=Delta*PM.txs0;
     else:
-        scDelta=-gamma*(voltage*PM.t0s0+Delta*PM.txs0)/np.sqrt(Delta**2-voltage**2+np.sign(voltage)*1e-9j);        
+        scDelta=-gamma*(voltage*PM.t0s0+Delta*PM.txs0)/np.sqrt(Delta**2-voltage**2-np.sign(voltage)*1e-9j);        
         
     #Construct lattice  (multiband->scDelta& muset not verified)
     if args_dict['multiband']==0:
         for x in range(wireLength):
-            junction[lat(x)]=(-muset[x]+2*t)*PM.tzs0+scDelta*PM.txs0+Vz*PM.t0sx-1j*Gamma*PM.t0s0;
+            junction[lat(x)]=(-muset[x]+2*t)*PM.tzs0+scDelta+Vz*PM.t0sx-1j*Gamma*PM.t0s0;
     else:
         for x in range(wireLength):
             junction[lat(x)]=(-muset[x]+2*t)*np.kron(np.array([[1,0],[0,0]]),PM.tzs0)+(epsilon-muset[x]+2*t)*np.kron(np.array([[0,0],[0,1]]),PM.tzs0)+scDelta*np.kron(PM.s0,PM.txs0)+Vz*np.kron(PM.s0,PM.t0sx)-1j*Gamma*np.kron(PM.s0,PM.t0s0)+Delta_c*np.kron(PM.sx,PM.txs0);
