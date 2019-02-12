@@ -107,8 +107,10 @@ def main():
             fn_Gamma=('G'+str(NS_dict['Gamma']));
             fn_dotLength=('dL'+str(int(NS_dict['dotLength'])))*(NS_dict['QD']!=0);
             fn_VD=('VD'+str(NS_dict['VD']))*(NS_dict['QD']!=0);
+            fn_gamma=('g'+str(NS_dict['gamma']))*(NS_dict['SE']==1);
+            fn_Vc=('Vc'+str(NS_dict['Vc']))*(NS_dict['SE']==1)*(NS_dict['Vc']!=0);
             
-            fn=fn_mu+fn_Delta+fn_alpha+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_vimp+fn_VD+fn_dotLength+fn_leadpos+fn_range;
+            fn=fn_mu+fn_Delta+fn_alpha+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_vimp+fn_VD+fn_dotLength+fn_gamma+fn_Vc+fn_leadpos+fn_range;
             
             np.savetxt(fn+'.dat',recvbuf);
             if NS_dict['TV']==1:
