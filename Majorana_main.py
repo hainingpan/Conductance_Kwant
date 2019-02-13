@@ -60,7 +60,8 @@ def main():
     per=int(tot/size);    
     
     for irun in range(int(NS_dict['bothlead'])+1):  #if both leads needed running sequentially
-        NS_dict['leadpos']=irun;
+        if NS_dict['bothlead']==1:
+            NS_dict['leadpos']=irun;
         sendbuf=np.empty((per,voltageNumber));  #conductance
         if NS_dict['TV']==1:
             sendbuf2=np.empty((per,voltageNumber)); #TV
