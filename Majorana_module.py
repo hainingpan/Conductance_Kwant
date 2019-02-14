@@ -61,7 +61,7 @@ def NSjunction(args_dict):
     else:
         scDelta=-gamma*(voltage*PM.t0s0+Delta*PM.txs0)/np.sqrt(Delta**2-voltage**2-np.sign(voltage)*1e-9j);        
         
-    if args_dict['Gamma']!=0:
+    if args_dict['GammaVar']!=0:
         Gamma=(Vz/Gamma)**6/100;
     #Construct lattice  (multiband->scDelta& muset not verified, the tau matrix should be replaced)
     if args_dict['multiband']==0:
