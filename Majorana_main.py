@@ -105,7 +105,7 @@ def main():
             fn_peakpos=('pk'+str(NS_dict['peakpos']))*((NS_dict['smoothpot']=='lorentz')+( NS_dict['smoothpot']=='lorentzsigmoid'));
             fn_sigma=('sg'+str(NS_dict['sigma']))*((NS_dict['smoothpot']=='exp')+(NS_dict['smoothpot']=='sigmoid'));
             fn_vimp=('v'+str(NS_dict['vimp']))*(NS_dict['vimp']!=0)
-            fn_Gamma=('G'+str(NS_dict['Gamma']));
+            fn_Gamma=('G'+str(NS_dict['Gamma']))*(NS_dict['GammaVar']!=0);
             fn_dotLength=('dL'+str(int(NS_dict['dotLength'])))*(NS_dict['QD']!=0);
             fn_VD=('VD'+str(NS_dict['VD']))*(NS_dict['QD']!=0);
             fn_gamma=('g'+str(NS_dict['gamma']))*(NS_dict['SE']==1);
