@@ -74,7 +74,7 @@ def NSjunction(args_dict):
     if args_dict['QD'] == 1:
         VD = args_dict['VD'];
         for x in range(dotLength):
-            junction[ lat(x) ] = (2*t - mu + VD*np.exp(-x*x/(2*dotLength*dotLength)) )*PM.tzs0 + Vz*PM.t0sx - 1j*Gamma*PM.t0s0;
+            junction[ lat(x) ] = (2*t - mu + VD*np.exp(-x*x/(dotLength*dotLength)) )*PM.tzs0 + Vz*PM.t0sx - 1j*Gamma*PM.t0s0;
     #Construct hopping
     if args_dict['multiband']==0:
         for x in range(1,wireLength):
