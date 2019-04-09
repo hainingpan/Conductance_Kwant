@@ -21,7 +21,8 @@ def main():
                'vimp':0,'vimplist':0,
                'gVar':0,'randlist':0,
                'gapVar':0,
-               'Vz':0.0, 'voltage':0.0,'vznum':256,'enum':1001,'vzstep': 0.002,'bothlead':0,};
+               'Vz':0.0, 'voltage':0.0,'vznum':256,'enum':1001,'vzstep': 0.002,'bothlead':0,
+               'Err':0};
     if (rank==0):
         if vars>1:        
             for i in range(1,vars):
@@ -29,16 +30,20 @@ def main():
                     varname=re.search('(.)*(?=\=)',sys.argv[i]).group(0);
                     varval=re.search('(?<=\=)(.)*',sys.argv[i]).group(0);
                     if varname in NS_dict:
-                        if varname in ['smoothpot','vimplist']:
+                        if varname in ['smoothpot','vimplist','randlist']:
                             NS_dict[varname]=varval;
                         else:
                             NS_dict[varname]=float(varval);
                     else:
                         print('Cannot find the parameter',varname);
+                        NS_dict['Err']=1;
+                        NS_dict=comm.bcast(NS_dict,root=0);
                         sys.exit(1);
                 except:
                     print('Cannot parse the input parameters',sys.argv[i]);
-                    sys.exit(1);                    
+                    NS_dict['Err']=1;
+                    NS_dict=comm.bcast(NS_dict,root=0);
+                    sys.exit(1);                   
         if (isinstance(NS_dict['vimplist'],str)):
             print('disorder use filename:'+NS_dict['vimplist']);
             vimpfn=NS_dict['vimplist'];
@@ -47,10 +52,14 @@ def main():
                 try:
                     NS_dict['vimplist']=dat;
                 except:
-                    print('Cannot assign vimplist',dat);
+                    print('Cannot read vimplist',dat);
+                    NS_dict['Err']=1;
+                    NS_dict=comm.bcast(NS_dict,root=0);
                     sys.exit(1);
             except:
                 print('Cannot find disorder file:',vimpfn);
+                NS_dict['Err']=1;
+                NS_dict=comm.bcast(NS_dict,root=0);
                 sys.exit(1);
         else:                    
             if (NS_dict['vimp']!=0):
@@ -63,10 +72,14 @@ def main():
                 try:
                     NS_dict['randlist']=dat;
                 except:
-                    print('Cannot assign randlist',dat);
+                    print('Cannot read randlist',dat);
+                    NS_dict['Err']=1;
+                    NS_dict=comm.bcast(NS_dict,root=0);
                     sys.exit(1);
             except:
                 print('Cannot find randlist file:',randfn);
+                NS_dict['Err']=1;
+                NS_dict=comm.bcast(NS_dict,root=0);                
                 sys.exit(1);
         else:
             if (NS_dict['gVar']!=0):
@@ -86,6 +99,10 @@ def main():
 
         
     NS_dict=comm.bcast(NS_dict,root=0);
+    if NS_dict['Err']!=0:   #for the slave to exit
+#        print('I am rank=',rank,'My flag is',NS_dict['Err'],'I exit because',NS_dict['Err']!=0);
+        sys.exit(1);
+
     tot=int(NS_dict['vznum']);   
     np.warnings.filterwarnings('ignore');
     voltageMin = -.3; voltageMax = .3; voltageNumber = int(NS_dict['enum']);VzStep = NS_dict['vzstep'];  
