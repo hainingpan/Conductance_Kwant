@@ -75,11 +75,11 @@ def main():
                     randlist=np.random.normal(1,NS_dict['gVar'],int(NS_dict['wireLength']));  
                 NS_dict['randlist']=randlist;
                 
-#            if (NS_dict['gapVar']!=0):
-#                randlist=np.random.normal(1,NS_dict['gVar'],NS_dict['wireLength']);
-#                while not (np.prod(randlist>0)):
-#                    randlist=np.random.normal(1,NS_dict['gVar'],NS_dict['wireLength']);
-#                NS_dict['randlist']=randlist*NS_dict['Delta_0'];       
+            if (NS_dict['gapVar']!=0):
+                randlist=np.random.normal(NS_dict['Delta_0'],NS_dict['gapVar'],int(NS_dict['wireLength']));
+                while not (np.prod(randlist>0)):
+                    randlist=np.random.normal(NS_dict['Delta_0'],NS_dict['gapVar'],int(NS_dict['wireLength']));
+                NS_dict['randlist']=randlist;     
                                
         
         print(NS_dict);   
