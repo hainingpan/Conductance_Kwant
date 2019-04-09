@@ -8,7 +8,6 @@
 
 . ~/.profile
 
-#cd /lustre/hnpan/multiband_kwant
 cd $PWD
 
 module load python/3.5.1

@@ -29,6 +29,7 @@ def NSjunction(args_dict):
     dotLength = int(args_dict['dotLength']);    #length of quantum dot
     vimplist=args_dict['vimplist'];     #the spatial profile of disorder(V_impurity)
     Vc = args_dict['Vc'];   #The point where SC gap collapses. 0 for constant Delta (Vzc=infitity). The gap collapsing curve is delta_0*sqrt(1-(Vz/Vzc)^2) 
+    randlist=args_dict['randlist']; #the random list for either random g and random SC gap. But does not support both. randlist is \tilde{g} for gVar!=0, which is Gaussian distributio N(1,gVar), randlist is spatial profile for SC gap for gapVar!=, which is Gaussian distribution N(delta_0,gapVar*delta_0)
     
     junction=kwant.Builder();
     lat=kwant.lattice.chain(a);  
@@ -63,10 +64,21 @@ def NSjunction(args_dict):
         
     if args_dict['GammaVar']!=0:
         Gamma=(Vz/Gamma)**6/100;
-    #Construct lattice  (multiband->scDelta& muset not verified, the tau matrix should be replaced)
+        
+    if args_dict['gVar']==0:
+        Vzlist=Vz*np.ones(wireLength);
+    else:
+        Vzlist=randlist;
+        
+#    if args_dict['gapVar']==0:
+#        scDelta=scDelta*np.ones(wireLength);
+#    else:
+#        scDelta=randlist;
+        
+    #Construct lattice  (multiband->scDelta& muset not verified, the tau matrix should be replaced, gVar, gapVar to be changed )
     if args_dict['multiband']==0:
         for x in range(wireLength):
-            junction[lat(x)]=(-muset[x]+2*t)*PM.tzs0+scDelta+Vz*PM.t0sx-1j*Gamma*PM.t0s0;
+            junction[lat(x)]=(-muset[x]+2*t)*PM.tzs0+scDelta+Vzlist[x]*PM.t0sx-1j*Gamma*PM.t0s0;
     else:
         for x in range(wireLength):
             junction[lat(x)]=(-muset[x]+2*t)*np.kron(np.array([[1,0],[0,0]]),PM.tzs0)+(epsilon-muset[x]+2*t)*np.kron(np.array([[0,0],[0,1]]),PM.tzs0)+scDelta*np.kron(PM.s0,PM.txs0)+Vz*np.kron(PM.s0,PM.t0sx)-1j*Gamma*np.kron(PM.s0,PM.t0s0)+Delta_c*np.kron(PM.sx,PM.txs0);
