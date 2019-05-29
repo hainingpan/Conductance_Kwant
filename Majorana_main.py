@@ -102,7 +102,11 @@ def main():
                     randlist=np.random.normal(NS_dict['alpha_R'],NS_dict['alpha_RVar'],int(NS_dict['wireLength']));
                 NS_dict['randlist']=randlist; 				
 			
-  
+            if (NS_dict['massVar']!=0):
+                randlist=np.random.normal(1,NS_dict['massVar'],int(NS_dict['wireLength']));
+                while not (np.prod(randlist>0)):
+                    randlist=np.random.normal(1,NS_dict['massVar'],int(NS_dict['wireLength']));
+                NS_dict['randlist']=randlist;   
 				
 			
                                
@@ -179,8 +183,9 @@ def main():
             fn_gVar=('gVar'+str(NS_dict['gVar']))*(NS_dict['gVar']!=0);
             fn_DeltaVar=('DVar'+str(NS_dict['DeltaVar']))*(NS_dict['DeltaVar']!=0);
             fn_alpha_RVar=('aVar'+str(NS_dict['alpha_RVar']))*(NS_dict['alpha_RVar']!=0);
+            fn_tVar=('massVar'+str(NS_dict['massVar']))*(NS_dict['massVar']!=0);
             
-            fn=fn_mu+fn_Delta+fn_DeltaVar+fn_alpha+fn_alpha_RVar+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_muVar+fn_VD+fn_dotLength+fn_gamma+fn_Vc+fn_Gamma+fn_gVar+fn_leadpos+fn_range;
+            fn=fn_mu+fn_Delta+fn_DeltaVar+fn_alpha+fn_alpha_RVar+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_muVar+fn_VD+fn_dotLength+fn_gamma+fn_Vc+fn_Gamma+fn_gVar+fn_tVar+fn_leadpos+fn_range;
             
             np.savetxt(fn+'.dat',recvbuf);
             if NS_dict['TV']==1:

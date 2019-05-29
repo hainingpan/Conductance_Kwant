@@ -29,8 +29,12 @@ def NSjunction(args_dict):
     dotLength = int(args_dict['dotLength']);    #length of quantum dot
     muVarlist=args_dict['muVarlist'];     #the spatial profile of disorder(V_impurity)
     Vc = args_dict['Vc'];   #The point where SC gap collapses. 0 for constant Delta (Vzc=infitity). The gap collapsing curve is delta_0*sqrt(1-(Vz/Vzc)^2) 
-    randlist=args_dict['randlist']; #the positive random list for either random g and random SC gap. But does not support both. randlist is \tilde{g} for gVar!=0, which is Gaussian distributio N(1,gVar), randlist is spatial profile for SC gap for DeltaVar!=0, which is Gaussian distribution N(delta_0,DeltaVar*delta_0)
-    
+    randlist=args_dict['randlist']; #the positive random list for only one in random {g,SC gap,alpha_R,effective mass}. But does not support both. 
+	#N(1,gVar) for g;
+	#N(delta_0,DeltaVar) for SC gap
+	#N(alpha_R,alpha_RVar) for alpha_R
+	#N(1,massVar) for effective mass
+ 	    
     junction=kwant.Builder();
     lat=kwant.lattice.chain(a);  
     #smooth confinement
@@ -78,38 +82,42 @@ def NSjunction(args_dict):
     if args_dict['alpha_RVar']==0:
 	    alphalist=alpha*np.ones(wireLength);
     else:
-	    alphalist=randlist;        
+	    alphalist=randlist/(2.*a);        
 
+    if args_dict['massVar']==0:
+	    tlist=t*np.ones(wireLength);
+    else:
+	    tlist=t/randlist;   
         
     #Construct lattice  (multiband->scDelta& muset not verified, the tau matrix should be replaced, gVar, DeltaVar to be changed )
     if args_dict['multiband']==0:
         for x in range(wireLength):
-            junction[lat(x)]=(-muset[x]+2*t)*PM.tzs0+scDelta[x]+Vzlist[x]*PM.t0sx-1j*Gamma*PM.t0s0;
+            junction[lat(x)]=(-muset[x]+2*tlist[x])*PM.tzs0+scDelta[x]+Vzlist[x]*PM.t0sx-1j*Gamma*PM.t0s0;
     else:
         for x in range(wireLength):
-            junction[lat(x)]=(-muset[x]+2*t)*np.kron(np.array([[1,0],[0,0]]),PM.tzs0)+(epsilon-muset[x]+2*t)*np.kron(np.array([[0,0],[0,1]]),PM.tzs0)+scDelta*np.kron(PM.s0,PM.txs0)+Vz*np.kron(PM.s0,PM.t0sx)-1j*Gamma*np.kron(PM.s0,PM.t0s0)+Delta_c*np.kron(PM.sx,PM.txs0);
+            junction[lat(x)]=(-muset[x]+2*tlist[x])*np.kron(np.array([[1,0],[0,0]]),PM.tzs0)+(epsilon-muset[x]+2*tlist[x])*np.kron(np.array([[0,0],[0,1]]),PM.tzs0)+scDelta*np.kron(PM.s0,PM.txs0)+Vz*np.kron(PM.s0,PM.t0sx)-1j*Gamma*np.kron(PM.s0,PM.t0s0)+Delta_c*np.kron(PM.sx,PM.txs0);
    
     if args_dict['QD'] == 1:
         VD = args_dict['VD'];
         for x in range(dotLength):
-            junction[ lat(x) ] = (2*t - mu + VD*np.exp(-x*x/(dotLength*dotLength)) )*PM.tzs0 + Vz*PM.t0sx - 1j*Gamma*PM.t0s0;
+            junction[ lat(x) ] = (2*tlist[x] - mu + VD*np.exp(-x*x/(dotLength*dotLength)) )*PM.tzs0 + Vz*PM.t0sx - 1j*Gamma*PM.t0s0;
     #Construct hopping
     if args_dict['multiband']==0:
         for x in range(1,wireLength):
-            junction[lat(x-1),lat(x)]=-t*PM.tzs0-1j*alphalist[x]*PM.tzsy;
+            junction[lat(x-1),lat(x)]=-tlist[x]*PM.tzs0-1j*alphalist[x]*PM.tzsy;
     else:
         for x in range(1,wireLength):
-            junction[lat(x-1),lat(x)]=-t*np.kron(PM.s0,PM.tzs0)-1j*alphalist[x]*np.kron(PM.s0,PM.tzsy);
+            junction[lat(x-1),lat(x)]=-tlist[x]*np.kron(PM.s0,PM.tzs0)-1j*alphalist[x]*np.kron(PM.s0,PM.tzsy);
     #Construct barrier
     
     if args_dict['multiband']==0:
         for x in range(Nbarrier):
             barrierindex=int(-0.5+((leadpos==0)-(leadpos==1))*(x+1))%wireLength;
-            junction[ lat(barrierindex) ] = (2*t - mu + Ebarrier)*PM.tzs0 + Vz*PM.t0sx;
+            junction[ lat(barrierindex) ] = (2*tlist[x] - mu + Ebarrier)*PM.tzs0 + Vz*PM.t0sx;
     else:
         for x in range(Nbarrier):
             barrierindex=int(-0.5+((leadpos==0)-(leadpos==1))*(x+1))%wireLength;
-            junction[ lat(barrierindex) ] = (2*t - mu + Ebarrier)*np.kron(PM.s0,PM.tzs0) + Vz*np.kron(PM.s0,PM.t0sx);
+            junction[ lat(barrierindex) ] = (2*tlist[x] - mu + Ebarrier)*np.kron(PM.s0,PM.tzs0) + Vz*np.kron(PM.s0,PM.t0sx);
     #Consruct lead
     symLeft=kwant.TranslationalSymmetry([-a]);
     symRight=kwant.TranslationalSymmetry([a]);
