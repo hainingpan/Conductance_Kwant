@@ -18,9 +18,11 @@ def main():
                'QD':0, 'VD':0.4, 'dotLength':20, 
                'SE':0, 'gamma':0.2, 'Vc':0,               
                'smoothpot':0, 'multiband':0,'leadpos':0,'peakpos':0,'sigma':1,
-               'vimp':0,'vimplist':0,
+               'muVar':0,'muVarlist':0,
                'gVar':0,'randlist':0,
-               'gapVar':0,
+               'DeltaVar':0,
+			   'alpha_RVar':0,
+			   'massVar':0,
                'Vz':0.0, 'voltage':0.0,'vznum':256,'enum':1001,'vzstep': 0.002,'bothlead':0,
                'Err':0};
     if (rank==0):
@@ -30,7 +32,7 @@ def main():
                     varname=re.search('(.)*(?=\=)',sys.argv[i]).group(0);
                     varval=re.search('(?<=\=)(.)*',sys.argv[i]).group(0);
                     if varname in NS_dict:
-                        if varname in ['smoothpot','vimplist','randlist']:
+                        if varname in ['smoothpot','muVarlist','randlist']:
                             NS_dict[varname]=varval;
                         else:
                             NS_dict[varname]=float(varval);
@@ -44,26 +46,26 @@ def main():
                     NS_dict['Err']=1;
                     NS_dict=comm.bcast(NS_dict,root=0);
                     sys.exit(1);                   
-        if (isinstance(NS_dict['vimplist'],str)):
-            print('disorder use filename:'+NS_dict['vimplist']);
-            vimpfn=NS_dict['vimplist'];
+        if (isinstance(NS_dict['muVarlist'],str)):
+            print('disorder use filename:'+NS_dict['muVarlist']);
+            muVarfn=NS_dict['muVarlist'];
             try:
-                dat=np.loadtxt(vimpfn);
+                dat=np.loadtxt(muVarfn);
                 try:
-                    NS_dict['vimplist']=dat;
+                    NS_dict['muVarlist']=dat;
                 except:
-                    print('Cannot read vimplist',dat);
+                    print('Cannot read muVarlist',dat);
                     NS_dict['Err']=1;
                     NS_dict=comm.bcast(NS_dict,root=0);
                     sys.exit(1);
             except:
-                print('Cannot find disorder file:',vimpfn);
+                print('Cannot find disorder file:',muVarfn);
                 NS_dict['Err']=1;
                 NS_dict=comm.bcast(NS_dict,root=0);
                 sys.exit(1);
         else:                    
-            if (NS_dict['vimp']!=0):
-                NS_dict['vimplist']=np.random.normal(0,NS_dict['vimp'],int(NS_dict['wireLength']));
+            if (NS_dict['muVar']!=0):
+                NS_dict['muVarlist']=np.random.normal(0,NS_dict['muVar'],int(NS_dict['wireLength']));
         if (isinstance(NS_dict['randlist'],str)):
             print('randlist use filename:'+NS_dict['randlist']);
             randfn=NS_dict['randlist'];
@@ -88,11 +90,21 @@ def main():
                     randlist=np.random.normal(1,NS_dict['gVar'],int(NS_dict['wireLength']));  
                 NS_dict['randlist']=randlist;
                 
-            if (NS_dict['gapVar']!=0):
-                randlist=np.random.normal(NS_dict['Delta_0'],NS_dict['gapVar'],int(NS_dict['wireLength']));
+            if (NS_dict['DeltaVar']!=0):
+                randlist=np.random.normal(NS_dict['Delta_0'],NS_dict['DeltaVar'],int(NS_dict['wireLength']));
                 while not (np.prod(randlist>0)):
-                    randlist=np.random.normal(NS_dict['Delta_0'],NS_dict['gapVar'],int(NS_dict['wireLength']));
+                    randlist=np.random.normal(NS_dict['Delta_0'],NS_dict['DeltaVar'],int(NS_dict['wireLength']));
                 NS_dict['randlist']=randlist;     
+
+            if (NS_dict['alpha_RVar']!=0):
+                randlist=np.random.normal(NS_dict['alpha_R'],NS_dict['alpha_RVar'],int(NS_dict['wireLength']));
+                while not (np.prod(randlist>0)):
+                    randlist=np.random.normal(NS_dict['alpha_R'],NS_dict['alpha_RVar'],int(NS_dict['wireLength']));
+                NS_dict['randlist']=randlist; 				
+			
+  
+				
+			
                                
         
         print(NS_dict);   
@@ -112,7 +124,7 @@ def main():
     
     per=int(tot/size);    
     
-    for irun in range(int(NS_dict['bothlead'])+1):  #if both leads needed running sequentially
+    for irun in range(int(NS_dict['bothlead'])+1):  #if both leads needed, running sequentially
         if NS_dict['bothlead']==1:
             NS_dict['leadpos']=irun;
         sendbuf=np.empty((per,voltageNumber));  #conductance
@@ -158,16 +170,17 @@ def main():
             fn_mumax=('mx'+str(NS_dict['mumax']))*(NS_dict['smoothpot']!=0);
             fn_peakpos=('pk'+str(NS_dict['peakpos']))*((NS_dict['smoothpot']=='lorentz')+( NS_dict['smoothpot']=='lorentzsigmoid'));
             fn_sigma=('sg'+str(NS_dict['sigma']))*((NS_dict['smoothpot']=='exp')+(NS_dict['smoothpot']=='sigmoid'));
-            fn_vimp=('v'+str(NS_dict['vimp']))*(NS_dict['vimp']!=0)
+            fn_muVar=('mVar'+str(NS_dict['muVar']))*(NS_dict['muVar']!=0)
             fn_Gamma=('G'+str(NS_dict['Gamma']))*(NS_dict['GammaVar']!=0);
             fn_dotLength=('dL'+str(int(NS_dict['dotLength'])))*(NS_dict['QD']!=0);
             fn_VD=('VD'+str(NS_dict['VD']))*(NS_dict['QD']!=0);
             fn_gamma=('g'+str(NS_dict['gamma']))*(NS_dict['SE']==1);
             fn_Vc=('Vc'+str(NS_dict['Vc']))*(NS_dict['SE']==1)*(NS_dict['Vc']!=0);
             fn_gVar=('gVar'+str(NS_dict['gVar']))*(NS_dict['gVar']!=0);
-            fn_gapVar=('gapVar'+str(NS_dict['gapVar']))*(NS_dict['gapVar']!=0);
+            fn_DeltaVar=('DVar'+str(NS_dict['DeltaVar']))*(NS_dict['DeltaVar']!=0);
+            fn_alpha_RVar=('aVar'+str(NS_dict['alpha_RVar']))*(NS_dict['alpha_RVar']!=0);
             
-            fn=fn_mu+fn_Delta+fn_alpha+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_vimp+fn_VD+fn_dotLength+fn_gamma+fn_Vc+fn_Gamma+fn_gVar+fn_gapVar+fn_leadpos+fn_range;
+            fn=fn_mu+fn_Delta+fn_DeltaVar+fn_alpha+fn_alpha_RVar+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_muVar+fn_VD+fn_dotLength+fn_gamma+fn_Vc+fn_Gamma+fn_gVar+fn_leadpos+fn_range;
             
             np.savetxt(fn+'.dat',recvbuf);
             if NS_dict['TV']==1:

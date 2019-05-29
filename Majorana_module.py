@@ -27,9 +27,9 @@ def NSjunction(args_dict):
     peakpos=args_dict['peakpos'];   #position of the peak
     sigma=args_dict['sigma'];   #sigma(linewidth) in smooth potential or quatnum dot
     dotLength = int(args_dict['dotLength']);    #length of quantum dot
-    vimplist=args_dict['vimplist'];     #the spatial profile of disorder(V_impurity)
+    muVarlist=args_dict['muVarlist'];     #the spatial profile of disorder(V_impurity)
     Vc = args_dict['Vc'];   #The point where SC gap collapses. 0 for constant Delta (Vzc=infitity). The gap collapsing curve is delta_0*sqrt(1-(Vz/Vzc)^2) 
-    randlist=args_dict['randlist']; #the random list for either random g and random SC gap. But does not support both. randlist is \tilde{g} for gVar!=0, which is Gaussian distributio N(1,gVar), randlist is spatial profile for SC gap for gapVar!=, which is Gaussian distribution N(delta_0,gapVar*delta_0)
+    randlist=args_dict['randlist']; #the positive random list for either random g and random SC gap. But does not support both. randlist is \tilde{g} for gVar!=0, which is Gaussian distributio N(1,gVar), randlist is spatial profile for SC gap for DeltaVar!=0, which is Gaussian distribution N(delta_0,DeltaVar*delta_0)
     
     junction=kwant.Builder();
     lat=kwant.lattice.chain(a);  
@@ -47,9 +47,9 @@ def NSjunction(args_dict):
         'sigmoid': lambda x: mu+mumax*1/(np.exp((.5*wireLength-x)*a/sigma)+1)
     }
     muset=potential[args_dict['smoothpot']](np.arange(wireLength));     
-    muset=muset-vimplist;
+    muset=muset-muVarlist;
     
-    if args_dict['gapVar']==0:
+    if args_dict['DeltaVar']==0:
         Delta_0=Delta_0*np.ones(wireLength);
     else:
         Delta_0=randlist;
@@ -74,10 +74,14 @@ def NSjunction(args_dict):
         Vzlist=Vz*np.ones(wireLength);
     else:
         Vzlist=randlist;
-        
+		
+    if args_dict['alpha_RVar']==0:
+	    alphalist=alpha*np.ones(wireLength);
+    else:
+	    alphalist=randlist;        
 
         
-    #Construct lattice  (multiband->scDelta& muset not verified, the tau matrix should be replaced, gVar, gapVar to be changed )
+    #Construct lattice  (multiband->scDelta& muset not verified, the tau matrix should be replaced, gVar, DeltaVar to be changed )
     if args_dict['multiband']==0:
         for x in range(wireLength):
             junction[lat(x)]=(-muset[x]+2*t)*PM.tzs0+scDelta[x]+Vzlist[x]*PM.t0sx-1j*Gamma*PM.t0s0;
@@ -92,10 +96,10 @@ def NSjunction(args_dict):
     #Construct hopping
     if args_dict['multiband']==0:
         for x in range(1,wireLength):
-            junction[lat(x-1),lat(x)]=-t*PM.tzs0-1j*alpha*PM.tzsy;
+            junction[lat(x-1),lat(x)]=-t*PM.tzs0-1j*alphalist[x]*PM.tzsy;
     else:
         for x in range(1,wireLength):
-            junction[lat(x-1),lat(x)]=-t*np.kron(PM.s0,PM.tzs0)-1j*alpha*np.kron(PM.s0,PM.tzsy);
+            junction[lat(x-1),lat(x)]=-t*np.kron(PM.s0,PM.tzs0)-1j*alphalist[x]*np.kron(PM.s0,PM.tzsy);
     #Construct barrier
     
     if args_dict['multiband']==0:
