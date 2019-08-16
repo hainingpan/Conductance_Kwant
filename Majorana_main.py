@@ -24,6 +24,7 @@ def main():
 			   'alpha_RVar':0,
 			   'massVar':0,
                'Vz':0.0, 'voltage':0.0,'vznum':256,'enum':1001,'vzstep': 0.002,'bothlead':0,
+               'mustep':0.002,'munum':0,
                'Err':0};
     if (rank==0):
         if vars>1:        
@@ -118,10 +119,15 @@ def main():
     if NS_dict['Err']!=0:   #for the slave to exit
 #        print('I am rank=',rank,'My flag is',NS_dict['Err'],'I exit because',NS_dict['Err']!=0);
         sys.exit(1);
-
-    tot=int(NS_dict['vznum']);   
+    if NS_dict['munum']==0:
+        tot=int(NS_dict['vznum']);
+        vzstep = NS_dict['vzstep'];  
+    else:
+        mu0=NS_dict['mu'];
+        tot=int(NS_dict['munum']); 
+        mustep=NS_dict['mustep'];      
     np.warnings.filterwarnings('ignore');
-    voltageMin = -.3; voltageMax = .3; voltageNumber = int(NS_dict['enum']);VzStep = NS_dict['vzstep'];  
+    voltageMin = -.3; voltageMax = .3; voltageNumber = int(NS_dict['enum']);
     voltageRange = np.linspace(voltageMin, voltageMax, voltageNumber);
     
     randlist=NS_dict['randlist'];
@@ -134,8 +140,13 @@ def main():
         sendbuf=np.empty((per,voltageNumber));  #conductance
         if NS_dict['TV']==1:
             sendbuf2=np.empty((per,voltageNumber)); #TV
+        
         for ii in range(per):
-            NS_dict['Vz'] = (ii+rank*per)*VzStep;
+            if NS_dict['munum']==0:
+                NS_dict['Vz'] = (ii+rank*per)*vzstep;
+            else:
+                NS_dict['mu'] = mu0+(ii+rank*per)*mustep;
+                
             if NS_dict['gVar']!=0:
                 NS_dict['randlist']=randlist*NS_dict['Vz'];
             if NS_dict['SE']==0:
@@ -170,7 +181,10 @@ def main():
             fn_epsilon=('ep'+str(NS_dict['epsilon']))*(NS_dict['multiband']!=0);
             fn_smoothpot=str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0);
             fn_leadpos='L'*(NS_dict['leadpos']==0)+'R'*(NS_dict['leadpos']==1);
-            fn_range='-'+str(VzStep*tot)+','+str(voltageMax)+'-';
+            if NS_dict['munum']==0:
+                fn_range=('-'+str(vzstep*tot)+','+str(voltageMax)+'-')*(NS_dict['munum']==0);
+            else:
+                fn_range=('-'+str(mu0)+','+str(mu0+mustep*tot)+','+str(voltageMax)+'-')*(NS_dict['munum']!=0);
             fn_mumax=('mx'+str(NS_dict['mumax']))*(NS_dict['smoothpot']!=0);
             fn_peakpos=('pk'+str(NS_dict['peakpos']))*((NS_dict['smoothpot']=='lorentz')+( NS_dict['smoothpot']=='lorentzsigmoid'));
             fn_sigma=('sg'+str(NS_dict['sigma']))*((NS_dict['smoothpot']=='exp')+(NS_dict['smoothpot']=='sigmoid'));
@@ -190,23 +204,25 @@ def main():
             np.savetxt(fn+'.dat',recvbuf);
             if NS_dict['TV']==1:
                 np.savetxt(fn+'TV.dat',recvbuf2);
-    
-            magneticfieldrange=np.arange(tot)*VzStep;
+            if NS_dict['munum']==0:
+                xrange=np.arange(tot)*vzstep;
+            else:
+                xrange=mu0+np.arange(tot)*mustep;
             fig=plt.figure();
-            plt.pcolormesh(magneticfieldrange,voltageRange,np.transpose(recvbuf), cmap='rainbow');
+            plt.pcolormesh(xrange,voltageRange,np.transpose(recvbuf), cmap='rainbow');
             plt.xlabel('Vz(meV)');
             plt.ylabel('V_bias(meV)');
             plt.colorbar();
-            plt.axis((0,tot*VzStep,voltageMin,voltageMax));
+            plt.axis((xrange[0],xrange[-1],voltageMin,voltageMax));
             fig.savefig(fn+'.png');
             
             if NS_dict['TV']==1:
                 fig2=plt.figure();
-                plt.pcolormesh(magneticfieldrange,voltageRange,np.transpose(recvbuf2));
+                plt.pcolormesh(xrange,voltageRange,np.transpose(recvbuf2));
                 plt.xlabel('Vz(meV)');
                 plt.ylabel('V_bias(meV)');
                 plt.colorbar();
-                plt.axis((0,tot*VzStep,voltageMin,voltageMax));
+                plt.axis((0,tot*vzstep,voltageMin,voltageMax));
                 fig2.savefig(fn+'TV.png');
         
    
