@@ -210,7 +210,10 @@ def main():
                 xrange=mu0+np.arange(tot)*mustep;
             fig=plt.figure();
             plt.pcolormesh(xrange,voltageRange,np.transpose(recvbuf), cmap='rainbow');
-            plt.xlabel('Vz(meV)');
+            if NS_dict['munum']==0:            
+                plt.xlabel('Vz(meV)');
+            else:
+                plt.xlabel('mu(meV)');
             plt.ylabel('V_bias(meV)');
             plt.colorbar();
             plt.axis((xrange[0],xrange[-1],voltageMin,voltageMax));
