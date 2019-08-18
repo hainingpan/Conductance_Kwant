@@ -173,7 +173,7 @@ def main():
             comm.Gather(sendbuf2,recvbuf2,root=0);
     
         if (rank==0):
-            fn_mu='m'+str(NS_dict['mu']);
+            fn_mu=('m'+str(NS_dict['mu']))*(NS_dict['munum']==0);
             fn_Delta='D'+str(NS_dict['Delta_0']);
             fn_alpha='a'+str(NS_dict['alpha_R']);
             fn_wl='L'+str(int(NS_dict['wireLength']));
