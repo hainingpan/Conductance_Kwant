@@ -107,11 +107,7 @@ def main():
                 randlist=np.random.normal(1,NS_dict['massVar'],int(NS_dict['wireLength']));
                 while not (np.prod(randlist>0)):
                     randlist=np.random.normal(1,NS_dict['massVar'],int(NS_dict['wireLength']));
-                NS_dict['randlist']=randlist;   
-				
-			
-                               
-        
+                NS_dict['randlist']=randlist;
         print(NS_dict);   
 
         
@@ -199,7 +195,7 @@ def main():
             fn_alpha_RVar=('aVar'+str(NS_dict['alpha_RVar']))*(NS_dict['alpha_RVar']!=0);
             fn_tVar=('massVar'+str(NS_dict['massVar']))*(NS_dict['massVar']!=0);
             
-            fn=fn_mu+fn_Delta+fn_DeltaVar+fn_alpha+fn_alpha_RVar+fn_Deltac+fn_epsilon+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_muVar+fn_VD+fn_dotLength+fn_gamma+fn_Vc+fn_Gamma+fn_gVar+fn_tVar+fn_leadpos+fn_range;
+            fn=fn_mu+fn_Delta+fn_DeltaVar+fn_alpha+fn_alpha_RVar+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_muVar+fn_VD+fn_dotLength+fn_gamma+fn_Vc+fn_Gamma+fn_gVar+fn_tVar+fn_leadpos+fn_range;
             
             np.savetxt(fn+'.dat',recvbuf);
             if NS_dict['TV']==1:
