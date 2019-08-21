@@ -17,7 +17,7 @@ def main():
                'mu_lead':25.0, 'Nbarrier':2,'Ebarrier':10.0, 'Gamma':0.0001,'GammaVar':0, 
                'QD':0, 'VD':0.4, 'dotLength':20, 
                'SE':0, 'gamma':0.2, 'Vc':0,               
-               'smoothpot':0, 'multiband':0,'leadpos':0,'peakpos':0,'sigma':1,
+               'smoothpot':0, 'leadpos':0,'peakpos':0,'sigma':1,
                'muVar':0,'muVarlist':0,
                'gVar':0,'randlist':0,
                'DeltaVar':0,
@@ -177,8 +177,8 @@ def main():
             fn_Delta='D'+str(NS_dict['Delta_0']);
             fn_alpha='a'+str(NS_dict['alpha_R']);
             fn_wl='L'+str(int(NS_dict['wireLength']));
-            fn_Deltac=('Dc'+str(NS_dict['Delta_c']))*(NS_dict['multiband']!=0);
-            fn_epsilon=('ep'+str(NS_dict['epsilon']))*(NS_dict['multiband']!=0);
+#            fn_Deltac=('Dc'+str(NS_dict['Delta_c']))*(NS_dict['multiband']!=0);
+#            fn_epsilon=('ep'+str(NS_dict['epsilon']))*(NS_dict['multiband']!=0);
             fn_smoothpot=str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0);
             fn_leadpos='L'*(NS_dict['leadpos']==0)+'R'*(NS_dict['leadpos']==1);
             if NS_dict['munum']==0:

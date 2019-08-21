@@ -1,10 +1,16 @@
 import numpy as np
+import tinyarray
 
 
-s0 = np.array([[1.0, 0.0], [0.0, 1.0]]);
-sx = np.array([[0.0, 1.0], [1.0, 0.0]]);
-sy = np.array([[0.0, -1j], [1j, 0.0]]);
-sz = np.array([[1.0, 0.0], [0.0, -1.0]]);
+s0 = tinyarray.array([[1, 0], [0, 1]]);
+sx = tinyarray.array([[0, 1], [1, 0]]);
+sy = tinyarray.array([[0, -1j], [1j, 0]]);
+sz = tinyarray.array([[1, 0], [0, -1]]);
+
+t0 = tinyarray.array([[1, 0], [0, 1]]);
+tx = tinyarray.array([[0, 1], [1, 0]]);
+ty = tinyarray.array([[0, -1j], [1j, 0]]);
+tz = tinyarray.array([[1, 0], [0, -1]]);
 
 
 t0s0 = np.kron(s0,s0);

@@ -34,7 +34,7 @@ def NSjunction(args_dict):
 	#N(delta_0,DeltaVar) for SC gap
 	#N(alpha_R,alpha_RVar) for alpha_R
 	#N(1,massVar) for effective mass
-    lat=kwant.lattice.chain(a,norbs=2);  
+    lat=kwant.lattice.chain(a,norbs=4);  
     junction=kwant.Builder();
      
     #smooth confinement
@@ -90,48 +90,33 @@ def NSjunction(args_dict):
 	    tlist=t/randlist;   
         
     #Construct lattice  (multiband->scDelta& muset not verified, the tau matrix should be replaced, gVar, DeltaVar to be changed )
-    if args_dict['multiband']==0:
-        for x in range(wireLength):
+    for x in range(wireLength):
             junction[lat(x)]=(-muset[x]+2*tlist[x])*PM.tzs0+scDelta[x]+Vzlist[x]*PM.t0sx-1j*Gamma*PM.t0s0;
-    else:
-        for x in range(wireLength):
-            junction[lat(x)]=(-muset[x]+2*tlist[x])*np.kron(np.array([[1,0],[0,0]]),PM.tzs0)+(epsilon-muset[x]+2*tlist[x])*np.kron(np.array([[0,0],[0,1]]),PM.tzs0)+scDelta*np.kron(PM.s0,PM.txs0)+Vz*np.kron(PM.s0,PM.t0sx)-1j*Gamma*np.kron(PM.s0,PM.t0s0)+Delta_c*np.kron(PM.sx,PM.txs0);
    
     if args_dict['QD'] == 1:
         VD = args_dict['VD'];
         for x in range(dotLength):
             junction[ lat(x) ] = (2*tlist[x] - mu + VD*np.exp(-x*x/(dotLength*dotLength)) )*PM.tzs0 + Vz*PM.t0sx - 1j*Gamma*PM.t0s0;
     #Construct hopping
-    if args_dict['multiband']==0:
-        for x in range(1,wireLength):
+    for x in range(1,wireLength):
             junction[lat(x-1),lat(x)]=-tlist[x]*PM.tzs0-1j*alphalist[x]*PM.tzsy;
-    else:
-        for x in range(1,wireLength):
-            junction[lat(x-1),lat(x)]=-tlist[x]*np.kron(PM.s0,PM.tzs0)-1j*alphalist[x]*np.kron(PM.s0,PM.tzsy);
+   
     #Construct barrier
-    
-    if args_dict['multiband']==0:
-        for x in range(Nbarrier):
+    for x in range(Nbarrier):
             barrierindex=int(-0.5+((leadpos==0)-(leadpos==1))*(x+1))%wireLength;
             junction[ lat(barrierindex) ] = (2*tlist[x] - mu + Ebarrier)*PM.tzs0 + Vz*PM.t0sx;
-    else:
-        for x in range(Nbarrier):
-            barrierindex=int(-0.5+((leadpos==0)-(leadpos==1))*(x+1))%wireLength;
-            junction[ lat(barrierindex) ] = (2*tlist[x] - mu + Ebarrier)*np.kron(PM.s0,PM.tzs0) + Vz*np.kron(PM.s0,PM.t0sx);
+    
     #Consruct lead
     symLeft=kwant.TranslationalSymmetry([-a]);
     symRight=kwant.TranslationalSymmetry([a]);
     if leadpos==0:
-        lead=kwant.Builder(symLeft);
+        lead=kwant.Builder(symLeft,conservation_law=-PM.tzs0);
     else:
-        lead=kwant.Builder(symRight);
-        
-    if args_dict['multiband']==0:
-        lead[ lat(0) ] = (2*t - mu_lead)*PM.tzs0 + Vz*PM.t0sx;
-        lead[ lat(0), lat(1) ] = -t*PM.tzs0 - 1j*alpha*PM.tzsy;
-    else:
-        lead[ lat(0) ] = (2*t - mu_lead)*np.kron(PM.s0,PM.tzs0) + Vz*np.kron(PM.s0,PM.t0sx);
-        lead[ lat(0), lat(1) ] = -t*np.kron(PM.s0,PM.tzs0) - 1j*alpha*np.kron(PM.s0,PM.tzsy);       
+        lead=kwant.Builder(symRight,conservation_law=-PM.tzs0);
+    
+    lead[ lat(0) ] = (2*t - mu_lead)*PM.tzs0 + Vz*PM.t0sx;
+    lead[ lat(0), lat(1) ] = -t*PM.tzs0 - 1j*alpha*PM.tzsy;
+    
     #Attach lead
     junction.attach_lead(lead);
     #Finalize
@@ -141,15 +126,12 @@ def NSjunction(args_dict):
 def conductance(args_dict,junction):
     voltage=args_dict['voltage'];
     S_matrix = kwant.smatrix(junction, voltage, check_hermiticity=False);
-    R = S_matrix.submatrix(0,0);
-    if (args_dict['multiband']==0):
-        G = 2.0;
-        for (i,j) in [(0,0),(0,1),(1,0),(1,1)]:
-            G = G - abs(R[i,j])**2 + abs(R[2+i,j])**2;
-    else:
-        G = 4.0;
-        for (i,j) in [(0,0),(0,1),(1,0),(1,1)]:
-            G=G-abs(R[i,j])**2-abs(R[2+i,j])**2-abs(R[2+i,2+j])**2-abs(R[i,2+j])**2+abs(R[4+i,j])**2+abs(R[4+i+2,j])**2+abs(R[4+i,j+2])**2+abs(R[4+i+2,j+2])**2;          
+#    R = S_matrix.submatrix(0,0);
+    G=S_matrix.submatrix((0,0),(0,0)).shape[0]-S_matrix.transmission((0,0),(0,0))+S_matrix.transmission((0,1),(0,0)) #Nc-Ree+Rhe
+#    G = 2.0;
+ #   for (i,j) in [(0,0),(0,1),(1,0),(1,1)]:
+ #           G = G - abs(R[i,j])**2 + abs(R[2+i,j])**2;
+    
     return G;
     
 def TV(args_dict):
@@ -191,15 +173,9 @@ def ConductanceAndTV(args_dict,junction):
     voltage=args_dict['voltage'];
     S_matrix = kwant.smatrix(junction, voltage, check_hermiticity=False);
     R = S_matrix.submatrix(0,0);
-    if (args_dict['multiband']==0):
-        G = 2.0;
-        for (i,j) in [(0,0),(0,1),(1,0),(1,1)]:
-            G = G - abs(R[i,j])**2 + abs(R[2+i,j])**2;
-    else:
-        G = 4.0;
-        for (i,j) in [(0,0),(0,1),(1,0),(1,1)]:
-            G=G-abs(R[i,j])**2-abs(R[2+i,j])**2-abs(R[2+i,2+j])**2-abs(R[i,2+j])**2+abs(R[4+i,j])**2+abs(R[4+i+2,j])**2+abs(R[4+i,j+2])**2+abs(R[4+i+2,j+2])**2;          
-    
+    G = 2.0;
+    for (i,j) in [(0,0),(0,1),(1,0),(1,1)]:
+        G = G - abs(R[i,j])**2 + abs(R[2+i,j])**2;
 
     tv0 = LA.det(R);
     basis_wf = S_matrix.lead_info[0].wave_functions;    
