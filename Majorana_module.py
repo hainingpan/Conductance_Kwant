@@ -34,9 +34,9 @@ def NSjunction(args_dict):
 	#N(delta_0,DeltaVar) for SC gap
 	#N(alpha_R,alpha_RVar) for alpha_R
 	#N(1,massVar) for effective mass
- 	    
+    lat=kwant.lattice.chain(a,norbs=2);  
     junction=kwant.Builder();
-    lat=kwant.lattice.chain(a);  
+     
     #smooth confinement
     potential={
         0: lambda x: mu*x**0,
