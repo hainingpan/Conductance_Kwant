@@ -250,85 +250,85 @@ def main():
             comm.Gather(sendbufGRL,recvbufGRL,root=0);
 
         
-            if (rank==0):
-                fn_mu=('m'+str(parameters['mu']))*(parameters['muNum']==0);
-                fn_Delta='D'+str(parameters['delta0']);
-                fn_alpha='a'+str(parameters['alpha_R']);
-                fn_wl='L'+str(int(parameters['wireLength']));
-                fn_potType=str(parameters['potType'])*(parameters['potType']!=0);
-                if parameters['muNum']==0:
-                    fn_range=('-'+str(vzStep*tot)+','+str(vBiasMax)+'-')*(parameters['muNum']==0);
-                else:
-                    fn_range=('-'+str(mu0)+','+str(mu0+muStep*tot)+','+str(vBiasMax)+'-')*(parameters['muNum']!=0);
-                fn_muMax=('mx'+str(parameters['muMax']))*(parameters['potType']!=0);
-                fn_potPeakPos=('pk'+str(parameters['potPeakPos']))*((parameters['potType']=='lorentz')+( parameters['potType']=='lorentzsigmoid'));
-                fn_potSigma=('sg'+str(parameters['potSigma']))*((parameters['potType']=='exp')+(parameters['potType']=='sigmoid'));
-                fn_muVar=('mVar'+str(parameters['muVar']))*(parameters['muVar']!=0)
-                fn_dissipation=('G'+str(parameters['dissipation']))*(parameters['isDissipationVar']!=0);
-                fn_dotLength=('dL'+str(int(parameters['dotLength'])))*(parameters['isQD']!=0);
-                fn_qdPeak=('VD'+str(parameters['qdPeak']))*(parameters['isQD']!=0);
-                fn_couplingSCSM=('g'+str(parameters['couplingSCSM']))*(parameters['isSE']==1);
-                fn_vc=('vc'+str(parameters['vc']))*(parameters['isSE']==1)*(parameters['vc']!=0);
-                fn_gVar=('gVar'+str(parameters['gVar']))*(parameters['gVar']!=0);
-                fn_deltaVar=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0);
-                
-                fnLL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_muMax+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'LL'+fn_range;
-                fnRR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_muMax+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'RR'+fn_range;
-                fnLR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_muMax+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'LR'+fn_range;
-                fnRL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_muMax+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'RL'+fn_range;
-                
-                np.savetxt(fnLL+'.dat',recvbufGLL);
-                np.savetxt(fnRR+'.dat',recvbufGRR);
-                np.savetxt(fnLR+'.dat',recvbufGLR);
-                np.savetxt(fnRL+'.dat',recvbufGRL);
+        if (rank==0):
+            fn_mu=('m'+str(parameters['mu']))*(parameters['muNum']==0);
+            fn_Delta='D'+str(parameters['delta0']);
+            fn_alpha='a'+str(parameters['alpha_R']);
+            fn_wl='L'+str(int(parameters['wireLength']));
+            fn_potType=str(parameters['potType'])*(parameters['potType']!=0);
+            if parameters['muNum']==0:
+                fn_range=('-'+str(vzStep*tot)+','+str(vBiasMax)+'-')*(parameters['muNum']==0);
+            else:
+                fn_range=('-'+str(mu0)+','+str(mu0+muStep*tot)+','+str(vBiasMax)+'-')*(parameters['muNum']!=0);
+            fn_muMax=('mx'+str(parameters['muMax']))*(parameters['potType']!=0);
+            fn_potPeakPos=('pk'+str(parameters['potPeakPos']))*((parameters['potType']=='lorentz')+( parameters['potType']=='lorentzsigmoid'));
+            fn_potSigma=('sg'+str(parameters['potSigma']))*((parameters['potType']=='exp')+(parameters['potType']=='sigmoid'));
+            fn_muVar=('mVar'+str(parameters['muVar']))*(parameters['muVar']!=0)
+            fn_dissipation=('G'+str(parameters['dissipation']))*(parameters['isDissipationVar']!=0);
+            fn_dotLength=('dL'+str(int(parameters['dotLength'])))*(parameters['isQD']!=0);
+            fn_qdPeak=('VD'+str(parameters['qdPeak']))*(parameters['isQD']!=0);
+            fn_couplingSCSM=('g'+str(parameters['couplingSCSM']))*(parameters['isSE']==1);
+            fn_vc=('vc'+str(parameters['vc']))*(parameters['isSE']==1)*(parameters['vc']!=0);
+            fn_gVar=('gVar'+str(parameters['gVar']))*(parameters['gVar']!=0);
+            fn_deltaVar=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0);
+            
+            fnLL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_muMax+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'LL'+fn_range;
+            fnRR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_muMax+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'RR'+fn_range;
+            fnLR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_muMax+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'LR'+fn_range;
+            fnRL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_muMax+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'RL'+fn_range;
+            
+            np.savetxt(fnLL+'.dat',recvbufGLL);
+            np.savetxt(fnRR+'.dat',recvbufGRR);
+            np.savetxt(fnLR+'.dat',recvbufGLR);
+            np.savetxt(fnRL+'.dat',recvbufGRL);
 
-                if parameters['muNum']==0:
-                    xRange=np.arange(tot)*vzStep;
-                else:
-                    xRange=mu0+np.arange(tot)*muStep;
-                figLL=plt.figure();
-                plt.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGLL), cmap='rainbow');
-                if parameters['muNum']==0:            
-                    plt.xlabel('Vz(meV)');
-                else:
-                    plt.xlabel('mu(meV)');
-                plt.ylabel('V_bias(meV)');
-                plt.colorbar();
-                plt.axis((xRange[0],xRange[-1],vBiasMin,vBiasMax));
-                figLL.savefig(fnLL+'.png');
-                
-                figRR=plt.figure();
-                plt.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGRR), cmap='rainbow');
-                if parameters['muNum']==0:            
-                    plt.xlabel('Vz(meV)');
-                else:
-                    plt.xlabel('mu(meV)');
-                plt.ylabel('V_bias(meV)');
-                plt.colorbar();
-                plt.axis((xRange[0],xRange[-1],vBiasMin,vBiasMax));
-                figRR.savefig(fnRR+'.png');
-                
-                figLR=plt.figure();
-                plt.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGLR), cmap='rainbow');
-                if parameters['muNum']==0:            
-                    plt.xlabel('Vz(meV)');
-                else:
-                    plt.xlabel('mu(meV)');
-                plt.ylabel('V_bias(meV)');
-                plt.colorbar();
-                plt.axis((xRange[0],xRange[-1],vBiasMin,vBiasMax));
-                figLR.savefig(fnLR+'.png');
-                
-                figRL=plt.figure();
-                plt.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGRL), cmap='rainbow');
-                if parameters['muNum']==0:            
-                    plt.xlabel('Vz(meV)');
-                else:
-                    plt.xlabel('mu(meV)');
-                plt.ylabel('V_bias(meV)');
-                plt.colorbar();
-                plt.axis((xRange[0],xRange[-1],vBiasMin,vBiasMax));
-                figRL.savefig(fnRL+'.png');        
+            if parameters['muNum']==0:
+                xRange=np.arange(tot)*vzStep;
+            else:
+                xRange=mu0+np.arange(tot)*muStep;
+            figLL=plt.figure();
+            plt.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGLL), cmap='rainbow');
+            if parameters['muNum']==0:            
+                plt.xlabel('Vz(meV)');
+            else:
+                plt.xlabel('mu(meV)');
+            plt.ylabel('V_bias(meV)');
+            plt.colorbar();
+            plt.axis((xRange[0],xRange[-1],vBiasMin,vBiasMax));
+            figLL.savefig(fnLL+'.png');
+            
+            figRR=plt.figure();
+            plt.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGRR), cmap='rainbow');
+            if parameters['muNum']==0:            
+                plt.xlabel('Vz(meV)');
+            else:
+                plt.xlabel('mu(meV)');
+            plt.ylabel('V_bias(meV)');
+            plt.colorbar();
+            plt.axis((xRange[0],xRange[-1],vBiasMin,vBiasMax));
+            figRR.savefig(fnRR+'.png');
+            
+            figLR=plt.figure();
+            plt.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGLR), cmap='rainbow');
+            if parameters['muNum']==0:            
+                plt.xlabel('Vz(meV)');
+            else:
+                plt.xlabel('mu(meV)');
+            plt.ylabel('V_bias(meV)');
+            plt.colorbar();
+            plt.axis((xRange[0],xRange[-1],vBiasMin,vBiasMax));
+            figLR.savefig(fnLR+'.png');
+            
+            figRL=plt.figure();
+            plt.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGRL), cmap='rainbow');
+            if parameters['muNum']==0:            
+                plt.xlabel('Vz(meV)');
+            else:
+                plt.xlabel('mu(meV)');
+            plt.ylabel('V_bias(meV)');
+            plt.colorbar();
+            plt.axis((xRange[0],xRange[-1],vBiasMin,vBiasMax));
+            figRL.savefig(fnRL+'.png');        
     
 if __name__=="__main__":
 	main()
