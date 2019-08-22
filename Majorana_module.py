@@ -84,41 +84,44 @@ def NSjunction(args_dict):
     else:
 	    alphalist=randlist/(2.*a);        
 
-    if args_dict['massVar']==0:
-	    tlist=t*np.ones(wireLength);
-    else:
-	    tlist=t/randlist;   
+#    if args_dict['massVar']==0:
+#	    tlist=t*np.ones(wireLength);
+#    else:
+#	    tlist=t/randlist;   
         
     #Construct lattice  (multiband->scDelta& muset not verified, the tau matrix should be replaced, gVar, DeltaVar to be changed )
     for x in range(wireLength):
-            junction[lat(x)]=(-muset[x]+2*tlist[x])*PM.tzs0+scDelta[x]+Vzlist[x]*PM.t0sx-1j*Gamma*PM.t0s0;
+            junction[lat(x)]=(-muset[x]+2*t)*PM.tzs0+scDelta[x]+Vzlist[x]*PM.t0sx-1j*Gamma*PM.t0s0;
    
     if args_dict['QD'] == 1:
         VD = args_dict['VD'];
         for x in range(dotLength):
-            junction[ lat(x) ] = (2*tlist[x] - mu + VD*np.exp(-x*x/(dotLength*dotLength)) )*PM.tzs0 + Vz*PM.t0sx - 1j*Gamma*PM.t0s0;
+            junction[ lat(x) ] = (2*t - mu + VD*np.exp(-x*x/(dotLength*dotLength)) )*PM.tzs0 + Vz*PM.t0sx - 1j*Gamma*PM.t0s0;
     #Construct hopping
     for x in range(1,wireLength):
-            junction[lat(x-1),lat(x)]=-tlist[x]*PM.tzs0-1j*alphalist[x]*PM.tzsy;
+            junction[lat(x-1),lat(x)]=-t*PM.tzs0-1j*alphalist[x]*PM.tzsy;
    
     #Construct barrier
-    for x in range(Nbarrier):
-            barrierindex=int(-0.5+((leadpos==0)-(leadpos==1))*(x+1))%wireLength;
-            junction[ lat(barrierindex) ] = (2*tlist[x] - mu + Ebarrier)*PM.tzs0 + Vz*PM.t0sx;
+#    for x in range(Nbarrier):
+#           barrierindex=int(-0.5+((leadpos==0)-(leadpos==1))*(x+1))%wireLength;
+#            junction[ lat(barrierindex) ] = (2*t- mu + Ebarrier)*PM.tzs0 + Vz*PM.t0sx;
     
-    #Consruct lead
-    symLeft=kwant.TranslationalSymmetry([-a]);
-    symRight=kwant.TranslationalSymmetry([a]);
-    if leadpos==0:
-        lead=kwant.Builder(symLeft,conservation_law=-PM.tzs0);
-    else:
-        lead=kwant.Builder(symRight,conservation_law=-PM.tzs0);
+    #Construct lead and barrier
+    if not (args_dict['leadnum']==1 and args_dict['leadpos']==1):   #exclude the situation of only right lead
+        junction[(lat(x) for x in range(Nbarrier))]=(2*t-mu+Ebarrier)*PM.tzs0 + Vz*PM.t0sx;
+        symLeft=kwant.TranslationalSymmetry([-a]);
+        lead0=kwant.Builder(symLeft,conservation_law=-PM.tzs0);
+        lead0[ lat(0) ] = (2*t - mu_lead)*PM.tzs0 + Vz*PM.t0sx;
+        lead0[ lat(0), lat(1) ] = -t*PM.tzs0 - 1j*alpha*PM.tzsy;
+        junction.attach_lead(lead0);
+    if not (args_dict['leadnum']==1 and args_dict['leadpos']==0):   #exclude the situation of only left lead
+        junction[(lat(wireLength-x-1) for x in range(Nbarrier))]=(2*t-mu+Ebarrier)*PM.tzs0 + Vz*PM.t0sx;
+        symRight=kwant.TranslationalSymmetry([a]);
+        lead1=kwant.Builder(symRight,conservation_law=-PM.tzs0);
+        lead1[ lat(0) ] = (2*t - mu_lead)*PM.tzs0 + Vz*PM.t0sx;
+        lead1[ lat(0), lat(1) ] = -t*PM.tzs0 - 1j*alpha*PM.tzsy;
+        junction.attach_lead(lead1);
     
-    lead[ lat(0) ] = (2*t - mu_lead)*PM.tzs0 + Vz*PM.t0sx;
-    lead[ lat(0), lat(1) ] = -t*PM.tzs0 - 1j*alpha*PM.tzsy;
-    
-    #Attach lead
-    junction.attach_lead(lead);
     #Finalize
     junction=junction.finalized();
     return junction
@@ -126,14 +129,20 @@ def NSjunction(args_dict):
 def conductance(args_dict,junction):
     voltage=args_dict['voltage'];
     S_matrix = kwant.smatrix(junction, voltage, check_hermiticity=False);
-#    R = S_matrix.submatrix(0,0);
-    G=S_matrix.submatrix((0,0),(0,0)).shape[0]-S_matrix.transmission((0,0),(0,0))+S_matrix.transmission((0,1),(0,0)) #Nc-Ree+Rhe
-#    G = 2.0;
- #   for (i,j) in [(0,0),(0,1),(1,0),(1,1)]:
- #           G = G - abs(R[i,j])**2 + abs(R[2+i,j])**2;
-    
+    G=S_matrix.submatrix((0,0),(0,0)).shape[0]-S_matrix.transmission((0,0),(0,0))+S_matrix.transmission((0,1),(0,0)) 
     return G;
     
+def conductance_matrix(args_dict,junction):
+    voltage=args_dict['voltage'];
+    S_matrix = kwant.smatrix(junction, voltage, check_hermiticity=False);
+    # [[G_LL,G_LR],[G_RL,G_RR]]
+    GLL=S_matrix.submatrix((0,0),(0,0)).shape[0]-S_matrix.transmission((0,0),(0,0))+S_matrix.transmission((0,1),(0,0)) 
+    GRR=S_matrix.submatrix((1,0),(1,0)).shape[0]-S_matrix.transmission((1,0),(1,0))+S_matrix.transmission((1,1),(1,0)) 
+    GLR=S_matrix.transmission((0,0),(1,0))-S_matrix.transmission((0,1),(1,0))
+    GRL=S_matrix.transmission((1,0),(0,0))-S_matrix.transmission((1,1),(0,0))
+    # return nparray or struct
+    return GLL,GRR,GLR,GRL
+
 def TV(args_dict):
     args_dict['voltage'] = 0.0; 
     junction = NSjunction(args_dict);
