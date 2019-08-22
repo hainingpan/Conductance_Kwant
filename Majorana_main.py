@@ -129,7 +129,7 @@ def main():
                 sendbuf2=np.empty((per,vBiasNumber)); #topological visibility
             
             for ii in range(per):
-                if parameters['muNummunum']==0:
+                if parameters['muNum']==0:
                     parameters['vz'] = vz0+(ii+rank*per)*vzStep;
                 else:
                     parameters['mu'] = mu0+(ii+rank*per)*muStep;
