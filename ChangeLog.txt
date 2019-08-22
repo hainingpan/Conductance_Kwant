@@ -1,0 +1,47 @@
+Name chart:
+* TV->isTV
+*Delta_0->delta0
+- Delta_c->deltaCoupling
+- epsilon->bandEDiff
+* mumax->muMax
+* mu_lead->muLead
+* Nbarrier->barrierNum
+* Ebarrier->barrierE
+* Gamma->dissipation
+* GammaVar->isDissipationVar
+* QD->isQD
+* VD->qdPeak
+* SE->isSE
+* gamma->couplingSCSM
+* Vc->vc
+* smoothpot->potType
+* peakpos->potPeakPos
+* sigma->potSigma
+* muVarlist->muVarList
+* randlist->randList
+* DeltaVar->deltaVar
+* voltage->vBias
+* voltagemin->vBiasMin
+* voltagemax->vBiasMax
+* vznum->vzNum
+* enum->vBiasNum
+* vzstep->vzStep
+* leadpos->leadPos
+* leadnum->leadNum
+* mustep->muStep
+* munum->muNum
+* Err->err
+* Vz->vz
+* NS_dict->parameters
+* args_dict->parameters
+
+* muset->muSet
+* Vzlist->vzSet
+* S_matrix->sMatrix
+* varname->varName
+* varval->varValue
+* xrange->xRange
+
+func:
+* ConductanceAndTV->conductance_TV
+* NSjunction->make_NS_junction
