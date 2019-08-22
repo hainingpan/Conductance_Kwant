@@ -22,7 +22,7 @@ def main():
                'gVar':0,'randlist':0,
                'DeltaVar':0,
 			   'alpha_RVar':0,			   
-               'Vz':0.0, 'voltage':0.0,'vznum':256,'enum':1001,'vzstep': 0.002,
+               'vz':0.0,'vz0':0, 'voltage':0.0,'voltagemin':-0.3,'voltagemax':0.3,'vznum':256,'enum':1001,'vzstep': 0.002,
                'leadpos':0,'leadnum':1,
                'mustep':0.002,'munum':0,
                'Err':0};
@@ -111,6 +111,7 @@ def main():
 #        print('I am rank=',rank,'My flag is',NS_dict['Err'],'I exit because',NS_dict['Err']!=0);
         sys.exit(1);
     if NS_dict['munum']==0:
+        vz0=NS_dict['vz0'];
         tot=int(NS_dict['vznum']);
         vzstep = NS_dict['vzstep'];  
     else:
@@ -118,7 +119,7 @@ def main():
         tot=int(NS_dict['munum']); 
         mustep=NS_dict['mustep'];      
     np.warnings.filterwarnings('ignore');
-    voltageMin = -.3; voltageMax = .3; voltageNumber = int(NS_dict['enum']);
+    voltageMin = NS_dict['voltagemin']; voltageMax = NS_dict['voltagemax']; voltageNumber = int(NS_dict['enum']);
     voltageRange = np.linspace(voltageMin, voltageMax, voltageNumber);
     
     randlist=NS_dict['randlist'];
@@ -139,12 +140,12 @@ def main():
             
             for ii in range(per):
                 if NS_dict['munum']==0:
-                    NS_dict['Vz'] = (ii+rank*per)*vzstep;
+                    NS_dict['vz'] = vz0+(ii+rank*per)*vzstep;
                 else:
                     NS_dict['mu'] = mu0+(ii+rank*per)*mustep;
                     
                 if NS_dict['gVar']!=0:
-                    NS_dict['randlist']=randlist*NS_dict['Vz'];
+                    NS_dict['randlist']=randlist*NS_dict['vz'];
                 if NS_dict['SE']==0:
                     junction=Maj.NSjunction(NS_dict);   #Change this if junction is voltage dependent, e.g. in Self energy
                 for index in range(voltageNumber):
@@ -230,12 +231,12 @@ def main():
         sendbufGRL=np.empty((per,voltageNumber));
         for ii in range(per):
             if NS_dict['munum']==0:
-                NS_dict['Vz'] = (ii+rank*per)*vzstep;
+                NS_dict['vz'] = vz0+(ii+rank*per)*vzstep;
             else:
                 NS_dict['mu'] = mu0+(ii+rank*per)*mustep;
                 
             if NS_dict['gVar']!=0:
-                NS_dict['randlist']=randlist*NS_dict['Vz'];
+                NS_dict['randlist']=randlist*NS_dict['vz'];
             if NS_dict['SE']==0:
                 junction=Maj.NSjunction(NS_dict);   #Change this if junction is voltage dependent, e.g. in Self energy
             for index in range(voltageNumber):
