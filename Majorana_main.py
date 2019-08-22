@@ -13,244 +13,231 @@ size=comm.Get_size();
     
 def main():    
     vars=len(sys.argv);    
-    NS_dict = {'TV':0,'a':1,'mu':.2,'mumax':1,'alpha_R':5, 'Delta_0':0.2,'Delta_c':0.2,'epsilon':1,'wireLength':1000,
-               'mu_lead':25.0, 'Nbarrier':2,'Ebarrier':10.0, 'Gamma':0.0001,'GammaVar':0, 
-               'QD':0, 'VD':0.4, 'dotLength':20, 
-               'SE':0, 'gamma':0.2, 'Vc':0,               
-               'smoothpot':0,'peakpos':0,'sigma':1,
-               'muVar':0,'muVarlist':0,
-               'gVar':0,'randlist':0,
-               'DeltaVar':0,
-			   'alpha_RVar':0,			   
-               'vz':0.0,'vz0':0, 'voltage':0.0,'voltagemin':-0.3,'voltagemax':0.3,'vznum':256,'enum':1001,'vzstep': 0.002,
-               'leadpos':0,'leadnum':1,
-               'mustep':0.002,'munum':0,
-               'Err':0};
+    parameters = {'isTV':0,'a':1,'mu':.2,'muMax':1,'alpha_R':5, 'delta0':0.2,'wireLength':1000,
+               'muLead':25.0, 'barrierNum':2,'barrierE':10.0, 'dissipation':0.0001,'isDissipationVar':0, 
+               'isQD':0, 'qdPeak':0.4, 'dotLength':20, 
+               'isSE':0, 'couplingSCSM':0.2, 'vc':0,               
+               'potType':0,'potPeakPos':0,'potSigma':1,
+               'muVar':0,'muVarList':0,
+               'gVar':0,'randList':0,
+               'deltaVar':0,
+               'vz':0.0,'vz0':0, 'vBias':0.0,'vBiasMin':-0.3,'vBiasMax':0.3,'vzNum':256,'vBiasNum':1001,'vzStep': 0.002,
+               'leadPos':0,'leadNum':1,
+               'muStep':0.002,'muNum':0,
+               'error':0};
     if (rank==0):
         if vars>1:        
             for i in range(1,vars):
                 try:
-                    varname=re.search('(.)*(?=\=)',sys.argv[i]).group(0);
-                    varval=re.search('(?<=\=)(.)*',sys.argv[i]).group(0);
-                    if varname in NS_dict:
-                        if varname in ['smoothpot','muVarlist','randlist']:
-                            NS_dict[varname]=varval;
+                    varName=re.search('(.)*(?=\=)',sys.argv[i]).group(0);
+                    varValue=re.search('(?<=\=)(.)*',sys.argv[i]).group(0);
+                    if varName in parameters:
+                        if varName in ['potType','muVarList','randList']:
+                            parameters[varName]=varValue;
                         else:
-                            NS_dict[varname]=float(varval);
+                            parameters[varName]=float(varValue);
                     else:
-                        print('Cannot find the parameter',varname);
-                        NS_dict['Err']=1;
-                        NS_dict=comm.bcast(NS_dict,root=0);
+                        print('Cannot find the parameter',varName);
+                        parameters['error']=1;
+                        parameters=comm.bcast(parameters,root=0);
                         sys.exit(1);
                 except:
                     print('Cannot parse the input parameters',sys.argv[i]);
-                    NS_dict['Err']=1;
-                    NS_dict=comm.bcast(NS_dict,root=0);
+                    parameters['error']=1;
+                    parameters=comm.bcast(parameters,root=0);
                     sys.exit(1);                   
-        if (isinstance(NS_dict['muVarlist'],str)):
-            print('disorder use filename:'+NS_dict['muVarlist']);
-            muVarfn=NS_dict['muVarlist'];
+        if (isinstance(parameters['muVarList'],str)):
+            print('disorder use filename:'+parameters['muVarList']);
+            muVarfn=parameters['muVarList'];
             try:
                 dat=np.loadtxt(muVarfn);
                 try:
-                    NS_dict['muVarlist']=dat;
+                    parameters['muVarList']=dat;
                 except:
-                    print('Cannot read muVarlist',dat);
-                    NS_dict['Err']=1;
-                    NS_dict=comm.bcast(NS_dict,root=0);
+                    print('Cannot read muVarList',dat);
+                    parameters['error']=1;
+                    parameters=comm.bcast(parameters,root=0);
                     sys.exit(1);
             except:
                 print('Cannot find disorder file:',muVarfn);
-                NS_dict['Err']=1;
-                NS_dict=comm.bcast(NS_dict,root=0);
+                parameters['error']=1;
+                parameters=comm.bcast(parameters,root=0);
                 sys.exit(1);
         else:                    
-            if (NS_dict['muVar']!=0):
-                NS_dict['muVarlist']=np.random.normal(0,NS_dict['muVar'],int(NS_dict['wireLength']));
-        if (isinstance(NS_dict['randlist'],str)):
-            print('randlist use filename:'+NS_dict['randlist']);
-            randfn=NS_dict['randlist'];
+            if (parameters['muVar']!=0):
+                parameters['muVarList']=np.random.normal(0,parameters['muVar'],int(parameters['wireLength']));
+        if (isinstance(parameters['randList'],str)):
+            print('random list use filename:'+parameters['randList']);
+            randfn=parameters['randList'];
             try:
                 dat=np.loadtxt(randfn);
                 try:
-                    NS_dict['randlist']=dat;
+                    parameters['randList']=dat;
                 except:
-                    print('Cannot read randlist',dat);
-                    NS_dict['Err']=1;
-                    NS_dict=comm.bcast(NS_dict,root=0);
+                    print('Cannot read random list',dat);
+                    parameters['error']=1;
+                    parameters=comm.bcast(parameters,root=0);
                     sys.exit(1);
             except:
-                print('Cannot find randlist file:',randfn);
-                NS_dict['Err']=1;
-                NS_dict=comm.bcast(NS_dict,root=0);                
+                print('Cannot find random list file:',randfn);
+                parameters['error']=1;
+                parameters=comm.bcast(parameters,root=0);                
                 sys.exit(1);
         else:
-            if (NS_dict['gVar']!=0):
-                randlist=np.random.normal(1,NS_dict['gVar'],int(NS_dict['wireLength']));
-                while not (np.prod(randlist>0)):
-                    randlist=np.random.normal(1,NS_dict['gVar'],int(NS_dict['wireLength']));  
-                NS_dict['randlist']=randlist;
+            if (parameters['gVar']!=0):
+                randList=np.random.normal(1,parameters['gVar'],int(parameters['wireLength']));
+                while not (np.prod(randList>0)):
+                    randList=np.random.normal(1,parameters['gVar'],int(parameters['wireLength']));  
+                parameters['randList']=randList;
                 
-            if (NS_dict['DeltaVar']!=0):
-                randlist=np.random.normal(NS_dict['Delta_0'],NS_dict['DeltaVar'],int(NS_dict['wireLength']));
-                while not (np.prod(randlist>0)):
-                    randlist=np.random.normal(NS_dict['Delta_0'],NS_dict['DeltaVar'],int(NS_dict['wireLength']));
-                NS_dict['randlist']=randlist;     
+            if (parameters['deltaVar']!=0):
+                randList=np.random.normal(parameters['delta0'],parameters['deltaVar'],int(parameters['wireLength']));
+                while not (np.prod(randList>0)):
+                    randList=np.random.normal(parameters['delta0'],parameters['deltaVar'],int(parameters['wireLength']));
+                parameters['randList']=randList;     
+			
 
-            if (NS_dict['alpha_RVar']!=0):
-                randlist=np.random.normal(NS_dict['alpha_R'],NS_dict['alpha_RVar'],int(NS_dict['wireLength']));
-                while not (np.prod(randlist>0)):
-                    randlist=np.random.normal(NS_dict['alpha_R'],NS_dict['alpha_RVar'],int(NS_dict['wireLength']));
-                NS_dict['randlist']=randlist; 				
-
-        print(NS_dict);   
+        print(parameters);   
 
         
-    NS_dict=comm.bcast(NS_dict,root=0);
-    if NS_dict['Err']!=0:   #for the slave to exit
-#        print('I am rank=',rank,'My flag is',NS_dict['Err'],'I exit because',NS_dict['Err']!=0);
+    parameters=comm.bcast(parameters,root=0);
+    if parameters['error']!=0:   #for the slave to exit
+#        print('I am rank=',rank,'My flag is',parameters['error'],'I exit because',parameters['error']!=0);
         sys.exit(1);
-    if NS_dict['munum']==0:
-        vz0=NS_dict['vz0'];
-        tot=int(NS_dict['vznum']);
-        vzstep = NS_dict['vzstep'];  
+    if parameters['muNum']==0:
+        vz0=parameters['vz0'];
+        tot=int(parameters['vzNum']);
+        vzStep = parameters['vzStep'];  
     else:
-        mu0=NS_dict['mu'];
-        tot=int(NS_dict['munum']); 
-        mustep=NS_dict['mustep'];      
+        mu0=parameters['mu'];
+        tot=int(parameters['muNum']); 
+        muStep=parameters['muStep'];      
     np.warnings.filterwarnings('ignore');
-    voltageMin = NS_dict['voltagemin']; voltageMax = NS_dict['voltagemax']; voltageNumber = int(NS_dict['enum']);
-    voltageRange = np.linspace(voltageMin, voltageMax, voltageNumber);
-    
-    randlist=NS_dict['randlist'];
-    
+    vBiasMin = parameters['vBiasMin']; 
+    vBiasMax = parameters['vBiasMax']; 
+    vBiasNumber = int(parameters['vBiasNum']);
+    vBiasRange = np.linspace(vBiasMin, vBiasMax, vBiasNumber);    
+    randList=parameters['randList'];    
     per=int(tot/size);    
     
-#   for irun in range(int(NS_dict['bothlead'])+1):  #if both leads needed, running sequentially
-#        if NS_dict['bothlead']==1:
-#            NS_dict['leadpos']=irun;
-    
-    if NS_dict['leadnum']==1:
-        leadpos=int(NS_dict['leadpos']);
-        for irun in range(leadpos+1):
-            NS_dict['leadpos']=irun;
-            sendbuf=np.empty((per,voltageNumber));  #conductance
-            if NS_dict['TV']==1:
-                sendbuf2=np.empty((per,voltageNumber)); #TV
+    if parameters['leadNum']==1:
+        leadPos=int(parameters['leadPos']);
+        for irun in range(leadPos+1):
+            parameters['leadPos']=irun;
+            sendbuf=np.empty((per,vBiasNumber));  #conductance
+            if parameters['isTV']==1:
+                sendbuf2=np.empty((per,vBiasNumber)); #topological visibility
             
             for ii in range(per):
-                if NS_dict['munum']==0:
-                    NS_dict['vz'] = vz0+(ii+rank*per)*vzstep;
+                if parameters['muNummunum']==0:
+                    parameters['vz'] = vz0+(ii+rank*per)*vzStep;
                 else:
-                    NS_dict['mu'] = mu0+(ii+rank*per)*mustep;
+                    parameters['mu'] = mu0+(ii+rank*per)*muStep;
                     
-                if NS_dict['gVar']!=0:
-                    NS_dict['randlist']=randlist*NS_dict['vz'];
-                if NS_dict['SE']==0:
-                    junction=Maj.NSjunction(NS_dict);   #Change this if junction is voltage dependent, e.g. in Self energy
-                for index in range(voltageNumber):
-                    voltage=voltageRange[index];
-                    NS_dict['voltage']=voltage;
-                    if NS_dict['SE']==1:
-                        junction=Maj.NSjunction(NS_dict);                    
-                    if NS_dict['TV']==0:
-                        sendbuf[ii,index]=Maj.conductance(NS_dict,junction);
+                if parameters['gVar']!=0:
+                    parameters['randList']=randList*parameters['vz'];
+                if parameters['isSE']==0:
+                    junction=Maj.make_NS_junction(parameters);   #Change this if junction is voltage dependent, e.g. in Self energy
+                for index in range(vBiasNumber):
+                    vBias=vBiasRange[index];
+                    parameters['vBias']=vBias;
+                    if parameters['isSE']==1:
+                        junction=Maj.make_NS_junction(parameters);                    
+                    if parameters['isTV']==0:
+                        sendbuf[ii,index]=Maj.conductance(parameters,junction);
                     else:
-                        sendbuf[ii,index],sendbuf2[ii,index]=Maj.ConductanceAndTV(NS_dict,junction);
+                        sendbuf[ii,index],sendbuf2[ii,index]=Maj.conductanceAndTV(parameters,junction);
             if (rank==0):
-                recvbuf=np.empty((tot,voltageNumber)); 
-                if NS_dict['TV']==1:
-                    recvbuf2=np.empty((tot,voltageNumber));
+                recvbuf=np.empty((tot,vBiasNumber)); 
+                if parameters['isTV']==1:
+                    recvbuf2=np.empty((tot,vBiasNumber));
             else:
                 recvbuf=None;
-                if NS_dict['TV']==1:
+                if parameters['isTV']==1:
                     recvbuf2=None;
             comm.Gather(sendbuf,recvbuf,root=0);
-            if NS_dict['TV']==1:
+            if parameters['isTV']==1:
                 comm.Gather(sendbuf2,recvbuf2,root=0);
         
             if (rank==0):
-                fn_mu=('m'+str(NS_dict['mu']))*(NS_dict['munum']==0);
-                fn_Delta='D'+str(NS_dict['Delta_0']);
-                fn_alpha='a'+str(NS_dict['alpha_R']);
-                fn_wl='L'+str(int(NS_dict['wireLength']));
-    #            fn_Deltac=('Dc'+str(NS_dict['Delta_c']))*(NS_dict['multiband']!=0);
-    #            fn_epsilon=('ep'+str(NS_dict['epsilon']))*(NS_dict['multiband']!=0);
-                fn_smoothpot=str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0);
-                fn_leadpos='L'*(NS_dict['leadpos']==0)+'R'*(NS_dict['leadpos']==1);
-                if NS_dict['munum']==0:
-                    fn_range=('-'+str(vzstep*tot)+','+str(voltageMax)+'-')*(NS_dict['munum']==0);
+                fn_mu=('m'+str(parameters['mu']))*(parameters['muNum']==0);
+                fn_Delta='D'+str(parameters['delta0']);
+                fn_alpha='a'+str(parameters['alpha_R']);
+                fn_wl='L'+str(int(parameters['wireLength']));
+                fn_potType=str(parameters['potType'])*(parameters['potType']!=0);
+                fn_leadPos='L'*(parameters['leadPos']==0)+'R'*(parameters['leadPos']==1);
+                if parameters['muNum']==0:
+                    fn_range=('-'+str(vzStep*tot)+','+str(vBiasMax)+'-')*(parameters['muNum']==0);
                 else:
-                    fn_range=('-'+str(mu0)+','+str(mu0+mustep*tot)+','+str(voltageMax)+'-')*(NS_dict['munum']!=0);
-                fn_mumax=('mx'+str(NS_dict['mumax']))*(NS_dict['smoothpot']!=0);
-                fn_peakpos=('pk'+str(NS_dict['peakpos']))*((NS_dict['smoothpot']=='lorentz')+( NS_dict['smoothpot']=='lorentzsigmoid'));
-                fn_sigma=('sg'+str(NS_dict['sigma']))*((NS_dict['smoothpot']=='exp')+(NS_dict['smoothpot']=='sigmoid'));
-                fn_muVar=('mVar'+str(NS_dict['muVar']))*(NS_dict['muVar']!=0)
-                fn_Gamma=('G'+str(NS_dict['Gamma']))*(NS_dict['GammaVar']!=0);
-                fn_dotLength=('dL'+str(int(NS_dict['dotLength'])))*(NS_dict['QD']!=0);
-                fn_VD=('VD'+str(NS_dict['VD']))*(NS_dict['QD']!=0);
-                fn_gamma=('g'+str(NS_dict['gamma']))*(NS_dict['SE']==1);
-                fn_Vc=('Vc'+str(NS_dict['Vc']))*(NS_dict['SE']==1)*(NS_dict['Vc']!=0);
-                fn_gVar=('gVar'+str(NS_dict['gVar']))*(NS_dict['gVar']!=0);
-                fn_DeltaVar=('DVar'+str(NS_dict['DeltaVar']))*(NS_dict['DeltaVar']!=0);
-                fn_alpha_RVar=('aVar'+str(NS_dict['alpha_RVar']))*(NS_dict['alpha_RVar']!=0);
+                    fn_range=('-'+str(mu0)+','+str(mu0+muStep*tot)+','+str(vBiasMax)+'-')*(parameters['muNum']!=0);
+                fn_muMax=('mx'+str(parameters['muMax']))*(parameters['potType']!=0);
+                fn_potPeakPos=('pk'+str(parameters['potPeakPos']))*((parameters['potType']=='lorentz')+( parameters['potType']=='lorentzsigmoid'));
+                fn_potSigma=('sg'+str(parameters['potSigma']))*((parameters['potType']=='exp')+(parameters['potType']=='sigmoid'));
+                fn_muVar=('mVar'+str(parameters['muVar']))*(parameters['muVar']!=0)
+                fn_dissipation=('G'+str(parameters['dissipation']))*(parameters['isDissipationVar']!=0);
+                fn_dotLength=('dL'+str(int(parameters['dotLength'])))*(parameters['isQD']!=0);
+                fn_qdPeak=('VD'+str(parameters['qdPeak']))*(parameters['isQD']!=0);
+                fn_couplingSCSM=('g'+str(parameters['couplingSCSM']))*(parameters['isSE']==1);
+                fn_vc=('vc'+str(parameters['vc']))*(parameters['isSE']==1)*(parameters['vc']!=0);
+                fn_gVar=('gVar'+str(parameters['gVar']))*(parameters['gVar']!=0);
+                fn_deltaVar=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0);
                 
-                fn=fn_mu+fn_Delta+fn_DeltaVar+fn_alpha+fn_alpha_RVar+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_muVar+fn_VD+fn_dotLength+fn_gamma+fn_Vc+fn_Gamma+fn_gVar+fn_leadpos+fn_range;
+                fn=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_muMax+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_leadPos+fn_range;
                 
                 np.savetxt(fn+'.dat',recvbuf);
-                if NS_dict['TV']==1:
+                if parameters['isTV']==1:
                     np.savetxt(fn+'TV.dat',recvbuf2);
-                if NS_dict['munum']==0:
-                    xrange=np.arange(tot)*vzstep;
+                if parameters['muNum']==0:
+                    xRange=np.arange(tot)*vzStep;
                 else:
-                    xrange=mu0+np.arange(tot)*mustep;
+                    xRange=mu0+np.arange(tot)*muStep;
                 fig=plt.figure();
-                plt.pcolormesh(xrange,voltageRange,np.transpose(recvbuf), cmap='rainbow');
-                if NS_dict['munum']==0:            
+                plt.pcolormesh(xRange,vBiasRange,np.transpose(recvbuf), cmap='rainbow');
+                if parameters['muNum']==0:            
                     plt.xlabel('Vz(meV)');
                 else:
                     plt.xlabel('mu(meV)');
                 plt.ylabel('V_bias(meV)');
                 plt.colorbar();
-                plt.axis((xrange[0],xrange[-1],voltageMin,voltageMax));
+                plt.axis((xRange[0],xRange[-1],vBiasMin,vBiasMax));
                 fig.savefig(fn+'.png');
                 
-                if NS_dict['TV']==1:
+                if parameters['isTV']==1:
                     fig2=plt.figure();
-                    plt.pcolormesh(xrange,voltageRange,np.transpose(recvbuf2));
+                    plt.pcolormesh(xRange,vBiasRange,np.transpose(recvbuf2));
                     plt.xlabel('Vz(meV)');
                     plt.ylabel('V_bias(meV)');
                     plt.colorbar();
-                    plt.axis((0,tot*vzstep,voltageMin,voltageMax));
+                    plt.axis((0,tot*vzStep,vBiasMin,vBiasMax));
                     fig2.savefig(fn+'TV.png');
         
-    elif NS_dict['leadnum']==2:
-        sendbufGLL=np.empty((per,voltageNumber));  #conductance
-        sendbufGRR=np.empty((per,voltageNumber));
-        sendbufGLR=np.empty((per,voltageNumber));
-        sendbufGRL=np.empty((per,voltageNumber));
+    elif parameters['leadNum']==2:
+        sendbufGLL=np.empty((per,vBiasNumber));  #conductance
+        sendbufGRR=np.empty((per,vBiasNumber));
+        sendbufGLR=np.empty((per,vBiasNumber));
+        sendbufGRL=np.empty((per,vBiasNumber));
         for ii in range(per):
-            if NS_dict['munum']==0:
-                NS_dict['vz'] = vz0+(ii+rank*per)*vzstep;
+            if parameters['muNum']==0:
+                parameters['vz'] = vz0+(ii+rank*per)*vzStep;
             else:
-                NS_dict['mu'] = mu0+(ii+rank*per)*mustep;
+                parameters['mu'] = mu0+(ii+rank*per)*muStep;
                 
-            if NS_dict['gVar']!=0:
-                NS_dict['randlist']=randlist*NS_dict['vz'];
-            if NS_dict['SE']==0:
-                junction=Maj.NSjunction(NS_dict);   #Change this if junction is voltage dependent, e.g. in Self energy
-            for index in range(voltageNumber):
-                voltage=voltageRange[index];
-                NS_dict['voltage']=voltage;
-                if NS_dict['SE']==1:
-                    junction=Maj.NSjunction(NS_dict);                    
-                (sendbufGLL[ii,index],sendbufGRR[ii,index],sendbufGLR[ii,index],sendbufGRL[ii,index])=Maj.conductance_matrix(NS_dict,junction);
+            if parameters['gVar']!=0:
+                parameters['randList']=randList*parameters['vz'];
+            if parameters['isSE']==0:
+                junction=Maj.make_NS_junction(parameters);   #Change this if junction is voltage dependent, e.g. in Self energy
+            for index in range(vBiasNumber):
+                vBias=vBiasRange[index];
+                parameters['vBias']=vBias;
+                if parameters['isSE']==1:
+                    junction=Maj.make_NS_junction(parameters);                    
+                (sendbufGLL[ii,index],sendbufGRR[ii,index],sendbufGLR[ii,index],sendbufGRL[ii,index])=Maj.conductance_matrix(parameters,junction);
                     
             if (rank==0):
-                recvbufGLL=np.empty((tot,voltageNumber)); 
-                recvbufGRR=np.empty((tot,voltageNumber));
-                recvbufGLR=np.empty((tot,voltageNumber));
-                recvbufGRL=np.empty((tot,voltageNumber));
+                recvbufGLL=np.empty((tot,vBiasNumber)); 
+                recvbufGRR=np.empty((tot,vBiasNumber));
+                recvbufGLR=np.empty((tot,vBiasNumber));
+                recvbufGRL=np.empty((tot,vBiasNumber));
             else:
                 recvbufGLL=None;
                 recvbufGRR=None;
@@ -264,85 +251,83 @@ def main():
 
         
             if (rank==0):
-                fn_mu=('m'+str(NS_dict['mu']))*(NS_dict['munum']==0);
-                fn_Delta='D'+str(NS_dict['Delta_0']);
-                fn_alpha='a'+str(NS_dict['alpha_R']);
-                fn_wl='L'+str(int(NS_dict['wireLength']));
-
-                fn_smoothpot=str(NS_dict['smoothpot'])*(NS_dict['smoothpot']!=0);
-                if NS_dict['munum']==0:
-                    fn_range=('-'+str(vzstep*tot)+','+str(voltageMax)+'-')*(NS_dict['munum']==0);
+                fn_mu=('m'+str(parameters['mu']))*(parameters['muNum']==0);
+                fn_Delta='D'+str(parameters['delta0']);
+                fn_alpha='a'+str(parameters['alpha_R']);
+                fn_wl='L'+str(int(parameters['wireLength']));
+                fn_potType=str(parameters['potType'])*(parameters['potType']!=0);
+                if parameters['muNum']==0:
+                    fn_range=('-'+str(vzStep*tot)+','+str(vBiasMax)+'-')*(parameters['muNum']==0);
                 else:
-                    fn_range=('-'+str(mu0)+','+str(mu0+mustep*tot)+','+str(voltageMax)+'-')*(NS_dict['munum']!=0);
-                fn_mumax=('mx'+str(NS_dict['mumax']))*(NS_dict['smoothpot']!=0);
-                fn_peakpos=('pk'+str(NS_dict['peakpos']))*((NS_dict['smoothpot']=='lorentz')+( NS_dict['smoothpot']=='lorentzsigmoid'));
-                fn_sigma=('sg'+str(NS_dict['sigma']))*((NS_dict['smoothpot']=='exp')+(NS_dict['smoothpot']=='sigmoid'));
-                fn_muVar=('mVar'+str(NS_dict['muVar']))*(NS_dict['muVar']!=0)
-                fn_Gamma=('G'+str(NS_dict['Gamma']))*(NS_dict['GammaVar']!=0);
-                fn_dotLength=('dL'+str(int(NS_dict['dotLength'])))*(NS_dict['QD']!=0);
-                fn_VD=('VD'+str(NS_dict['VD']))*(NS_dict['QD']!=0);
-                fn_gamma=('g'+str(NS_dict['gamma']))*(NS_dict['SE']==1);
-                fn_Vc=('Vc'+str(NS_dict['Vc']))*(NS_dict['SE']==1)*(NS_dict['Vc']!=0);
-                fn_gVar=('gVar'+str(NS_dict['gVar']))*(NS_dict['gVar']!=0);
-                fn_DeltaVar=('DVar'+str(NS_dict['DeltaVar']))*(NS_dict['DeltaVar']!=0);
-                fn_alpha_RVar=('aVar'+str(NS_dict['alpha_RVar']))*(NS_dict['alpha_RVar']!=0);
+                    fn_range=('-'+str(mu0)+','+str(mu0+muStep*tot)+','+str(vBiasMax)+'-')*(parameters['muNum']!=0);
+                fn_muMax=('mx'+str(parameters['muMax']))*(parameters['potType']!=0);
+                fn_potPeakPos=('pk'+str(parameters['potPeakPos']))*((parameters['potType']=='lorentz')+( parameters['potType']=='lorentzsigmoid'));
+                fn_potSigma=('sg'+str(parameters['potSigma']))*((parameters['potType']=='exp')+(parameters['potType']=='sigmoid'));
+                fn_muVar=('mVar'+str(parameters['muVar']))*(parameters['muVar']!=0)
+                fn_dissipation=('G'+str(parameters['dissipation']))*(parameters['isDissipationVar']!=0);
+                fn_dotLength=('dL'+str(int(parameters['dotLength'])))*(parameters['isQD']!=0);
+                fn_qdPeak=('VD'+str(parameters['qdPeak']))*(parameters['isQD']!=0);
+                fn_couplingSCSM=('g'+str(parameters['couplingSCSM']))*(parameters['isSE']==1);
+                fn_vc=('vc'+str(parameters['vc']))*(parameters['isSE']==1)*(parameters['vc']!=0);
+                fn_gVar=('gVar'+str(parameters['gVar']))*(parameters['gVar']!=0);
+                fn_deltaVar=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0);
                 
-                fnLL=fn_mu+fn_Delta+fn_DeltaVar+fn_alpha+fn_alpha_RVar+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_muVar+fn_VD+fn_dotLength+fn_gamma+fn_Vc+fn_Gamma+fn_gVar+'LL'+fn_range;
-                fnRR=fn_mu+fn_Delta+fn_DeltaVar+fn_alpha+fn_alpha_RVar+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_muVar+fn_VD+fn_dotLength+fn_gamma+fn_Vc+fn_Gamma+fn_gVar+'RR'+fn_range;
-                fnLR=fn_mu+fn_Delta+fn_DeltaVar+fn_alpha+fn_alpha_RVar+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_muVar+fn_VD+fn_dotLength+fn_gamma+fn_Vc+fn_Gamma+fn_gVar+'LR'+fn_range;
-                fnRL=fn_mu+fn_Delta+fn_DeltaVar+fn_alpha+fn_alpha_RVar+fn_wl+fn_smoothpot+fn_mumax+fn_peakpos+fn_sigma+fn_muVar+fn_VD+fn_dotLength+fn_gamma+fn_Vc+fn_Gamma+fn_gVar+'RL'+fn_range;
+                fnLL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_muMax+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'LL'+fn_range;
+                fnRR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_muMax+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'RR'+fn_range;
+                fnLR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_muMax+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'LR'+fn_range;
+                fnRL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_muMax+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'RL'+fn_range;
                 
                 np.savetxt(fnLL+'.dat',recvbufGLL);
                 np.savetxt(fnRR+'.dat',recvbufGRR);
                 np.savetxt(fnLR+'.dat',recvbufGLR);
                 np.savetxt(fnRL+'.dat',recvbufGRL);
 
-                if NS_dict['munum']==0:
-                    xrange=np.arange(tot)*vzstep;
+                if parameters['muNum']==0:
+                    xRange=np.arange(tot)*vzStep;
                 else:
-                    xrange=mu0+np.arange(tot)*mustep;
+                    xRange=mu0+np.arange(tot)*muStep;
                 figLL=plt.figure();
-                plt.pcolormesh(xrange,voltageRange,np.transpose(recvbufGLL), cmap='rainbow');
-                if NS_dict['munum']==0:            
+                plt.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGLL), cmap='rainbow');
+                if parameters['muNum']==0:            
                     plt.xlabel('Vz(meV)');
                 else:
                     plt.xlabel('mu(meV)');
                 plt.ylabel('V_bias(meV)');
                 plt.colorbar();
-                plt.axis((xrange[0],xrange[-1],voltageMin,voltageMax));
+                plt.axis((xRange[0],xRange[-1],vBiasMin,vBiasMax));
                 figLL.savefig(fnLL+'.png');
                 
                 figRR=plt.figure();
-                plt.pcolormesh(xrange,voltageRange,np.transpose(recvbufGRR), cmap='rainbow');
-                if NS_dict['munum']==0:            
+                plt.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGRR), cmap='rainbow');
+                if parameters['muNum']==0:            
                     plt.xlabel('Vz(meV)');
                 else:
                     plt.xlabel('mu(meV)');
                 plt.ylabel('V_bias(meV)');
                 plt.colorbar();
-                plt.axis((xrange[0],xrange[-1],voltageMin,voltageMax));
+                plt.axis((xRange[0],xRange[-1],vBiasMin,vBiasMax));
                 figRR.savefig(fnRR+'.png');
                 
                 figLR=plt.figure();
-                plt.pcolormesh(xrange,voltageRange,np.transpose(recvbufGLR), cmap='rainbow');
-                if NS_dict['munum']==0:            
+                plt.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGLR), cmap='rainbow');
+                if parameters['muNum']==0:            
                     plt.xlabel('Vz(meV)');
                 else:
                     plt.xlabel('mu(meV)');
                 plt.ylabel('V_bias(meV)');
                 plt.colorbar();
-                plt.axis((xrange[0],xrange[-1],voltageMin,voltageMax));
+                plt.axis((xRange[0],xRange[-1],vBiasMin,vBiasMax));
                 figLR.savefig(fnLR+'.png');
                 
                 figRL=plt.figure();
-                plt.pcolormesh(xrange,voltageRange,np.transpose(recvbufGRL), cmap='rainbow');
-                if NS_dict['munum']==0:            
+                plt.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGRL), cmap='rainbow');
+                if parameters['muNum']==0:            
                     plt.xlabel('Vz(meV)');
                 else:
                     plt.xlabel('mu(meV)');
                 plt.ylabel('V_bias(meV)');
                 plt.colorbar();
-                plt.axis((xrange[0],xrange[-1],voltageMin,voltageMax));
+                plt.axis((xRange[0],xRange[-1],vBiasMin,vBiasMax));
                 figRL.savefig(fnRL+'.png');        
     
 if __name__=="__main__":
