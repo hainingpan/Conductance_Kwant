@@ -13,7 +13,7 @@ def make_NS_junction(parameters):
     vz = parameters['vz'];       #Zeeman field
     delta0 = parameters['delta0'];     #Proximitized SC gap
     mu = parameters['mu'];       #chemical potential with respect to band bottom
-    muMax = parameters['muMax'];     #peak of smooth confinement
+    potPeak = parameters['potPeak'];     #peak of smooth confinement
     muLead = parameters['muLead'];     #chemical potential of lead
     wireLength = int(parameters['wireLength']);       #Length of wire= $wireLength/100(um)
     barrierNum = parameters['barrierNum'];   # number of barrier
@@ -36,15 +36,15 @@ def make_NS_junction(parameters):
     #smooth confinement
     potential={
         0: lambda x: mu*x**0,
-        'sin': lambda x: np.sin(x*pi/(0.1*wireLength))*muMax+mu,
-        'sintheta': lambda x: muMax*np.sin(x*pi/(wireLength/10))*(x<wireLength/10)+mu,
-        'cos': lambda x: np.cos(x*pi/wireLength)*muMax+mu,
-        'sin2': lambda x: np.sin(x*2*pi/wireLength)*muMax+mu,
-        'sinabs': lambda x: np.abs(np.sin(x*2*pi/wireLength))*muMax+mu,
-        'lorentz': lambda x: muMax*1.0/(((x-potPeakPos*wireLength)*a)**2+0.5)+mu,
-        'lorentzsigmoid': lambda x:  (muMax*1.0/(((x-potPeakPos*wireLength)*a)**2+.5)+(4-mu)/2./(np.exp(-(x-0.5*wireLength)*a)+1))+mu, 
-        'exp': lambda x: muMax*(np.exp(-((x-potPeakPos*wireLength)*a)**2/(2*potSigma**2)))+mu,
-        'sigmoid': lambda x: mu+muMax*1/(np.exp((.5*wireLength-x)*a/potSigma)+1)
+        'sin': lambda x: np.sin(x*pi/(0.1*wireLength))*potPeak+mu,
+        'sintheta': lambda x: potPeak*np.sin(x*pi/(wireLength/10))*(x<wireLength/10)+mu,
+        'cos': lambda x: np.cos(x*pi/wireLength)*potPeak+mu,
+        'sin2': lambda x: np.sin(x*2*pi/wireLength)*potPeak+mu,
+        'sinabs': lambda x: np.abs(np.sin(x*2*pi/wireLength))*potPeak+mu,
+        'lorentz': lambda x: potPeak*1.0/(((x-potPeakPos*wireLength)*a)**2+0.5)+mu,
+        'lorentzsigmoid': lambda x:  (potPeak*1.0/(((x-potPeakPos*wireLength)*a)**2+.5)+(4-mu)/2./(np.exp(-(x-0.5*wireLength)*a)+1))+mu, 
+        'exp': lambda x: potPeak*(np.exp(-((x-potPeakPos*wireLength)*a)**2/(2*potSigma**2)))+mu,
+        'sigmoid': lambda x: mu+potPeak*1/(np.exp((.5*wireLength-x)*a/potSigma)+1)
     }
     muSet=potential[parameters['potType']](np.arange(wireLength));     
     muSet=muSet-muVarList;

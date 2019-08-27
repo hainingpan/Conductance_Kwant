@@ -13,15 +13,15 @@ size=comm.Get_size();
     
 def main():    
     vars=len(sys.argv);    
-    parameters = {'isTV':0,'a':1,'mu':.2,'muMax':1,'alpha_R':5, 'delta0':0.2,'wireLength':1000,
+    parameters = {'isTV':0,'a':1,'mu':.2,'alpha_R':5, 'delta0':0.2,'wireLength':1000,
                'muLead':25.0, 'barrierNum':2,'barrierE':10.0, 'dissipation':0.0001,'isDissipationVar':0, 
                'isQD':0, 'qdPeak':0.4, 'dotLength':20, 
                'isSE':0, 'couplingSCSM':0.2, 'vc':0,               
-               'potType':0,'potPeakPos':0,'potSigma':1,
+               'potType':0,'potPeakPos':0,'potSigma':1,'potPeak':0,
                'muVar':0,'muVarList':0,
                'gVar':0,'randList':0,
                'deltaVar':0,
-               'vz':0.0,'vz0':0, 'vBias':0.0,'vBiasMin':-0.3,'vBiasMax':0.3,'vzNum':256,'vBiasNum':1001,'vzStep': 0.002,
+               'vz':0.0,'vz0':0, 'vBias':0.0,'vBiasMin':-0.3,'vBiasMax':0.3,'vzNum':256,'vBiasNum':1001,'vzStep': 0.002,'muMax':1,
                'leadPos':0,'leadNum':1,
                'muStep':0.002,'muNum':0,
                'error':0};
@@ -170,7 +170,7 @@ def main():
                     fn_range=('-'+str(vzStep*tot)+','+str(vBiasMax)+'-')*(parameters['muNum']==0);
                 else:
                     fn_range=('-'+str(mu0)+','+str(mu0+muStep*tot)+','+str(vBiasMax)+'-')*(parameters['muNum']!=0);
-                fn_muMax=('mx'+str(parameters['muMax']))*(parameters['potType']!=0);
+                fn_potPeak=('mx'+str(parameters['potPeak']))*(parameters['potType']!=0);
                 fn_potPeakPos=('pk'+str(parameters['potPeakPos']))*((parameters['potType']=='lorentz')+( parameters['potType']=='lorentzsigmoid'));
                 fn_potSigma=('sg'+str(parameters['potSigma']))*((parameters['potType']=='exp')+(parameters['potType']=='sigmoid'));
                 fn_muVar=('mVar'+str(parameters['muVar']))*(parameters['muVar']!=0)
@@ -182,7 +182,7 @@ def main():
                 fn_gVar=('gVar'+str(parameters['gVar']))*(parameters['gVar']!=0);
                 fn_deltaVar=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0);
                 
-                fn=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_muMax+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_leadPos+fn_range;
+                fn=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_leadPos+fn_range;
                 
                 np.savetxt(fn+'.dat',recvbuf);
                 if parameters['isTV']==1:
@@ -260,7 +260,7 @@ def main():
                 fn_range=('-'+str(vzStep*tot)+','+str(vBiasMax)+'-')*(parameters['muNum']==0);
             else:
                 fn_range=('-'+str(mu0)+','+str(mu0+muStep*tot)+','+str(vBiasMax)+'-')*(parameters['muNum']!=0);
-            fn_muMax=('mx'+str(parameters['muMax']))*(parameters['potType']!=0);
+            fn_potPeak=('mx'+str(parameters['potPeak']))*(parameters['potType']!=0);
             fn_potPeakPos=('pk'+str(parameters['potPeakPos']))*((parameters['potType']=='lorentz')+( parameters['potType']=='lorentzsigmoid'));
             fn_potSigma=('sg'+str(parameters['potSigma']))*((parameters['potType']=='exp')+(parameters['potType']=='sigmoid'));
             fn_muVar=('mVar'+str(parameters['muVar']))*(parameters['muVar']!=0)
@@ -272,10 +272,10 @@ def main():
             fn_gVar=('gVar'+str(parameters['gVar']))*(parameters['gVar']!=0);
             fn_deltaVar=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0);
             
-            fnLL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_muMax+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'LL'+fn_range;
-            fnRR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_muMax+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'RR'+fn_range;
-            fnLR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_muMax+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'LR'+fn_range;
-            fnRL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_muMax+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'RL'+fn_range;
+            fnLL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'LL'+fn_range;
+            fnRR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'RR'+fn_range;
+            fnLR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'LR'+fn_range;
+            fnRL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_dotLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'RL'+fn_range;
             
             np.savetxt(fnLL+'.dat',recvbufGLL);
             np.savetxt(fnRR+'.dat',recvbufGRR);
