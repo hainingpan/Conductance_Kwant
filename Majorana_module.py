@@ -24,7 +24,7 @@ def make_NS_junction(parameters):
     leadPos=parameters['leadPos'];       #position of lead, 0: left; 1: right
     potPeakPos=parameters['potPeakPos'];   #position of the peak
     potSigma=parameters['potSigma'];   #sigma(linewidth) in smooth potential or quatnum dot
-    dotLength = int(parameters['dotLength']);    #length of quantum dot
+    qdLength = int(parameters['qdLength']);    #length of quantum dot
     muVarList=parameters['muVarList'];     #the spatial profile of disorder(V_impurity)
     vc = parameters['vc'];   #The point where SC gap collapses. 0 for constant Delta (vc=infitity). The gap collapsing curve is delta_0*sqrt(1-(vz/vc)^2) 
     randList=parameters['randList']; #the positive random list for only one in random {g,SC gap}. But does not support both. 
@@ -82,8 +82,8 @@ def make_NS_junction(parameters):
    
     if parameters['isQD'] == 1:
         qdPeak = parameters['qdPeak'];
-        for x in range(dotLength):
-            junction[ lat(x) ] = (2*t - mu + qdPeak*np.exp(-x*x/(dotLength*dotLength)) )*PM.tzs0 + vz*PM.t0sx - 1j*dissipation*PM.t0s0;
+        for x in range(qdLength):
+            junction[ lat(x) ] = (2*t - mu + qdPeak*np.exp(-x*x/(qdLength*qdLength)) )*PM.tzs0 + vz*PM.t0sx - 1j*dissipation*PM.t0s0;
     #Construct hopping
     for x in range(1,wireLength):
             junction[lat(x-1),lat(x)]=-t*PM.tzs0-1j*alpha*PM.tzsy;
