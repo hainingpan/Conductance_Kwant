@@ -123,12 +123,12 @@ def main():
                 learner=adaptive.Learner2D(cond_partial,bounds=[(parameters['mu0'],parameters['muMax']),(parameters['vBiasMin'],parameters['vBiasMax'])],loss_per_triangle=loss);
     elif parameters['leadNum']==2:
         cond_matrix_partial=partial(cond_matrix,parameters=parameters)
-        loss=adaptive.learner.learner2D.resolution_loss_function(min_distance=0.001,max_distance=1)
+        loss=adaptive.learner.learner2D.resolution_loss_function(min_distance=0.01,max_distance=1)
         if parameters['isMu']==0:
-            learner=adaptive.Learner2D(cond_matrix_partial,bounds=[(parameters['vz0'],parameters['vzMax']),(parameters['vBiasMin'],parameters['vBiasMax'])],loss_per_triangle=adaptive.learner.learner2D.minimize_triangle_surface_loss);
+            learner=adaptive.Learner2D(cond_matrix_partial,bounds=[(parameters['vz0'],parameters['vzMax']),(parameters['vBiasMin'],parameters['vBiasMax'])],loss_per_triangle=loss);
         else:
             learner=adaptive.Learner2D(cond_matrix_partial,bounds=[(parameters['mu0'],parameters['muMax']),(parameters['vBiasMin'],parameters['vBiasMax'])],loss_per_triangle=loss);
-    runner=adaptive.BlockingRunner(learner,goal=lambda l:l.loss()<0.0001,executor=MPIPoolExecutor(),shutdown_executor=True)
+    runner=adaptive.BlockingRunner(learner,goal=lambda l:l.loss()<0.01,executor=MPIPoolExecutor(),shutdown_executor=True)
     save_fig(learner,n=501,parameters=parameters)
     end=time.time()
     print(end-start)
@@ -214,10 +214,10 @@ def save_fig(self,n=None,parameters=None):
         plt.axis((xb[0],xb[1],yb[0],yb[1]))
         fig.savefig(fn+'.png')
     else:
-        fn_leadPosSet=("LL","LR","RL","RR")
+        fn_leadPosSet=("LL","RR","LR","RL")
         for i in range(z.shape[2]):
             fn=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_muVar+fn_qdPeak+fn_qdLength+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_leadPosSet[i]+fn_range;
-            np.savetxt(fn+'.dat',z)
+            np.savetxt(fn+'.dat',z[:,:,i])
             fig=plt.figure()
             plt.pcolormesh(xRange,yRange,z[:,:,i].T,cmap='rainbow')
             if parameters['isMu']==0:            
