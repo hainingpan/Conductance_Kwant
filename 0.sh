@@ -3,7 +3,7 @@
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
 #SBATCH --share
-#SBATCH -t 20:05:00
+#SBATCH -t 2:05:00
 #SBATCH -n 256
 
 . ~/.profile
