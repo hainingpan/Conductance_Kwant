@@ -5,6 +5,7 @@
 * `python Majorana_main.py wireLength=100`  Run on single core, for a nanowire with 100 sites where lattice constant is 10nm. So the total length is 1um. 
 * `mpirun -n 4 python Majorana_main.py wireLength=100 leadNum=2` Run on local multiple cores, for a 1 um nanowire with both lead attached to calculate nonlocal conductance
 * `mpiexec -n 4 python -m mpi4py.futures Majorana_adaptive.py wireLength=100` Run on local MPI executor pool. using adaptive sampling instead of uniform grid sampling
+* 0.sh for submitting to Deepthought2 cluster
 
 *Current utitlity with the default value:*
 
