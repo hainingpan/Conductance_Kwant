@@ -6,6 +6,7 @@ import Majorana_module as Maj
 import sys
 import re
 import matplotlib.pyplot as plt
+import time
 
 comm = MPI.COMM_WORLD;
 rank = comm.Get_rank();
@@ -331,5 +332,7 @@ def main():
             figRL.savefig(fnRL+'.png');        
     
 if __name__=="__main__":
-	main()
-
+    start=time.time()
+    main()
+    end=time.time()
+    print(end-start)
