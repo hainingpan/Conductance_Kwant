@@ -22,9 +22,8 @@ def main():
                'muVar':0,'muVarList':0,
                'gVar':0,'randList':0,
                'deltaVar':0,
-               'vz':0.0,'vz0':0, 'vBias':0.0,'vBiasMin':-0.3,'vBiasMax':0.3,'vzNum':256,'vBiasNum':1001,'vzStep': 0.002,'muMax':1,
-               'leadPos':0,'leadNum':1,
-               'muStep':0.002,'muNum':0,
+               'vz':0.0,'vz0':0, 'vBias':0.0,'vBiasMin':-0.3,'vBiasMax':0.3,'vzNum':256,'vBiasNum':1001,'vzStep': 0.002,'mu0':0,'muMax':1,'muStep':0.002,'muNum':0,
+               'leadPos':0,'leadNum':1,               
                'error':0};
     if (rank==0):
         if vars>1:        
@@ -110,7 +109,7 @@ def main():
         tot=int(parameters['vzNum']);
         vzStep = parameters['vzStep'];  
     else:
-        mu0=parameters['mu'];
+        mu0=parameters['mu0'];
         tot=int(parameters['muNum']); 
         muStep=parameters['muStep'];      
     np.warnings.filterwarnings('ignore');

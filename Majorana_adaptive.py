@@ -17,17 +17,16 @@ import time
 def main():
     start=time.time()
     vars=len(sys.argv);    
-    parameters = {'isTV':0,'a':1,'mu':.2,'muMax':1,'alpha_R':5, 'delta0':0.2,'wireLength':1000,
+    parameters = {'isTV':0,'a':1,'mu':.2,'alpha_R':5, 'delta0':0.2,'wireLength':1000,
                'muLead':25.0, 'barrierNum':2,'barrierE':10.0, 'dissipation':0.0001,'isDissipationVar':0, 
                'isQD':0, 'qdPeak':0.4, 'qdLength':20, 
                'isSE':0, 'couplingSCSM':0.2, 'vc':0,               
-               'potType':0,'potPeakPos':0,'potSigma':1,'potPeak':1,
+               'potType':0,'potPeakPos':0,'potSigma':1,'potPeak':0,
                'muVar':0,'muVarList':0,
                'gVar':0,'randList':0,
                'deltaVar':0,
-               'vz':0.0,'vz0':0, 'vBias':0.0,'vBiasMin':-0.3,'vBiasMax':0.3,'vzNum':256,'vBiasNum':1001,'vzStep': 0.002,'vzMax':1.024,
-               'leadPos':0,'leadNum':1,
-               'muStep':0.002,'isMu':0,
+               'vz':0.0,'vz0':0, 'vBias':0.0,'vBiasMin':-0.3,'vBiasMax':0.3,'vzNum':256,'vBiasNum':1001,'vzStep': 0.002,'vzMax':1.024,'mu0':0,'muMax':1,'muStep':0.002,'isMu':0,
+               'leadPos':0,'leadNum':1,               
                'error':0};
     if vars>1:        
         for i in range(1,vars):
@@ -42,12 +41,10 @@ def main():
                 else:
                     print('Cannot find the parameter',varName);
                     parameters['error']=1;
-                    parameters=comm.bcast(parameters,root=0);
                     sys.exit(1);
             except:
                 print('Cannot parse the input parameters',sys.argv[i]);
                 parameters['error']=1;
-                parameters=comm.bcast(parameters,root=0);
                 sys.exit(1);                
     if (isinstance(parameters['muVarList'],str)):
         print('disorder use filename:'+parameters['muVarList']);
@@ -59,12 +56,10 @@ def main():
             except:
                 print('Cannot read muVarList',dat);
                 parameters['error']=1;
-                parameters=comm.bcast(parameters,root=0);
                 sys.exit(1);
         except:
             print('Cannot find disorder file:',muVarfn);
             parameters['error']=1;
-            parameters=comm.bcast(parameters,root=0);
             sys.exit(1);
     else:                    
         if (parameters['muVar']!=0):
@@ -79,12 +74,10 @@ def main():
             except:
                 print('Cannot read random list',dat);
                 parameters['error']=1;
-                parameters=comm.bcast(parameters,root=0);
                 sys.exit(1);
         except:
             print('Cannot find random list file:',randfn);
             parameters['error']=1;
-            parameters=comm.bcast(parameters,root=0);                
             sys.exit(1);
     else:
         if (parameters['gVar']!=0):
@@ -126,10 +119,10 @@ def main():
         cond_matrix_partial=partial(cond_matrix,parameters=parameters)
         loss=adaptive.learner.learner2D.resolution_loss_function(min_distance=0.0,max_distance=1)
         if parameters['isMu']==0:
-            learner=adaptive.Learner2D(cond_matrix_partial,bounds=[(parameters['vz0'],parameters['vzMax']),(parameters['vBiasMin'],parameters['vBiasMax'])],loss_per_triangle=loss);
+            learner=adaptive.Learner2D(cond_matrix_partial,bounds=[(parameters['vz0'],parameters['vzMax']),(parameters['vBiasMin'],parameters['vBiasMax'])]);
         else:
-            learner=adaptive.Learner2D(cond_matrix_partial,bounds=[(parameters['mu0'],parameters['muMax']),(parameters['vBiasMin'],parameters['vBiasMax'])],loss_per_triangle=loss);
-    runner=adaptive.BlockingRunner(learner,goal=lambda l:l.loss()<0.0001,executor=MPIPoolExecutor(),shutdown_executor=True)
+            learner=adaptive.Learner2D(cond_matrix_partial,bounds=[(parameters['mu0'],parameters['muMax']),(parameters['vBiasMin'],parameters['vBiasMax'])]);
+    runner=adaptive.BlockingRunner(learner,goal=lambda l:l.loss()<0.01,executor=MPIPoolExecutor(),shutdown_executor=True)
     save_fig(learner,n=501,parameters=parameters)
     end=time.time()
     print(end-start)
@@ -230,10 +223,6 @@ def save_fig(self,n=None,parameters=None):
             plt.colorbar()        
             plt.axis((xb[0],xb[1],yb[0],yb[1]))
             fig.savefig(fn+'.png')
-       
-   
-
-
-
+            
 if __name__=="__main__":
 	main()
