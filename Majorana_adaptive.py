@@ -12,6 +12,7 @@ from mpi4py.futures import MPIPoolExecutor
 from math import sqrt
 from functools import partial
 import time
+from copy import deepcopy
 
 
 def main():
@@ -103,7 +104,7 @@ def main():
     vBiasMax = parameters['vBiasMax']; 
     vBiasNumber = int(parameters['vBiasNum']);
     vBiasRange = np.linspace(vBiasMin, vBiasMax, vBiasNumber);    
-    randList=parameters['randList'];    
+    #randList=parameters['randList'];    
     if parameters['leadNum']==1:
         cond_partial=partial(cond,parameters=parameters)
         leadPos=int(parameters['leadPos']);
@@ -114,7 +115,9 @@ def main():
                 learner=adaptive.Learner2D(cond_partial,bounds=[(parameters['vz0'],parameters['vzMax']),(parameters['vBiasMin'],parameters['vBiasMax'])]);
                 #,loss_per_triangle=adaptive.learner.learner2D.minimize_triangle_surface_loss
             else:
-                learner=adaptive.Learner2D(cond_partial,bounds=[(parameters['mu0'],parameters['muMax']),(parameters['vBiasMin'],parameters['vBiasMax'])],loss_per_triangle=loss);
+                learner=adaptive.Learner2D(cond_partial,bounds=[(parameters['mu0'],parameters['muMax']),(parameters['vBiasMin'],parameters['vBiasMax'])]);
+            runner=adaptive.BlockingRunner(learner,goal=lambda l:l.loss()<0.01,executor=MPIPoolExecutor(),shutdown_executor=True)
+            save_fig(learner,n=501,parameters=parameters)
     elif parameters['leadNum']==2:
         cond_matrix_partial=partial(cond_matrix,parameters=parameters)
         loss=adaptive.learner.learner2D.resolution_loss_function(min_distance=0.0,max_distance=1)
@@ -122,37 +125,39 @@ def main():
             learner=adaptive.Learner2D(cond_matrix_partial,bounds=[(parameters['vz0'],parameters['vzMax']),(parameters['vBiasMin'],parameters['vBiasMax'])]);
         else:
             learner=adaptive.Learner2D(cond_matrix_partial,bounds=[(parameters['mu0'],parameters['muMax']),(parameters['vBiasMin'],parameters['vBiasMax'])]);
-    runner=adaptive.BlockingRunner(learner,goal=lambda l:l.loss()<0.01,executor=MPIPoolExecutor(),shutdown_executor=True)
-    save_fig(learner,n=501,parameters=parameters)
+        runner=adaptive.BlockingRunner(learner,goal=lambda l:l.loss()<0.01,executor=MPIPoolExecutor(),shutdown_executor=True)
+        save_fig(learner,n=501,parameters=parameters)
     end=time.time()
     print(end-start)
     print(len(learner.data))
 
 def cond(xy,parameters=None):
     x,y=xy
-    if parameters['isMu']==0:
-        parameters['vz']=x     
+    pm=deepcopy(parameters)
+    if pm['isMu']==0:
+        pm['vz']=x     
     else:
-        parameters['mu']=x
-    parameters['vBias']=y
-    if parameters['gVar']!=0:
-        parameters['randList']=randList*parameters['vz'];
+        pm['mu']=x
+    pm['vBias']=y
+    if pm['gVar']!=0:
+        pm['randList']=pm['randList']*pm['vz'];
 
-    junction=Maj.make_NS_junction(parameters)  
-    return Maj.conductance(parameters,junction)  
+    junction=Maj.make_NS_junction(pm)  
+    return Maj.conductance(pm,junction)  
  
 def cond_matrix(xy,parameters=None):
     x,y=xy
-    if parameters['isMu']==0:
-        parameters['vz']=x     
+    pm=deepcopy(parameters)
+    if pm['isMu']==0:
+        pm['vz']=x     
     else:
-        parameters['mu']=x
-    parameters['vBias']=y
-    if parameters['gVar']!=0:
-        parameters['randList']=randList*parameters['vz'];
+        pm['mu']=x
+    pm['vBias']=y
+    if pm['gVar']!=0:
+        pm['randList']=pm['randList']*pm['vz'];
 
-    junction=Maj.make_NS_junction(parameters)  
-    return Maj.conductance_matrix(parameters,junction)    
+    junction=Maj.make_NS_junction(pm)  
+    return Maj.conductance_matrix(pm,junction)    
 
 def areas(ip):
     p=ip.tri.points[ip.tri.vertices]
