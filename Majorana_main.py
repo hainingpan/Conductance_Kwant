@@ -331,7 +331,7 @@ def main():
             figRL.savefig(fnRL+'.png');        
     
 if __name__=="__main__":
-    start=time.time()
+    #start=time.time()
     main()
-    end=time.time()
+    #end=time.time()
     print(end-start)
