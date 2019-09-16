@@ -27,7 +27,8 @@ def main():
                'gVar':0,'randList':0,
                'deltaVar':0,
                'vz':0.0,'vz0':0, 'vBias':0.0,'vBiasMin':-0.3,'vBiasMax':0.3,'vzNum':256,'vBiasNum':1001,'vzStep': 0.002,'vzMax':1.024,'mu0':0,'muMax':1,'muStep':0.002,'isMu':0,
-               'leadPos':0,'leadNum':1,               
+               'leadPos':0,'leadNum':1,     
+               'loss':0.01,
                'error':0};
     if vars>1:        
         for i in range(1,vars):
@@ -110,22 +111,22 @@ def main():
         leadPos=int(parameters['leadPos']);
         for irun in range(leadPos+1):
             parameters['leadPos']=irun;
-            loss=adaptive.learner.learner2D.resolution_loss_function(min_distance=0.001,max_distance=1)
+            lossfunc=adaptive.learner.learner2D.resolution_loss_function(min_distance=0.001,max_distance=1)
             if parameters['isMu']==0:
                 learner=adaptive.Learner2D(cond_partial,bounds=[(parameters['vz0'],parameters['vzMax']),(parameters['vBiasMin'],parameters['vBiasMax'])]);
                 #,loss_per_triangle=adaptive.learner.learner2D.minimize_triangle_surface_loss
             else:
                 learner=adaptive.Learner2D(cond_partial,bounds=[(parameters['mu0'],parameters['muMax']),(parameters['vBiasMin'],parameters['vBiasMax'])]);
-            runner=adaptive.BlockingRunner(learner,goal=lambda l:l.loss()<0.01,executor=MPIPoolExecutor(),shutdown_executor=True)
+            runner=adaptive.BlockingRunner(learner,goal=lambda l:l.loss()<parameters['loss'],executor=MPIPoolExecutor(),shutdown_executor=True)
             save_fig(learner,n=501,parameters=parameters)
     elif parameters['leadNum']==2:
         cond_matrix_partial=partial(cond_matrix,parameters=parameters)
-        loss=adaptive.learner.learner2D.resolution_loss_function(min_distance=0.0,max_distance=1)
+        lossfunc=adaptive.learner.learner2D.resolution_loss_function(min_distance=0.0,max_distance=1)
         if parameters['isMu']==0:
             learner=adaptive.Learner2D(cond_matrix_partial,bounds=[(parameters['vz0'],parameters['vzMax']),(parameters['vBiasMin'],parameters['vBiasMax'])]);
         else:
             learner=adaptive.Learner2D(cond_matrix_partial,bounds=[(parameters['mu0'],parameters['muMax']),(parameters['vBiasMin'],parameters['vBiasMax'])]);
-        runner=adaptive.BlockingRunner(learner,goal=lambda l:l.loss()<0.01,executor=MPIPoolExecutor(),shutdown_executor=True)
+        runner=adaptive.BlockingRunner(learner,goal=lambda l:l.loss()<parameters['loss'],executor=MPIPoolExecutor(),shutdown_executor=True)
         save_fig(learner,n=501,parameters=parameters)
     end=time.time()
     print(end-start)
