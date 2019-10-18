@@ -31,6 +31,8 @@ def make_NS_junction(parameters):
     potSigmaL=parameters['potSigmaL'];
     potSigmaR=parameters['potSigmaR'];
     qdLength = int(parameters['qdLength']);    #length of quantum dot
+    qdLengthR = int(parameters['qdLengthR']);   #lenght of right QD
+
     muVarList=parameters['muVarList'];     #the spatial profile of disorder(V_impurity)
     vc = parameters['vc'];   #The point where SC gap collapses. 0 for constant Delta (vc=infitity). The gap collapsing curve is delta_0*sqrt(1-(vz/vc)^2) 
     randList=parameters['randList']; #the positive random list for only one in random {g,SC gap}. But does not support both. 
@@ -85,15 +87,18 @@ def make_NS_junction(parameters):
         
     #Construct lattice  (multiband->scDelta& muSet not verified, the tau matrix should be replaced, gVar, deltaVar to be changed )
     for x in range(wireLength):
-            junction[lat(x)]=(-muSet[x]+2*t)*PM.tzs0+scDelta[x]+vzSet[x]*PM.t0sx-1j*dissipation*PM.t0s0;
-   
+        junction[lat(x)]=(-muSet[x]+2*t)*PM.tzs0+scDelta[x]+vzSet[x]*PM.t0sx-1j*dissipation*PM.t0s0;   
+        
     if parameters['isQD'] == 1:
         qdPeak = parameters['qdPeak'];
         for x in range(qdLength):
-            junction[ lat(x) ] = (2*t - mu + qdPeak*np.exp(-x*x/(qdLength*qdLength)) )*PM.tzs0 + vz*PM.t0sx - 1j*dissipation*PM.t0s0;
+            junction[ lat(x) ] = (2*t - mu + qdPeak*np.exp(-x*x/(qdLength*qdLength)) )*PM.tzs0 + vz*PM.t0sx - 1j*dissipation*PM.t0s0;        
+        qdPeakR = parameters['qdPeakR']
+        for x in range(qdLengthR):
+            junction[ lat(wireLength-x-1)] = (2*t - mu + qdPeakR*np.exp(-x*x/(qdLengthR*qdLengthR)) )*PM.tzs0 + vz*PM.t0sx - 1j*dissipation*PM.t0s0;
+
     #Construct hopping
-    for x in range(1,wireLength):
-            junction[lat(x-1),lat(x)]=-t*PM.tzs0-1j*alpha*PM.tzsy;
+    junction[lat.neighbors()]=-t*PM.tzs0-1j*alpha*PM.tzsy;
    
     
     #Construct lead and barrier
