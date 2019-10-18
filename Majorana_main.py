@@ -18,7 +18,7 @@ def main():
                'muLead':25.0, 'barrierNum':2,'barrierE':10.0, 'dissipation':0.0001,'isDissipationVar':0, 
                'isQD':0, 'qdPeak':0.4, 'qdLength':20, 
                'isSE':0, 'couplingSCSM':0.2, 'vc':0,               
-               'potType':0,'potPeakPos':0,'potSigma':1,'potPeak':0,
+               'potType':0,'potPeakPos':0,'potSigma':1,'potPeak':0,'potPeakL':0,'potPeakR':0,'potPeakPosL':0,'potPeakPosR':0,'potSigmaL':0,'potSigmaR':0,
                'muVar':0,'muVarList':0,
                'gVar':0,'randList':0,
                'deltaVar':0,

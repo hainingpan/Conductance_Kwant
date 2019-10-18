@@ -24,6 +24,12 @@ def make_NS_junction(parameters):
     leadPos=parameters['leadPos'];       #position of lead, 0: left; 1: right
     potPeakPos=parameters['potPeakPos'];   #position of the peak
     potSigma=parameters['potSigma'];   #sigma(linewidth) in smooth potential or quatnum dot
+    potPeakL=parameters['potPeakL'];
+    potPeakPosL=parameters['potPeakPosL'];
+    potPeakR=parameters['potPeakR'];
+    potPeakPosR=parameters['potPeakPosR'];
+    potSigmaL=parameters['potSigmaL'];
+    potSigmaR=parameters['potSigmaR'];
     qdLength = int(parameters['qdLength']);    #length of quantum dot
     muVarList=parameters['muVarList'];     #the spatial profile of disorder(V_impurity)
     vc = parameters['vc'];   #The point where SC gap collapses. 0 for constant Delta (vc=infitity). The gap collapsing curve is delta_0*sqrt(1-(vz/vc)^2) 
@@ -44,7 +50,8 @@ def make_NS_junction(parameters):
         'lorentz': lambda x: potPeak*1.0/(((x-potPeakPos*wireLength)*a)**2+0.5)+mu,
         'lorentzsigmoid': lambda x:  (potPeak*1.0/(((x-potPeakPos*wireLength)*a)**2+.5)+(4-mu)/2./(np.exp(-(x-0.5*wireLength)*a)+1))+mu, 
         'exp': lambda x: potPeak*(np.exp(-((x-potPeakPos*wireLength)*a)**2/(2*potSigma**2)))+mu,
-        'sigmoid': lambda x: mu+potPeak*1/(np.exp((.5*wireLength-x)*a/potSigma)+1)
+        'sigmoid': lambda x: mu+potPeak*1/(np.exp((.5*wireLength-x)*a/potSigma)+1),
+        'exp2': lambda x: potPeakL*(np.exp(-((x-potPeakPosL*wireLength)*a)**2/(2*potSigmaL**2)))+potPeakR*(np.exp(-((x-potPeakPosR*wireLength)*a)**2/(2*potSigmaR**2)))+mu
     }
     muSet=potential[parameters['potType']](np.arange(wireLength));     
     muSet=muSet-muVarList;
@@ -118,6 +125,7 @@ def conductance(parameters,junction):
 def conductance_matrix(parameters,junction):
     vBias=parameters['vBias'];
     sMatrix = kwant.smatrix(junction, vBias, check_hermiticity=False);
+    #np.savetxt(str(vBias)+'.dat',sMatrix.data)
     # [[G_LL,G_LR],[G_RL,G_RR]]
     GLL=sMatrix.submatrix((0,0),(0,0)).shape[0]-sMatrix.transmission((0,0),(0,0))+sMatrix.transmission((0,1),(0,0)) 
     GRR=sMatrix.submatrix((1,0),(1,0)).shape[0]-sMatrix.transmission((1,0),(1,0))+sMatrix.transmission((1,1),(1,0)) 
