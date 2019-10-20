@@ -48,9 +48,9 @@ def make_NS_junction(parameters):
         'sinabs': lambda x: np.abs(np.sin(x*2*pi/wireLength))*potPeak+mu,
         'lorentz': lambda x: potPeak*1.0/(((x-potPeakPos*wireLength)*a)**2+0.5)+mu,
         'lorentzsigmoid': lambda x:  (potPeak*1.0/(((x-potPeakPos*wireLength)*a)**2+.5)+(4-mu)/2./(np.exp(-(x-0.5*wireLength)*a)+1))+mu, 
-        'exp': lambda x: potPeak*(np.exp(-((x-potPeakPos*wireLength)*a)**2/(2*potSigma**2)))+mu,
+        'exp': lambda x: potPeak*(np.exp(-((x-potPeakPos)*a)**2/(2*potSigma**2)))+mu,
         'sigmoid': lambda x: mu+potPeak*1/(np.exp((.5*wireLength-x)*a/potSigma)+1),
-        'exp2': lambda x: potPeak*(np.exp(-((x-potPeakPos*wireLength)*a)**2/(2*potSigma**2)))+potPeakR*(np.exp(-((x-potPeakPosR*wireLength)*a)**2/(2*potSigmaR**2)))+mu
+        'exp2': lambda x: potPeak*(np.exp(-((x-potPeakPos)*a)**2/(2*potSigma**2)))+potPeakR*(np.exp(-((x-potPeakPosR)*a)**2/(2*potSigmaR**2)))+mu
     }
     muSet=potential[parameters['potType']](np.arange(wireLength));     
     muSet=muSet-muVarList;
@@ -89,10 +89,10 @@ def make_NS_junction(parameters):
     if parameters['isQD'] == 1:
         qdPeak = parameters['qdPeak'];
         for x in range(qdLength):
-            junction[ lat(x) ] = (2*t - mu + qdPeak*np.exp(-x*x/(qdLength*qdLength)) )*PM.tzs0 + vz*PM.t0sx - 1j*dissipation*PM.t0s0;        
+            junction[ lat(x) ] = (2*t - mu + qdPeak*np.exp(-(x*a)**2/(qdLength*qdLength)) )*PM.tzs0 + vz*PM.t0sx - 1j*dissipation*PM.t0s0;        
         qdPeakR = parameters['qdPeakR']
         for x in range(qdLengthR):
-            junction[ lat(wireLength-x-1)] = (2*t - mu + qdPeakR*np.exp(-x*x/(qdLengthR*qdLengthR)) )*PM.tzs0 + vz*PM.t0sx - 1j*dissipation*PM.t0s0;
+            junction[ lat(wireLength-x-1)] = (2*t - mu + qdPeakR*np.exp(-(x*a)**2/(qdLengthR*qdLengthR)) )*PM.tzs0 + vz*PM.t0sx - 1j*dissipation*PM.t0s0;
 
     #Construct hopping
     junction[lat.neighbors()]=-t*PM.tzs0-1j*alpha*PM.tzsy;
