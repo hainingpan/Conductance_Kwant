@@ -18,7 +18,7 @@ def main():
                'muLead':25.0, 'barrierNum':2,'barrierE':10.0, 'dissipation':0.0001,'isDissipationVar':0, 
                'isQD':0, 'qdPeak':0.4, 'qdLength':20, 'qdPeakR':0,'qdLengthR':0,
                'isSE':0, 'couplingSCSM':0.2, 'vc':0,               
-               'potType':0,'potPeakPos':0,'potSigma':1,'potPeak':0,'potPeakL':0,'potPeakR':0,'potPeakPosL':0,'potPeakPosR':0,'potSigmaL':0,'potSigmaR':0,
+               'potType':0,'potPeakPos':0,'potSigma':1,'potPeak':0,'potPeakR':0,'potPeakPosR':0,'potSigmaR':0,
                'muVar':0,'muVarList':0,
                'gVar':0,'randList':0,
                'deltaVar':0,
@@ -171,8 +171,8 @@ def main():
                 else:
                     fn_range=('-'+str(mu0)+','+str(mu0+muStep*tot)+','+str(vBiasMax)+'-')*(parameters['muNum']!=0);
                 fn_potPeak=('mx'+str(parameters['potPeak']))*(parameters['potType']!=0);
-                fn_potPeakPos=('pk'+str(parameters['potPeakPos']))*((parameters['potType']=='lorentz')+( parameters['potType']=='lorentzsigmoid'));
-                fn_potSigma=('sg'+str(parameters['potSigma']))*((parameters['potType']=='exp')+(parameters['potType']=='sigmoid'));
+                fn_potPeakPos=('pk'+str(parameters['potPeakPos']))*((parameters['potType']=='lorentz')+( parameters['potType']=='lorentzsigmoid')+(parameters['potType']=='exp2'));
+                fn_potSigma=('sg'+str(parameters['potSigma']))*((parameters['potType']=='exp')+(parameters['potType']=='sigmoid')+(parameters['potType']=='exp2'));
                 fn_potPeakR=('mxR'+str(parameters['potPeakR']))*(parameters['potType']=='exp2');
                 fn_potPeakPosR=('pkR'+str(parameters['potPeakPosR']))*( parameters['potType']=='exp2');
                 fn_potSigmaR=('sgR'+str(parameters['potSigmaR']))*(parameters['potType']=='exp2');
@@ -266,8 +266,8 @@ def main():
             else:
                 fn_range=('-'+str(mu0)+','+str(mu0+muStep*tot)+','+str(vBiasMax)+'-')*(parameters['muNum']!=0);
             fn_potPeak=('mx'+str(parameters['potPeak']))*(parameters['potType']!=0);
-            fn_potPeakPos=('pk'+str(parameters['potPeakPos']))*((parameters['potType']=='lorentz')+( parameters['potType']=='lorentzsigmoid'));
-            fn_potSigma=('sg'+str(parameters['potSigma']))*((parameters['potType']=='exp')+(parameters['potType']=='sigmoid'));
+            fn_potPeakPos=('pk'+str(parameters['potPeakPos']))*((parameters['potType']=='lorentz')+( parameters['potType']=='lorentzsigmoid')+(parameters['potType']=='exp2'));
+            fn_potSigma=('sg'+str(parameters['potSigma']))*((parameters['potType']=='exp')+(parameters['potType']=='sigmoid')+(parameters['potType']=='exp2'));
             fn_potPeakR=('mxR'+str(parameters['potPeakR']))*(parameters['potType']=='exp2');
             fn_potPeakPosR=('pkR'+str(parameters['potPeakPosR']))*( parameters['potType']=='exp2');
             fn_potSigmaR=('sgR'+str(parameters['potSigmaR']))*(parameters['potType']=='exp2');

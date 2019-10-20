@@ -24,11 +24,8 @@ def make_NS_junction(parameters):
     leadPos=parameters['leadPos'];       #position of lead, 0: left; 1: right
     potPeakPos=parameters['potPeakPos'];   #position of the peak
     potSigma=parameters['potSigma'];   #sigma(linewidth) in smooth potential or quatnum dot
-    potPeakL=parameters['potPeakL'];
-    potPeakPosL=parameters['potPeakPosL'];
     potPeakR=parameters['potPeakR'];
     potPeakPosR=parameters['potPeakPosR'];
-    potSigmaL=parameters['potSigmaL'];
     potSigmaR=parameters['potSigmaR'];
     qdLength = int(parameters['qdLength']);    #length of quantum dot
     qdLengthR = int(parameters['qdLengthR']);   #lenght of right QD
@@ -53,7 +50,7 @@ def make_NS_junction(parameters):
         'lorentzsigmoid': lambda x:  (potPeak*1.0/(((x-potPeakPos*wireLength)*a)**2+.5)+(4-mu)/2./(np.exp(-(x-0.5*wireLength)*a)+1))+mu, 
         'exp': lambda x: potPeak*(np.exp(-((x-potPeakPos*wireLength)*a)**2/(2*potSigma**2)))+mu,
         'sigmoid': lambda x: mu+potPeak*1/(np.exp((.5*wireLength-x)*a/potSigma)+1),
-        'exp2': lambda x: potPeakL*(np.exp(-((x-potPeakPosL*wireLength)*a)**2/(2*potSigmaL**2)))+potPeakR*(np.exp(-((x-potPeakPosR*wireLength)*a)**2/(2*potSigmaR**2)))+mu
+        'exp2': lambda x: potPeak*(np.exp(-((x-potPeakPos*wireLength)*a)**2/(2*potSigma**2)))+potPeakR*(np.exp(-((x-potPeakPosR*wireLength)*a)**2/(2*potSigmaR**2)))+mu
     }
     muSet=potential[parameters['potType']](np.arange(wireLength));     
     muSet=muSet-muVarList;
