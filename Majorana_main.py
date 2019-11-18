@@ -19,25 +19,26 @@ def main():
                'isQD':0, 'qdPeak':0.4, 'qdLength':20, 'qdPeakR':0,'qdLengthR':0,
                'isSE':0, 'couplingSCSM':0.2, 'vc':0,               
                'potType':0,'potPeakPos':0,'potSigma':1,'potPeak':0,'potPeakR':0,'potPeakPosR':0,'potSigmaR':0,
-               'muVar':0,'muVarList':0,
+               'muVar':0,'muVarList':0,'muVarType':0,'scatterList':0,
                'gVar':0,'randList':0,
                'deltaVar':0,
                'vz':0.0,'vz0':0, 'vBias':0.0,'vBiasMin':-0.3,'vBiasMax':0.3,'vzNum':256,'vBiasNum':1001,'vzStep': 0.002,'mu0':0,'muMax':1,'muStep':0.002,'muNum':0,
                'leadPos':0,'leadNum':1,               
                'error':0};
     if (rank==0):
-        if vars>1:        
+        if vars>1:     
+            #read and parse parameters
             for i in range(1,vars):
                 try:
                     varName=re.search('(.)*(?=\=)',sys.argv[i]).group(0);
                     varValue=re.search('(?<=\=)(.)*',sys.argv[i]).group(0);
                     if varName in parameters:
-                        if varName in ['potType','muVarList','randList']:
+                        if varName in ['potType','muVarList','randList','muVarType','scatterList']:
                             parameters[varName]=varValue;
                         else:
                             parameters[varName]=float(varValue);
                     else:
-                        print('Cannot find the parameter',varName);
+                        print('Cannot find the parameter(s)',varName);
                         parameters['error']=1;
                         parameters=comm.bcast(parameters,root=0);
                         sys.exit(1);
@@ -45,27 +46,59 @@ def main():
                     print('Cannot parse the input parameters',sys.argv[i]);
                     parameters['error']=1;
                     parameters=comm.bcast(parameters,root=0);
-                    sys.exit(1);                   
-        if (isinstance(parameters['muVarList'],str)):
-            print('disorder use filename:'+parameters['muVarList']);
-            muVarfn=parameters['muVarList'];
-            try:
-                dat=np.loadtxt(muVarfn);
+                    sys.exit(1);               
+        
+        if (parameters['muVarType']==0 or parameters['muVarType']=='Gaussian'):
+            if (isinstance(parameters['muVarList'],str)):                   #whether use disorder configuration file             
+                print('gaussian disorder in the chemical potential uses filename: '+parameters['muVarList']);
+                muVarfn=parameters['muVarList'];
                 try:
-                    parameters['muVarList']=dat;
+                    dat=np.loadtxt(muVarfn);
+                    try:
+                        parameters['muVarList']=dat;
+                    except:
+                        print('Cannot read muVarList: ',dat);
+                        parameters['error']=1;
+                        parameters=comm.bcast(parameters,root=0);
+                        sys.exit(1);
                 except:
-                    print('Cannot read muVarList',dat);
+                    print('Cannot find disorder file: ',muVarfn);
                     parameters['error']=1;
                     parameters=comm.bcast(parameters,root=0);
                     sys.exit(1);
-            except:
-                print('Cannot find disorder file:',muVarfn);
-                parameters['error']=1;
-                parameters=comm.bcast(parameters,root=0);
-                sys.exit(1);
-        else:                    
-            if (parameters['muVar']!=0):
-                parameters['muVarList']=np.random.normal(0,parameters['muVar'],int(parameters['wireLength']));
+            else:                    
+                if (parameters['muVar']!=0):
+                    parameters['muVarList']=np.random.normal(0,parameters['muVar'],int(parameters['wireLength']));
+        
+        if (parameters['muVarType']=='Coulomb'):
+            if (isinstance(parameters['scatterList'],str)):
+                print('Coulomb disorder in the chemical potential uses filename: '+parameters['scatterList']);
+                scatterListfn=parameters['scatterList'];            #the position of scattering center in (um)
+                try:
+                    dat=np.loadtxt(scatterListfn)
+                    parameters['scatterList']=dat
+                    try:
+                        prefactor=1/(4*np.pi*8.85418781762039e-12)*(1.60217662e-19/(5*parameters['a']*10e-9))*1e3       #1/(4pi)*e/(5*a) (meV)
+                        parameters['muVarList']=prefactor*np.array([np.sum(1/np.array([np.sqrt((site-xi/(parameters['a']*1e-2))**2+(5)**2) for xi in dat])) for site in range(int(parameters['wireLength']))])
+                    except:
+                        print('Cannot read scatterList: ',dat)
+                        parameters['error']=1
+                        parameters=comm.bcast(parameters,root=0)
+                        sys.exit(1)                        
+                except:
+                    print('Cannot find disorder file: ',scatterListfn)
+                    parameters['error']=1
+                    parameters=comm.bcast(parameters,root=0)
+                    sys.exit(1);
+            else:
+                if (parameters['muVar']!=0):
+                    dat=np.random.uniform(low=0,high=parameters['wireLength'],size=int(parameters['muVar']))*parameters['a']*1e-2
+                    parameters['scatterList']=dat
+                    prefactor=1/(4*np.pi*8.85418781762039e-12)*(1.60217662e-19/(5*parameters['a']*10e-9))*1e3
+                    parameters['muVarList']=prefactor*np.array([np.sum(1/np.array([np.sqrt((site-xi/(parameters['a']*1e-2))**2+(5)**2) for xi in dat])) for site in range(int(parameters['wireLength']))])                
+        
+        
+        
         if (isinstance(parameters['randList'],str)):
             print('random list use filename:'+parameters['randList']);
             randfn=parameters['randList'];
@@ -177,6 +210,8 @@ def main():
                 fn_potPeakPosR=('pkR'+str(parameters['potPeakPosR']))*( parameters['potType']=='exp2');
                 fn_potSigmaR=('sgR'+str(parameters['potSigmaR']))*(parameters['potType']=='exp2');
                 fn_muVar=('mVar'+str(parameters['muVar']))*(parameters['muVar']!=0)
+                fn_muVarType=('C')*(parameters['muVarType']=='Coulomb')
+                
                 fn_dissipation=('G'+str(parameters['dissipation']))*(parameters['isDissipationVar']!=0);
                 fn_qdLength=('dL'+str(int(parameters['qdLength'])))*(parameters['isQD']!=0);
                 fn_qdPeak=('VD'+str(parameters['qdPeak']))*(parameters['isQD']!=0);
@@ -187,7 +222,7 @@ def main():
                 fn_gVar=('gVar'+str(parameters['gVar']))*(parameters['gVar']!=0);
                 fn_deltaVar=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0);
                 
-                fn=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_leadPos+fn_range;
+                fn=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_leadPos+fn_range;
                 
                 np.savetxt(fn+'.dat',recvbuf);
                 if parameters['isTV']==1:
@@ -273,6 +308,7 @@ def main():
             fn_potSigmaR=('sgR'+str(parameters['potSigmaR']))*(parameters['potType']=='exp2');
 
             fn_muVar=('mVar'+str(parameters['muVar']))*(parameters['muVar']!=0)
+            fn_muVarType=('C')*(parameters['muVarType']=='Coulomb')
             fn_dissipation=('G'+str(parameters['dissipation']))*(parameters['isDissipationVar']!=0);
             fn_qdLength=('dL'+str(int(parameters['qdLength'])))*(parameters['isQD']!=0);
             fn_qdPeak=('VD'+str(parameters['qdPeak']))*(parameters['isQD']!=0);
@@ -284,10 +320,10 @@ def main():
             fn_gVar=('gVar'+str(parameters['gVar']))*(parameters['gVar']!=0);
             fn_deltaVar=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0);
             
-            fnLL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'LL'+fn_range;
-            fnRR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'RR'+fn_range;
-            fnLR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'LR'+fn_range;
-            fnRL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'RL'+fn_range;
+            fnLL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'LL'+fn_range;
+            fnRR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'RR'+fn_range;
+            fnLR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'LR'+fn_range;
+            fnRL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'RL'+fn_range;
             
             np.savetxt(fnLL+'.dat',recvbufGLL);
             np.savetxt(fnRR+'.dat',recvbufGRR);
