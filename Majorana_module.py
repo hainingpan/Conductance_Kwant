@@ -136,20 +136,14 @@ def conductance_matrix(parameters,junction):
     # return nparray or struct
     return GLL,GRR,GLR,GRL
 
-def topologicalQ_1(parameters,junction):
-    vBias=parameters['vBias'];
-    sMatrix = kwant.smatrix(junction, vBias, check_hermiticity=False);
-    return np.abs(np.linalg.det(sMatrix.submatrix((0,0),(0,0)))),np.abs(np.linalg.det(sMatrix.submatrix((0,1),(0,1))))
-    
 def topologicalQ(parameters,junction):
     vBias=parameters['vBias'];
     sMatrix = kwant.smatrix(junction, vBias, check_hermiticity=False);
-    return np.abs(np.linalg.det(sMatrix.submatrix((0,0),(0,0)))),np.abs(np.linalg.det(sMatrix.submatrix((1,0),(1,0)))),np.abs(np.linalg.det(sMatrix.submatrix((0,1),(0,1)))),np.abs(np.linalg.det(sMatrix.submatrix((1,1),(1,1))))
-        
+    return np.abs(LA.det(sMatrix.data))
+    
 
-def TV(parameters):
-    parameters['vBias'] = 0.0; 
-    junction = make_NS_junction(parameters);
+def TV(parameters,junction):
+    vBias=parameters['vBias'];
     
     sMatrix = kwant.smatrix(junction, parameters['vBias'], check_hermiticity=False);
     R = sMatrix.submatrix(0,0);
@@ -168,7 +162,7 @@ def TV(parameters):
     return tv
     
 def TVmap(parameters,junction):
-    vBias=parameters['vBias'];   
+    vBias=parameters['vBias'];   #TV is not suitable to define large value deviated from 0
     sMatrix = kwant.smatrix(junction, vBias, check_hermiticity=False);
     R = sMatrix.submatrix(0,0);
     tv0 = LA.det(R);
