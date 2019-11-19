@@ -136,6 +136,17 @@ def conductance_matrix(parameters,junction):
     # return nparray or struct
     return GLL,GRR,GLR,GRL
 
+def topologicalQ_1(parameters,junction):
+    vBias=parameters['vBias'];
+    sMatrix = kwant.smatrix(junction, vBias, check_hermiticity=False);
+    return np.abs(np.linalg.det(sMatrix.submatrix((0,0),(0,0)))),np.abs(np.linalg.det(sMatrix.submatrix((0,1),(0,1))))
+    
+def topologicalQ(parameters,junction):
+    vBias=parameters['vBias'];
+    sMatrix = kwant.smatrix(junction, vBias, check_hermiticity=False);
+    return np.abs(np.linalg.det(sMatrix.submatrix((0,0),(0,0)))),np.abs(np.linalg.det(sMatrix.submatrix((1,0),(1,0)))),np.abs(np.linalg.det(sMatrix.submatrix((0,1),(0,1)))),np.abs(np.linalg.det(sMatrix.submatrix((1,1),(1,1))))
+        
+
 def TV(parameters):
     parameters['vBias'] = 0.0; 
     junction = make_NS_junction(parameters);

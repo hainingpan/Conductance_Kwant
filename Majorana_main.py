@@ -23,7 +23,8 @@ def main():
                'gVar':0,'randList':0,
                'deltaVar':0,
                'vz':0.0,'vz0':0, 'vBias':0.0,'vBiasMin':-0.3,'vBiasMax':0.3,'vzNum':256,'vBiasNum':1001,'vzStep': 0.002,'mu0':0,'muMax':1,'muStep':0.002,'muNum':0,
-               'leadPos':0,'leadNum':1,               
+               'leadPos':0,'leadNum':1, 
+               'Q':0,
                'error':0};
     if (rank==0):
         if vars>1:     
@@ -158,6 +159,8 @@ def main():
         for irun in range(leadPos+1):
             parameters['leadPos']=irun;
             sendbuf=np.empty((per,vBiasNumber));  #conductance
+            if (parameters['Q']!=0):
+                sendbufQ=np.empty((per,2))
             if parameters['isTV']==1:
                 sendbuf2=np.empty((per,vBiasNumber)); #topological visibility
             
@@ -180,17 +183,28 @@ def main():
                         sendbuf[ii,index]=Maj.conductance(parameters,junction);
                     else:
                         sendbuf[ii,index],sendbuf2[ii,index]=Maj.conductanceAndTV(parameters,junction);
+                        
+                    if (parameters['Q']!=0):
+                        if (vBias==0):
+                            sendbufQ[ii,:]=Maj.topologicalQ_1(parameters,junction)
+                            
             if (rank==0):
                 recvbuf=np.empty((tot,vBiasNumber)); 
+                if (parameters['Q']!=0):
+                    recvbufQ=np.empty((tot,2))
                 if parameters['isTV']==1:
                     recvbuf2=np.empty((tot,vBiasNumber));
             else:
-                recvbuf=None;
+                recvbuf=None
+                if (parameters['Q']!=0):
+                    recvbufQ=None
                 if parameters['isTV']==1:
-                    recvbuf2=None;
-            comm.Gather(sendbuf,recvbuf,root=0);
+                    recvbuf2=None
+            comm.Gather(sendbuf,recvbuf,root=0)
+            if (parameters['Q']!=0):
+                comm.Gather(sendbufQ,recvbufQ,root=0)
             if parameters['isTV']==1:
-                comm.Gather(sendbuf2,recvbuf2,root=0);
+                comm.Gather(sendbuf2,recvbuf2,root=0)
         
             if (rank==0):
                 fn_mu=('m'+str(parameters['mu']))*(parameters['muNum']==0);
@@ -218,13 +232,19 @@ def main():
                 fn_qdLengthR=('dLR'+str(int(parameters['qdLengthR'])))*(parameters['isQD']!=0)*(parameters['qdLengthR']!=0);
                 fn_qdPeakR=('VDR'+str(parameters['qdPeakR']))*(parameters['isQD']!=0)*(parameters['qdLengthR']!=0);
                 fn_couplingSCSM=('g'+str(parameters['couplingSCSM']))*(parameters['isSE']==1);
-                fn_vc=('vc'+str(parameters['vc']))*(parameters['isSE']==1)*(parameters['vc']!=0);
+                fn_vc=('vc'+str(parameters['vc']))*(parameters['isSE']==1)*(parameters['vc']!=0)
                 fn_gVar=('gVar'+str(parameters['gVar']))*(parameters['gVar']!=0);
-                fn_deltaVar=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0);
+                fn_deltaVar=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0)
                 
-                fn=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_leadPos+fn_range;
+                fn=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_leadPos+fn_range
                 
-                np.savetxt(fn+'.dat',recvbuf);
+                if (parameters['Q']!=0):
+                    fn=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_leadPos+'Q'+fn_range
+                    
+                np.savetxt(fn+'.dat',recvbuf)
+                if (parameters['Q']!=0):
+                   np.savetxt(fnQ+'.dat',recvbufQ)
+                   
                 if parameters['isTV']==1:
                     np.savetxt(fn+'TV.dat',recvbuf2);
                 if parameters['muNum']==0:
@@ -242,6 +262,14 @@ def main():
                 plt.axis((xRange[0],xRange[-1],vBiasMin,vBiasMax));
                 fig.savefig(fn+'.png');
                 
+                if (parameters['Q']==1):
+                    figQ=plt.figure();
+                    plt.plot(xRange,recvbufQ)
+                    plt.xlabel('Vz(meV)')
+                    plt.ylabel('V_bias(meV)')
+                    plt.axis((xRange[0],xRange[-1],0,1))
+                    figQ.savefig(fnQ+'.png')
+                    
                 if parameters['isTV']==1:
                     fig2=plt.figure();
                     plt.pcolormesh(xRange,vBiasRange,np.transpose(recvbuf2));
@@ -252,43 +280,54 @@ def main():
                     fig2.savefig(fn+'TV.png');
         
     elif parameters['leadNum']==2:
-        sendbufGLL=np.empty((per,vBiasNumber));  #conductance
-        sendbufGRR=np.empty((per,vBiasNumber));
-        sendbufGLR=np.empty((per,vBiasNumber));
-        sendbufGRL=np.empty((per,vBiasNumber));
+        sendbufGLL=np.empty((per,vBiasNumber))  #conductance
+        sendbufGRR=np.empty((per,vBiasNumber))
+        sendbufGLR=np.empty((per,vBiasNumber))
+        sendbufGRL=np.empty((per,vBiasNumber))
+        if (parameters['Q']!=0):
+            sendbufQ=np.empty((per,4))          #topological number, Q=|det(r)|=1 for everywhere except TQPT, Rosdahl et al 2018 Andreev rectifier
         for ii in range(per):
             if parameters['muNum']==0:
-                parameters['vz'] = vz0+(ii+rank*per)*vzStep;
+                parameters['vz'] = vz0+(ii+rank*per)*vzStep
             else:
-                parameters['mu'] = mu0+(ii+rank*per)*muStep;
+                parameters['mu'] = mu0+(ii+rank*per)*muStep
                 
             if parameters['gVar']!=0:
                 parameters['randList']=randList*parameters['vz'];
             if parameters['isSE']==0:
-                junction=Maj.make_NS_junction(parameters);   #Change this if junction is voltage dependent, e.g. in Self energy
+                junction=Maj.make_NS_junction(parameters)   #Change this if junction is voltage dependent, e.g. in Self energy
             for index in range(vBiasNumber):
-                vBias=vBiasRange[index];
-                parameters['vBias']=vBias;
+                vBias=vBiasRange[index]
+                parameters['vBias']=vBias
                 if parameters['isSE']==1:
-                    junction=Maj.make_NS_junction(parameters);                    
-                (sendbufGLL[ii,index],sendbufGRR[ii,index],sendbufGLR[ii,index],sendbufGRL[ii,index])=Maj.conductance_matrix(parameters,junction);
+                    junction=Maj.make_NS_junction(parameters)                  
+                (sendbufGLL[ii,index],sendbufGRR[ii,index],sendbufGLR[ii,index],sendbufGRL[ii,index])=Maj.conductance_matrix(parameters,junction)
+                if (parameters['Q']!=0):
+                    if (vBias==0):
+                        sendbufQ[ii,:]=Maj.topologicalQ(parameters,junction)
+            
                     
             if (rank==0):
-                recvbufGLL=np.empty((tot,vBiasNumber)); 
-                recvbufGRR=np.empty((tot,vBiasNumber));
-                recvbufGLR=np.empty((tot,vBiasNumber));
-                recvbufGRL=np.empty((tot,vBiasNumber));
+                recvbufGLL=np.empty((tot,vBiasNumber))
+                recvbufGRR=np.empty((tot,vBiasNumber))
+                recvbufGLR=np.empty((tot,vBiasNumber))
+                recvbufGRL=np.empty((tot,vBiasNumber))
+                if (parameters['Q']!=0):
+                    recvbufQ=np.empty((tot,4))
             else:
-                recvbufGLL=None;
-                recvbufGRR=None;
-                recvbufGLR=None;
-                recvbufGRL=None;
+                recvbufGLL=None
+                recvbufGRR=None
+                recvbufGLR=None
+                recvbufGRL=None
+                if (parameters['Q']!=0):
+                    recvbufQ=None
 
-            comm.Gather(sendbufGLL,recvbufGLL,root=0);
-            comm.Gather(sendbufGRR,recvbufGRR,root=0);
-            comm.Gather(sendbufGLR,recvbufGLR,root=0);
-            comm.Gather(sendbufGRL,recvbufGRL,root=0);
-
+            comm.Gather(sendbufGLL,recvbufGLL,root=0)
+            comm.Gather(sendbufGRR,recvbufGRR,root=0)
+            comm.Gather(sendbufGLR,recvbufGLR,root=0)
+            comm.Gather(sendbufGRL,recvbufGRL,root=0)
+            if (parameters['Q']!=0):
+                comm.Gather(sendbufQ,recvbufQ,root=0)
         
         if (rank==0):
             fn_mu=('m'+str(parameters['mu']))*(parameters['muNum']==0);
@@ -320,15 +359,21 @@ def main():
             fn_gVar=('gVar'+str(parameters['gVar']))*(parameters['gVar']!=0);
             fn_deltaVar=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0);
             
-            fnLL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'LL'+fn_range;
-            fnRR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'RR'+fn_range;
-            fnLR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'LR'+fn_range;
-            fnRL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'RL'+fn_range;
+            fnLL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'LL'+fn_range
+            fnRR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'RR'+fn_range
+            fnLR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'LR'+fn_range
+            fnRL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'RL'+fn_range
+            if (parameters['Q']!=0):
+                fnQ=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'Q'+fn_range;
+        
+
             
             np.savetxt(fnLL+'.dat',recvbufGLL);
             np.savetxt(fnRR+'.dat',recvbufGRR);
             np.savetxt(fnLR+'.dat',recvbufGLR);
             np.savetxt(fnRL+'.dat',recvbufGRL);
+            if (parameters['Q']!=0):
+                np.savetxt(fnQ+'.dat',recvbufQ);
 
             if parameters['muNum']==0:
                 xRange=np.arange(tot)*vzStep;
@@ -376,7 +421,16 @@ def main():
             plt.ylabel('V_bias(meV)');
             plt.colorbar();
             plt.axis((xRange[0],xRange[-1],vBiasMin,vBiasMax));
-            figRL.savefig(fnRL+'.png');        
+            figRL.savefig(fnRL+'.png');    
+
+            if (parameters['Q']==1):
+                figQ=plt.figure();
+                plt.plot(xRange,recvbufQ)
+                plt.xlabel('Vz(meV)')
+                plt.ylabel('V_bias(meV)')
+                plt.axis((xRange[0],xRange[-1],0,1))
+                figQ.savefig(fnQ+'.png')
+            
     
 if __name__=="__main__":
     #start=time.time()
