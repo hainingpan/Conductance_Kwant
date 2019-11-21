@@ -266,7 +266,7 @@ def main():
                     figQ=plt.figure();
                     plt.plot(xRange,recvbufQ)
                     plt.xlabel('Vz(meV)')
-                    plt.ylabel('V_bias(meV)')
+                    plt.ylabel('|det(r)|')
                     plt.axis((xRange[0],xRange[-1],0,1))
                     figQ.savefig(fn+'Q.png')
                     
@@ -428,7 +428,7 @@ def main():
                 figQ=plt.figure();
                 plt.plot(xRange,recvbufQ)
                 plt.xlabel('Vz(meV)')
-                plt.ylabel('V_bias(meV)')
+                plt.ylabel('|det(r)|')
                 plt.axis((xRange[0],xRange[-1],0,1))
                 figQ.savefig(fn+'Q.png')
             
