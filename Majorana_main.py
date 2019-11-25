@@ -79,7 +79,7 @@ def main():
                     dat=np.loadtxt(scatterListfn)
                     parameters['scatterList']=dat
                     try:
-                        prefactor=1/(4*np.pi*8.85418781762039e-12)*(1.60217662e-19/(5*parameters['a']*10e-9))*1e3       #1/(4pi)*e/(5*a) (meV)
+                        prefactor=1/(4*np.pi*8.85418781762039e-12)*(1.60217662e-19/(5*parameters['a']*10e-9))*1e3       #1/(4pi*epsilon)*e/(5*a) (meV)
                         parameters['muVarList']=prefactor*np.array([np.sum(1/np.array([np.sqrt((site-xi/(parameters['a']*1e-2))**2+(5)**2) for xi in dat])) for site in range(int(parameters['wireLength']))])
                     except:
                         print('Cannot read scatterList: ',dat)
