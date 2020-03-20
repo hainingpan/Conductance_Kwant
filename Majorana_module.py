@@ -54,9 +54,6 @@ def make_NS_junction(parameters):
     }
     muSet=potential[parameters['potType']](np.arange(wireLength));     
     muSet=muSet-muVarList;
-    fig=plt.figure();
-    plt.plot(muSet-mu)
-    fig.savefig('mulist.png')
     
     if parameters['deltaVar']==0:
         delta0=delta0*np.ones(wireLength);
