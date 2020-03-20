@@ -44,6 +44,7 @@ def make_NS_junction(parameters):
         'sin': lambda x: np.sin(x*pi/(0.1*wireLength))*potPeak+mu,
         'sintheta': lambda x: potPeak*np.sin(x*pi/(wireLength/10))*(x<wireLength/10)+mu,
         'cos': lambda x: np.cos(3*x*pi/potSigma/2)*potPeak*(x<=potSigma)+mu,
+		'cos2': lambda x: -(np.cos(x*pi/potSigma/2)*potPeak*(x<=potSigma)-np.sin((x-potSigma)/20*pi)*(x>=potSigma))*(x<=(potSigma+20))+mu,
         'sin2': lambda x: np.sin(x*2*pi/wireLength)*potPeak+mu,
         'sinabs': lambda x: np.abs(np.sin(x*2*pi/wireLength))*potPeak+mu,
         'lorentz': lambda x: potPeak*1.0/(((x-potPeakPos*wireLength)*a)**2+0.5)+mu,
@@ -54,6 +55,9 @@ def make_NS_junction(parameters):
     }
     muSet=potential[parameters['potType']](np.arange(wireLength));     
     muSet=muSet-muVarList;
+    fig=plt.figure()
+    plt.plot(mu-muSet)
+    fig.savefig('mulist.png')
     
     if parameters['deltaVar']==0:
         delta0=delta0*np.ones(wireLength);
