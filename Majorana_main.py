@@ -128,11 +128,9 @@ def main():
                 randList=np.random.normal(parameters['delta0'],parameters['deltaVar'],int(parameters['wireLength']));
                 while not (np.prod(randList>0)):
                     randList=np.random.normal(parameters['delta0'],parameters['deltaVar'],int(parameters['wireLength']));
-                parameters['randList']=randList;     
-			
-
+                parameters['randList']=randList;   
+           
         print(parameters);   
-
         
     parameters=comm.bcast(parameters,root=0);
     if parameters['error']!=0:   #for the slave to exit

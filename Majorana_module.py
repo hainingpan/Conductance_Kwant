@@ -33,8 +33,8 @@ def make_NS_junction(parameters):
     muVarList=parameters['muVarList'];     #the spatial profile of disorder(V_impurity)
     vc = parameters['vc'];   #The point where SC gap collapses. 0 for constant Delta (vc=infitity). The gap collapsing curve is delta_0*sqrt(1-(vz/vc)^2) 
     randList=parameters['randList']; #the positive random list for only one in random {g,SC gap}. But does not support both. 
-	#N(1,gVar) for g;
-	#N(delta_0,deltaVar) for SC gap
+    #N(1,gVar) for g;
+    #N(delta_0,deltaVar) for SC gap
     lat=kwant.lattice.chain(a,norbs=4);  
     junction=kwant.Builder();
      
@@ -44,7 +44,7 @@ def make_NS_junction(parameters):
         'sin': lambda x: np.sin(x*pi/(0.1*wireLength))*potPeak+mu,
         'sintheta': lambda x: potPeak*np.sin(x*pi/(wireLength/10))*(x<wireLength/10)+mu,
         'cos': lambda x: -np.cos(3*x*pi/potSigma/2)*potPeak*(x<=potSigma)+mu,
-		'cos2': lambda x: -(np.cos(x*pi/potSigma/2)*potPeak*(x<=potSigma)-np.sin((x-potSigma)/20*pi)*(x>=potSigma))*(x<=(potSigma+20))+mu,
+        'cos2': lambda x: -(np.cos(x*pi/potSigma/2)*potPeak*(x<=potSigma)-np.sin((x-potSigma)/20*pi)*(x>=potSigma))*(x<=(potSigma+20))+mu,
         'sin2': lambda x: np.sin(x*2*pi/wireLength)*potPeak+mu,
         'sinabs': lambda x: np.abs(np.sin(x*2*pi/wireLength))*potPeak+mu,
         'lorentz': lambda x: potPeak*1.0/(((x-potPeakPos*wireLength)*a)**2+0.5)+mu,
@@ -142,10 +142,10 @@ def conductance_matrix(parameters,junction):
 def topologicalQ(parameters,junction):
     vBias=parameters['vBias'];
     sMatrix = kwant.smatrix(junction, vBias, check_hermiticity=False);
-	if parameters['leadNum']==1:
+    if parameters['leadNum']==1:
         return np.abs(LA.det(sMatrix.data))
     if parameters['leadNum']==2:
-	    return np.abs(LA.det(sMatrix.submatrix(0,0)))
+        return np.abs(LA.det(sMatrix.submatrix(0,0)))
     
 
 def TV(parameters,junction):
