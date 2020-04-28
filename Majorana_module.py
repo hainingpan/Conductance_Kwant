@@ -142,7 +142,10 @@ def conductance_matrix(parameters,junction):
 def topologicalQ(parameters,junction):
     vBias=parameters['vBias'];
     sMatrix = kwant.smatrix(junction, vBias, check_hermiticity=False);
-    return np.abs(LA.det(sMatrix.data))
+	if parameters['leadNum']==1:	  
+        return np.abs(LA.det(sMatrix.data))
+    if parameters['leadNum']==2:
+	    return np.abs(LA.det(sMatrix.submatrix(0,0)))
     
 
 def TV(parameters,junction):
