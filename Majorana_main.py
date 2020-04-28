@@ -265,7 +265,7 @@ def main():
                     plt.plot(xRange,recvbufQ)
                     plt.xlabel('Vz(meV)')
                     plt.ylabel('|det(r)|')
-                    plt.axis((xRange[0],xRange[-1],0,1))
+                    plt.axis((xRange[0],xRange[-1],-1,1))
                     figQ.savefig(fn+'Q.png')
                     
                 if parameters['isTV']!=0:
@@ -427,7 +427,7 @@ def main():
                 plt.plot(xRange,recvbufQ)
                 plt.xlabel('Vz(meV)')
                 plt.ylabel('|det(r)|')
-                plt.axis((xRange[0],xRange[-1],0,1))
+                plt.axis((xRange[0],xRange[-1],-1,1))
                 figQ.savefig(fn+'Q.png')
             
     
