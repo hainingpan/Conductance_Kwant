@@ -91,8 +91,8 @@ def make_NS_junction(parameters):
     if parameters['isQD'] == 1:
         qdPeak = parameters['qdPeak'];
         for x in range(qdLength):
-#            junction[ lat(x) ] = (2*t - mu + qdPeak*np.exp(-(x*a)**2/(qdLength*qdLength)) )*PM.tzs0 + vz*PM.t0sx - 1j*dissipation*PM.t0s0;  
-            junction[ lat(x) ] = (2*t - muSet[x])*PM.tzs0 + vz*PM.t0sx - 1j*dissipation*PM.t0s0;              
+            junction[ lat(x) ] = (2*t - mu + qdPeak*np.exp(-(x*a)**2/(qdLength*qdLength)) )*PM.tzs0 + vz*PM.t0sx - 1j*dissipation*PM.t0s0;  
+#            junction[ lat(x) ] = (2*t - muSet[x])*PM.tzs0 + vz*PM.t0sx - 1j*dissipation*PM.t0s0;              
         qdPeakR = parameters['qdPeakR']
         for x in range(qdLengthR):
             junction[ lat(wireLength-x-1)] = (2*t - mu + qdPeakR*np.exp(-(x*a)**2/(qdLengthR*qdLengthR)) )*PM.tzs0 + vz*PM.t0sx - 1j*dissipation*PM.t0s0;
