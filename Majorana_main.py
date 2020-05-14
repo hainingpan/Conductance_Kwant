@@ -265,7 +265,7 @@ def main():
                     plt.plot(xRange,recvbufQ)
                     plt.xlabel('Vz(meV)')
                     plt.ylabel('|det(r)|')
-                    plt.axis((xRange[0],xRange[-1],-1,1))
+                    plt.axis((xRange[0],xRange[-1],0,1))
                     figQ.savefig(fn+'Q.png')
                     
                 if parameters['isTV']!=0:
@@ -276,7 +276,7 @@ def main():
                     plt.ylabel('V_bias(meV)');
                     # plt.colorbar();
                     # plt.axis((0,tot*vzStep,vBiasMin,vBiasMax));
-                    plt.axis((xRange[0],xRange[-1],-1,1))
+                    plt.axis((xRange[0],xRange[-1],0,1))
                     fig2.savefig(fn+'TV.png');
         
     elif parameters['leadNum']==2:
@@ -427,7 +427,7 @@ def main():
                 plt.plot(xRange,recvbufQ)
                 plt.xlabel('Vz(meV)')
                 plt.ylabel('|det(r)|')
-                plt.axis((xRange[0],xRange[-1],-1,1))
+                plt.axis((xRange[0],xRange[-1],0,1))
                 figQ.savefig(fn+'Q.png')
             
     
