@@ -143,9 +143,9 @@ def topologicalQ(parameters,junction):
     vBias=parameters['vBias'];
     sMatrix = kwant.smatrix(junction, vBias, check_hermiticity=False);
     if parameters['leadNum']==1:
-        return (LA.det(sMatrix.data))
+        return np.abs(LA.det(sMatrix.data))
     if parameters['leadNum']==2:
-        return (LA.det(sMatrix.submatrix(0,0)))
+        return np.abs(LA.det(sMatrix.submatrix(0,0)))
     
 
 def TV(parameters,junction):
