@@ -138,17 +138,17 @@ def conductance_matrix(parameters,junction):
     GRL=sMatrix.transmission((1,0),(0,0))-sMatrix.transmission((1,1),(0,0))
     # return nparray or struct
     return GLL,GRR,GLR,GRL
-
+'''
 def topologicalQ(parameters,junction):
     vBias=parameters['vBias'];
     sMatrix = kwant.smatrix(junction, vBias, check_hermiticity=False);
     if parameters['leadNum']==1:
         return np.abs(LA.det(sMatrix.data))
     if parameters['leadNum']==2:
-        return np.abs(LA.det(sMatrix.submatrix(0,0)))
+        return np.abs(LA.det(sMatrix.submatrix(1,1)))
     
-
-def TV(parameters,junction):
+'''
+def topologicalQ(parameters,junction):
     vBias=parameters['vBias'];
     
     sMatrix = kwant.smatrix(junction, parameters['vBias'], check_hermiticity=False);
@@ -163,10 +163,26 @@ def TV(parameters,junction):
         m = normalize_dict[n];
         phase_dict[n]= (-1)**m*basis_wf[m,n]/abs(basis_wf[m,n]);
         
-    tv = tv0*np.conjugate(phase_dict[0]*phase_dict[1]*phase_dict[2]*phase_dict[3])* phase_dict[4]    *phase_dict[5]*phase_dict[6]*phase_dict[7] ;
-    
+    tv = tv0*np.conjugate(phase_dict[0]*phase_dict[1]*phase_dict[2]*phase_dict[3])* phase_dict[4]*phase_dict[5]*phase_dict[6]*phase_dict[7] ;    
     return tv
     
+def getSMatrix(parameters,junction):
+    vBias=parameters['vBias'];
+    sMatrix = kwant.smatrix(junction, parameters['vBias'], check_hermiticity=False);
+    R = sMatrix.data;
+    basis_wf = sMatrix.lead_info[0].wave_functions;
+    
+    normalize_dict = {0:0,1:0,2:3,3:3,4:0,5:0,6:3,7:3}
+    phase_dict = {};
+    
+    for n in range(8):
+        m = normalize_dict[n];
+        phase_dict[n]= (-1)**m*basis_wf[m,n]/abs(basis_wf[m,n]);
+        
+    R = R*np.conjugate(phase_dict[0]*phase_dict[1]*phase_dict[2]*phase_dict[3])* phase_dict[4]    *phase_dict[5]*phase_dict[6]*phase_dict[7] ;    
+    R = R.flatten().view(float);
+    return R
+  
 def TVmap(parameters,junction):
     vBias=parameters['vBias'];   #TV is not suitable to define large value deviated from 0
     sMatrix = kwant.smatrix(junction, vBias, check_hermiticity=False);

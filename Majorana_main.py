@@ -15,7 +15,7 @@ size=comm.Get_size();
 def main():    
     vars=len(sys.argv);    
     parameters = {'isTV':0,'a':1,'mu':.2,'alpha_R':5, 'delta0':0.2,'wireLength':1000,
-               'muLead':25.0, 'barrierNum':2,'barrierE':10.0, 'dissipation':0.0000,'isDissipationVar':0, 
+               'muLead':25.0, 'barrierNum':2,'barrierE':10.0, 'dissipation':0.0001,'isDissipationVar':0, 
                'isQD':0, 'qdPeak':0.4, 'qdLength':20, 'qdPeakR':0,'qdLengthR':0,
                'isSE':0, 'couplingSCSM':0.2, 'vc':0,               
                'potType':0,'potPeakPos':0,'potSigma':1,'potPeak':0,'potPeakR':0,'potPeakPosR':0,'potSigmaR':0,
@@ -234,8 +234,9 @@ def main():
                 fn_vc=('vc'+str(parameters['vc']))*(parameters['isSE']==1)*(parameters['vc']!=0)
                 fn_gVar=('gVar'+str(parameters['gVar']))*(parameters['gVar']!=0);
                 fn_deltaVar=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0)
+				fn_bE=('bE'+str(parameters['barrierE']))
                 
-                fn=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_leadPos+fn_range
+                fn=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_bE+fn_leadPos+fn_range
                 
                 
                     
@@ -264,8 +265,8 @@ def main():
                     figQ=plt.figure();
                     plt.plot(xRange,recvbufQ)
                     plt.xlabel('Vz(meV)')
-                    plt.ylabel('|det(r)|')
-                    plt.axis((xRange[0],xRange[-1],0,1))
+                    plt.ylabel('det(r)')
+                    plt.axis((xRange[0],xRange[-1],-1,1))
                     figQ.savefig(fn+'Q.png')
                     
                 if parameters['isTV']!=0:
@@ -276,7 +277,7 @@ def main():
                     plt.ylabel('V_bias(meV)');
                     # plt.colorbar();
                     # plt.axis((0,tot*vzStep,vBiasMin,vBiasMax));
-                    plt.axis((xRange[0],xRange[-1],0,1))
+                    plt.axis((xRange[0],xRange[-1],-1,1))
                     fig2.savefig(fn+'TV.png');
         
     elif parameters['leadNum']==2:
@@ -286,6 +287,7 @@ def main():
         sendbufGRL=np.empty((per,vBiasNumber))
         if (parameters['Q']!=0):
             sendbufQ=np.empty((per,1))          #topological number, Q=|det(r)|=1 for everywhere except TQPT, Rosdahl et al 2018 Andreev rectifier
+            sendbufR=np.empty((per,8*8*2))
         for ii in range(per):
             if parameters['muNum']==0:
                 parameters['vz'] = vz0+(ii+rank*per)*vzStep
@@ -305,6 +307,7 @@ def main():
                 if (parameters['Q']!=0):
                     if (vBias==0):
                         sendbufQ[ii,:]=Maj.topologicalQ(parameters,junction)
+                        sendbufR[ii,:]=Maj.getSMatrix(parameters,junction)
             
                     
             if (rank==0):
@@ -314,6 +317,7 @@ def main():
                 recvbufGRL=np.empty((tot,vBiasNumber))
                 if (parameters['Q']!=0):
                     recvbufQ=np.empty((tot,1))
+                    recvbufR=np.empty((tot,8*8*2))
             else:
                 recvbufGLL=None
                 recvbufGRR=None
@@ -321,6 +325,7 @@ def main():
                 recvbufGRL=None
                 if (parameters['Q']!=0):
                     recvbufQ=None
+                    recvbufR=None
 
             comm.Gather(sendbufGLL,recvbufGLL,root=0)
             comm.Gather(sendbufGRR,recvbufGRR,root=0)
@@ -328,6 +333,7 @@ def main():
             comm.Gather(sendbufGRL,recvbufGRL,root=0)
             if (parameters['Q']!=0):
                 comm.Gather(sendbufQ,recvbufQ,root=0)
+                comm.Gather(sendbufR,recvbufR,root=0)
         
         if (rank==0):
             fn_mu=('m'+str(parameters['mu']))*(parameters['muNum']==0);
@@ -358,13 +364,14 @@ def main():
             fn_vc=('vc'+str(parameters['vc']))*(parameters['isSE']==1)*(parameters['vc']!=0);
             fn_gVar=('gVar'+str(parameters['gVar']))*(parameters['gVar']!=0);
             fn_deltaVar=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0);
+			fn_bE=('bE'+str(parameters['barrierE']))
             
-            fnLL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'LL'+fn_range
-            fnRR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'RR'+fn_range
-            fnLR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'LR'+fn_range
-            fnRL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+'RL'+fn_range
+            fnLL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_bE+'LL'+fn_range
+            fnRR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_bE+'RR'+fn_range
+            fnLR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_bE+'LR'+fn_range
+            fnRL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_bE+'RL'+fn_range
             
-            fn=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_range
+            fn=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_bE+fn_range
             
             
             np.savetxt(fnLL+'.dat',recvbufGLL);
@@ -372,7 +379,8 @@ def main():
             np.savetxt(fnLR+'.dat',recvbufGLR);
             np.savetxt(fnRL+'.dat',recvbufGRL);
             if (parameters['Q']!=0):
-                np.savetxt(fn+'Q.dat',recvbufQ);
+                np.savetxt(fn+'Q.dat',recvbufQ)
+                np.savetxt(fn+'R.dat',recvbufR)
 
             if parameters['muNum']==0:
                 xRange=np.arange(tot)*vzStep;
@@ -426,8 +434,8 @@ def main():
                 figQ=plt.figure();
                 plt.plot(xRange,recvbufQ)
                 plt.xlabel('Vz(meV)')
-                plt.ylabel('|det(r)|')
-                plt.axis((xRange[0],xRange[-1],0,1))
+                plt.ylabel('det(r)')
+                plt.axis((xRange[0],xRange[-1],-1,1))
                 figQ.savefig(fn+'Q.png')
             
     
