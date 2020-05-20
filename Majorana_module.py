@@ -17,7 +17,7 @@ def make_NS_junction(parameters):
     muLead = parameters['muLead'];     #chemical potential of lead
     wireLength = int(parameters['wireLength']);       #Length of wire= $wireLength/100(um)
     barrierNum = parameters['barrierNum'];   # number of barrier
-    barrierE = parameters['barrierE'];  
+         = parameters['    '];  
     couplingSCSM = parameters['couplingSCSM'];   #SM-SC coupling strength
     dissipation = parameters['dissipation'];     #dissipation
     vBias=parameters['vBias'];       #bias voltage
@@ -103,14 +103,14 @@ def make_NS_junction(parameters):
     
     #Construct lead and barrier
     if not (parameters['leadNum']==1 and parameters['leadPos']==1):   #exclude the situation of only right lead
-        junction[(lat(x) for x in range(barrierNum))]=(2*t-mu+barrierE)*PM.tzs0 + vz*PM.t0sx;
+        junction[(lat(x) for x in range(barrierNum))]=(2*t-mu+    )*PM.tzs0 + vz*PM.t0sx;
         symLeft=kwant.TranslationalSymmetry([-a]);
         lead0=kwant.Builder(symLeft,conservation_law=-PM.tzs0);
         lead0[ lat(0) ] = (2*t - muLead)*PM.tzs0 + vz*PM.t0sx;
         lead0[ lat(0), lat(1) ] = -t*PM.tzs0 - 1j*alpha*PM.tzsy;
         junction.attach_lead(lead0);
     if not (parameters['leadNum']==1 and parameters['leadPos']==0):   #exclude the situation of only left lead
-        junction[(lat(wireLength-x-1) for x in range(barrierNum))]=(2*t-mu+barrierE)*PM.tzs0 + vz*PM.t0sx;
+        junction[(lat(wireLength-x-1) for x in range(barrierNum))]=(2*t-mu+    )*PM.tzs0 + vz*PM.t0sx;
         symRight=kwant.TranslationalSymmetry([a]);
         lead1=kwant.Builder(symRight,conservation_law=-PM.tzs0);
         lead1[ lat(0) ] = (2*t - muLead)*PM.tzs0 + vz*PM.t0sx;

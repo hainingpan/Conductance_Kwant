@@ -234,7 +234,7 @@ def main():
                 fn_vc=('vc'+str(parameters['vc']))*(parameters['isSE']==1)*(parameters['vc']!=0)
                 fn_gVar=('gVar'+str(parameters['gVar']))*(parameters['gVar']!=0);
                 fn_deltaVar=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0)
-				fn_bE=('bE'+str(parameters['barrierE']))
+                fn_bE=('bE'+str(parameters['barrierE']))
                 
                 fn=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_bE+fn_leadPos+fn_range
                 
@@ -364,7 +364,7 @@ def main():
             fn_vc=('vc'+str(parameters['vc']))*(parameters['isSE']==1)*(parameters['vc']!=0);
             fn_gVar=('gVar'+str(parameters['gVar']))*(parameters['gVar']!=0);
             fn_deltaVar=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0);
-			fn_bE=('bE'+str(parameters['barrierE']))
+            fn_bE=('bE'+str(parameters['barrierE']))
             
             fnLL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_bE+'LL'+fn_range
             fnRR=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_bE+'RR'+fn_range
