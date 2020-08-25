@@ -306,8 +306,8 @@ def main():
                 (sendbufGLL[ii,index],sendbufGRR[ii,index],sendbufGLR[ii,index],sendbufGRL[ii,index])=Maj.conductance_matrix(parameters,junction)
                 if (parameters['Q']!=0):
                     if (vBias==0):
-                        sendbufQ[ii,:]=Maj.topologicalQ(parameters,junction)
-                        sendbufR[ii,:]=Maj.getSMatrix(parameters,junction)
+                        # sendbufQ[ii,:]=Maj.topologicalQ(parameters,junction)
+                        sendbufR[ii,:],sendbufQ[ii,:]=Maj.getSMatrix(parameters,junction)
             
                     
             if (rank==0):

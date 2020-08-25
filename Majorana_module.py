@@ -153,7 +153,7 @@ def topologicalQ(parameters,junction):
     
     sMatrix = kwant.smatrix(junction, parameters['vBias'], check_hermiticity=False);
     R = sMatrix.submatrix(0,0);
-    tv0 = LA.det(R);
+    tv0 = LA.det(R);	
     basis_wf = sMatrix.lead_info[0].wave_functions;
     
     normalize_dict = {0:0,1:0,2:3,3:3,4:0,5:0,6:3,7:3}
@@ -162,8 +162,12 @@ def topologicalQ(parameters,junction):
     for n in range(8):
         m = normalize_dict[n];
         phase_dict[n]= (-1)**m*basis_wf[m,n]/abs(basis_wf[m,n]);
-        
-    tv = tv0*np.conjugate(phase_dict[0]*phase_dict[1]*phase_dict[2]*phase_dict[3])* phase_dict[4]*phase_dict[5]*phase_dict[6]*phase_dict[7] ;    
+    fixphase=np.conjugate(phase_dict[0]*phase_dict[1]*phase_dict[2]*phase_dict[3])* phase_dict[4]*phase_dict[5]*phase_dict[6]*phase_dict[7]   
+    # print('R-topo:')
+    # print(R.round(3))	
+    # print('det='+str(tv0)+'  phase='+str(fixphase))
+    tv = tv0*fixphase
+    # print('tv='+str(tv))
     return tv
     
 def getSMatrix(parameters,junction):
@@ -178,10 +182,14 @@ def getSMatrix(parameters,junction):
     for n in range(8):
         m = normalize_dict[n];
         phase_dict[n]= (-1)**m*basis_wf[m,n]/abs(basis_wf[m,n]);
-        
-    R = R*np.conjugate(phase_dict[0]*phase_dict[1]*phase_dict[2]*phase_dict[3])* phase_dict[4]    *phase_dict[5]*phase_dict[6]*phase_dict[7] ;    
+    
+    fixphase=np.conjugate(phase_dict[0]*phase_dict[1]*phase_dict[2]*phase_dict[3])* phase_dict[4]*phase_dict[5]*phase_dict[6]*phase_dict[7] 
+    # print('R-sm: ')    
+    # R = R*fixphase
+    # print(R[:4,:4].round(3))
+    # print('det='+str(LA.det(R[:4,:4]))+'  phase='+str(fixphase))
     R = R.flatten().view(float);
-    return R
+    return R,fixphase
   
 def TVmap(parameters,junction):
     vBias=parameters['vBias'];   #TV is not suitable to define large value deviated from 0
