@@ -31,6 +31,7 @@ def make_NS_junction(parameters):
     qdLengthR = int(parameters['qdLengthR']);   #lenght of right QD
 
     muVarList=parameters['muVarList'];     #the spatial profile of disorder(V_impurity)
+    a_muVar=parameters['a_muVar'];    #the lattice constant in muVarList
     vc = parameters['vc'];   #The point where SC gap collapses. 0 for constant Delta (vc=infitity). The gap collapsing curve is delta_0*sqrt(1-(vz/vc)^2) 
     randList=parameters['randList']; #the positive random list for only one in random {g,SC gap}. But does not support both. 
     #N(1,gVar) for g;
@@ -53,7 +54,10 @@ def make_NS_junction(parameters):
         'sigmoid': lambda x: mu+potPeak*1/(np.exp((.5*wireLength-x)*a/potSigma)+1),
         'exp2': lambda x: potPeak*(np.exp(-((x-potPeakPos)*a)**2/(2*potSigma**2)))+potPeakR*(np.exp(-((x-potPeakPosR)*a)**2/(2*potSigmaR**2)))+mu
     }
-    muSet=potential[parameters['potType']](np.arange(wireLength));     
+    muSet=potential[parameters['potType']](np.arange(wireLength));
+    if a_muVar!=1:
+        muVarList=[muVarList.flatten()[int(a/a_muVar*x)] for x in range(wireLength)]
+        
     muSet=muSet-muVarList;
 
     
@@ -145,15 +149,14 @@ def topologicalQ(parameters,junction):
     if parameters['leadNum']==1:
         return np.abs(LA.det(sMatrix.data))
     if parameters['leadNum']==2:
-        return np.abs(LA.det(sMatrix.submatrix(1,1)))
-    
+        return np.abs(LA.det(sMatrix.submatrix(1,1)))    
 '''
 def topologicalQ(parameters,junction):
     vBias=parameters['vBias'];
     
     sMatrix = kwant.smatrix(junction, parameters['vBias'], check_hermiticity=False);
     R = sMatrix.submatrix(0,0);
-    tv0 = LA.det(R);	
+    tv0 = LA.det(R);    
     basis_wf = sMatrix.lead_info[0].wave_functions;
     
     normalize_dict = {0:0,1:0,2:3,3:3,4:0,5:0,6:3,7:3}
@@ -164,7 +167,7 @@ def topologicalQ(parameters,junction):
         phase_dict[n]= (-1)**m*basis_wf[m,n]/abs(basis_wf[m,n]);
     fixphase=np.conjugate(phase_dict[0]*phase_dict[1]*phase_dict[2]*phase_dict[3])* phase_dict[4]*phase_dict[5]*phase_dict[6]*phase_dict[7]   
     # print('R-topo:')
-    # print(R.round(3))	
+    # print(R.round(3))    
     # print('det='+str(tv0)+'  phase='+str(fixphase))
     tv = tv0*fixphase
     # print('tv='+str(tv))

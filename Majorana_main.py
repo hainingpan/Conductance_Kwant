@@ -19,7 +19,7 @@ def main():
                'isQD':0, 'qdPeak':0.4, 'qdLength':20, 'qdPeakR':0,'qdLengthR':0,
                'isSE':0, 'couplingSCSM':0.2, 'vc':0,               
                'potType':0,'potPeakPos':0,'potSigma':1,'potPeak':0,'potPeakR':0,'potPeakPosR':0,'potSigmaR':0,
-               'muVar':0,'muVarList':0,'muVarType':0,'scatterList':0,
+               'muVar':0,'muVarList':0,'muVarType':0,'scatterList':0,'a_muVar':1,
                'gVar':0,'randList':0,
                'deltaVar':0,
                'vz':0.0,'vz0':0, 'vBias':0.0,'vBiasMin':-0.3,'vBiasMax':0.3,'vzNum':256,'vBiasNum':1001,'vzStep': 0.002,'mu0':0,'muMax':1,'muStep':0.002,'muNum':0,
@@ -286,7 +286,7 @@ def main():
         sendbufGLR=np.empty((per,vBiasNumber))
         sendbufGRL=np.empty((per,vBiasNumber))
         if (parameters['Q']!=0):
-            sendbufQ=np.empty((per,1))          #topological number, Q=|det(r)|=1 for everywhere except TQPT, Rosdahl et al 2018 Andreev rectifier
+            sendbufQ=np.empty((per,1))          #fix phase
             sendbufR=np.empty((per,8*8*2))
         for ii in range(per):
             if parameters['muNum']==0:
