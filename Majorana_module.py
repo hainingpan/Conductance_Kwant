@@ -31,7 +31,7 @@ def make_NS_junction(parameters):
     qdLengthR = int(parameters['qdLengthR']);   #lenght of right QD
 
     muVarList=parameters['muVarList'];     #the spatial profile of disorder(V_impurity)
-    a_muVar=parameters['a_muVar'];    #the lattice constant in muVarList
+    N_muVar=parameters['N_muVar'];    # number of muVar, used when length of muVarList is different from the number of sites
     vc = parameters['vc'];   #The point where SC gap collapses. 0 for constant Delta (vc=infitity). The gap collapsing curve is delta_0*sqrt(1-(vz/vc)^2) 
     randList=parameters['randList']; #the positive random list for only one in random {g,SC gap}. But does not support both. 
     #N(1,gVar) for g;
@@ -55,8 +55,8 @@ def make_NS_junction(parameters):
         'exp2': lambda x: potPeak*(np.exp(-((x-potPeakPos)*a)**2/(2*potSigma**2)))+potPeakR*(np.exp(-((x-potPeakPosR)*a)**2/(2*potSigmaR**2)))+mu
     }
     muSet=potential[parameters['potType']](np.arange(wireLength));
-    if a_muVar!=1:
-        muVarList=[muVarList.flatten()[int(a/a_muVar*x)] for x in range(wireLength)]
+    if N_muVar!=1:
+        muVarList=[muVarList.flatten()[int(N_muVar/wireLength*x)] for x in range(wireLength)]
         
     muSet=muSet-muVarList;
 
