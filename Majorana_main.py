@@ -397,7 +397,7 @@ def main():
             # fnRL=fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_bE+'RL'+fn_range
 
             fn=fn_vz+fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_muLead+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_bE+fn_range
-            fnLL=fn+'ll'
+            fnLL=fn+'LL'
             fnRR=fn+'RR'
             fnLR=fn+'LR'
             fnRL=fn+'RL'
