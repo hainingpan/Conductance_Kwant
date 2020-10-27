@@ -367,7 +367,7 @@ def main():
             fn_muLead='muL'+str(parameters['muLead'])*(parameters['x']!='muLead')
             fn_bE=('bE'+str(parameters['barrierE']))*(parameters['x']!='barrierE')
             fn_potType=str(parameters['potType'])*(parameters['potType']!=0)
-            fn_range=('-'+parameters['x']+'('+str(parameters['xMin'])+','+fn(parameters['xMax'])+')'+','+str(vBiasMax)+'-')
+            fn_range=('-'+parameters['x']+'('+str(parameters['xMin'])+','+str(parameters['xMax'])+')'+','+str(vBiasMax)+'-')
             # if parameters['muNum']==0:
             #     fn_range=('-'+str(vzStep*tot)+','+str(vBiasMax)+'-')*(parameters['muNum']==0)
             # else:
