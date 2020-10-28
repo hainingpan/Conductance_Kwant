@@ -258,7 +258,7 @@ def main():
                 fn_gVar=('gVar'+str(parameters['gVar']))*(parameters['gVar']!=0)
                 fn_deltaVar=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0)
                 fn_vz=('vz'+str(parameters['vz']))*(parameters['x']!='vz')
-                fn=fn_vz+fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_muLead+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_bE+fn_leadPos+fn_range
+                fn=fn_vz+fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_muLead+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_bE+fn_range+fn_leadPos
 
                 np.savetxt(fn+'.dat',recvbuf)
                 if (parameters['Q']!=0):
