@@ -29,7 +29,7 @@ def make_NS_junction(parameters):
     potSigmaR=parameters['potSigmaR']
     qdLength = int(parameters['qdLength'])    #length of quantum dot
     qdLengthR = int(parameters['qdLengthR'])   #lenght of right QD
-    alpha=parameters['alpha']   #interpolate between inhomogeneous and disorder, (1-alpha)*V_imhom+alpha*V_imp
+    alpha=parameters['alpha']   #interpolate between inhomogeneous and disorder, (1-alpha)*V_imhom+alpha*V_imp, alpha =[0,1] is linear, otherwise unity.
 
     muVarList=parameters['muVarList']     #the spatial profile of disorder(V_impurity)
     N_muVar=parameters['N_muVar']    # number of muVar, used when length of muVarList is different from the number of sites
@@ -56,11 +56,12 @@ def make_NS_junction(parameters):
         'exp2': lambda x: potPeak*(np.exp(-((x-potPeakPos)*a)**2/(2*potSigma**2)))+potPeakR*(np.exp(-((x-potPeakPosR)*a)**2/(2*potSigmaR**2)))
     }
 
-    muSet=mu-potential[parameters['potType']](np.arange(wireLength))
+    alpha2=((not (alpha<=1 and alpha>=0))*1+(alpha<=1 and alpha>=0)*alpha)  #alpha2=alpha if alpha=[0,1] otherwise alpha2=1
+    muSet=mu-(1-alpha2)*potential[parameters['potType']](np.arange(wireLength))
     if N_muVar!=1:
         muVarList=[muVarList.flatten()[int(N_muVar/wireLength*x)] for x in range(wireLength)]
 
-    muSet=muSet-muVarList
+    muSet=muSet-(alpha2)*muVarList
 
 
     if parameters['deltaVar']==0:
