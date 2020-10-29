@@ -29,6 +29,7 @@ def make_NS_junction(parameters):
     potSigmaR=parameters['potSigmaR']
     qdLength = int(parameters['qdLength'])    #length of quantum dot
     qdLengthR = int(parameters['qdLengthR'])   #lenght of right QD
+    alpha=parameters['alpha']   #interpolate between inhomogeneous and disorder, (1-alpha)*V_imhom+alpha*V_imp
 
     muVarList=parameters['muVarList']     #the spatial profile of disorder(V_impurity)
     N_muVar=parameters['N_muVar']    # number of muVar, used when length of muVarList is different from the number of sites
@@ -42,19 +43,20 @@ def make_NS_junction(parameters):
     #smooth confinement
     potential={
         0: lambda x: mu*x**0,
-        'sin': lambda x: np.sin(x*pi/(0.1*wireLength))*potPeak+mu,
-        'sintheta': lambda x: potPeak*np.sin(x*pi/(wireLength/10))*(x<wireLength/10)+mu,
-        'cos': lambda x: -np.cos(3*x*pi/potSigma/2)*potPeak*(x<=potSigma)+mu,
-        'cos2': lambda x: -(np.cos(x*pi/potSigma/2)*potPeak*(x<=potSigma)-np.sin((x-potSigma)/20*pi)*(x>=potSigma))*(x<=(potSigma+20))+mu,
-        'sin2': lambda x: np.sin(x*2*pi/wireLength)*potPeak+mu,
-        'sinabs': lambda x: np.abs(np.sin(x*2*pi/wireLength))*potPeak+mu,
-        'lorentz': lambda x: potPeak*1.0/(((x-potPeakPos*wireLength)*a)**2+0.5)+mu,
-        'lorentzsigmoid': lambda x:  (potPeak*1.0/(((x-potPeakPos*wireLength)*a)**2+.5)+(4-mu)/2./(np.exp(-(x-0.5*wireLength)*a)+1))+mu,
-        'exp': lambda x: potPeak*(np.exp(-((x-potPeakPos)*a)**2/(2*potSigma**2)))+mu,
-        'sigmoid': lambda x: mu+potPeak*1/(np.exp((.5*wireLength-x)*a/potSigma)+1),
-        'exp2': lambda x: potPeak*(np.exp(-((x-potPeakPos)*a)**2/(2*potSigma**2)))+potPeakR*(np.exp(-((x-potPeakPosR)*a)**2/(2*potSigmaR**2)))+mu
+        'sin': lambda x: np.sin(x*pi/(0.1*wireLength))*potPeak,
+        'sintheta': lambda x: potPeak*np.sin(x*pi/(wireLength/10))*(x<wireLength/10),
+        'cos': lambda x: np.cos(3*x*pi/potSigma/2)*potPeak*(x<=potSigma),
+        'cos2': lambda x: (np.cos(x*pi/potSigma/2)*potPeak*(x<=potSigma)+np.sin((x-potSigma)/20*pi)*(x>=potSigma))*(x<=(potSigma+20)),
+        'sin2': lambda x: np.sin(x*2*pi/wireLength)*potPeak,
+        'sinabs': lambda x: np.abs(np.sin(x*2*pi/wireLength))*potPeak,
+        'lorentz': lambda x: potPeak*1.0/(((x-potPeakPos*wireLength)*a)**2+0.5),
+        'lorentzsigmoid': lambda x:  (potPeak*1.0/(((x-potPeakPos*wireLength)*a)**2+.5)+(4-mu)/2./(np.exp(-(x-0.5*wireLength)*a)+1)),
+        'exp': lambda x: potPeak*(np.exp(-((x-potPeakPos)*a)**2/(2*potSigma**2))),
+        'sigmoid': lambda x: potPeak*1/(np.exp((.5*wireLength-x)*a/potSigma)+1),
+        'exp2': lambda x: potPeak*(np.exp(-((x-potPeakPos)*a)**2/(2*potSigma**2)))+potPeakR*(np.exp(-((x-potPeakPosR)*a)**2/(2*potSigmaR**2)))
     }
-    muSet=potential[parameters['potType']](np.arange(wireLength))
+
+    muSet=mu-potential[parameters['potType']](np.arange(wireLength))
     if N_muVar!=1:
         muVarList=[muVarList.flatten()[int(N_muVar/wireLength*x)] for x in range(wireLength)]
 
