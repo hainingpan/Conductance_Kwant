@@ -56,12 +56,11 @@ def make_NS_junction(parameters):
         'exp2': lambda x: potPeak*(np.exp(-((x-potPeakPos)*a)**2/(2*potSigma**2)))+potPeakR*(np.exp(-((x-potPeakPosR)*a)**2/(2*potSigmaR**2)))
     }
 
-    alpha2=((not (alpha<=1 and alpha>=0))*1+(alpha<=1 and alpha>=0)*alpha)  #alpha2=alpha if alpha=[0,1] otherwise alpha2=1
-    muSet=mu-(1-alpha2)*potential[parameters['potType']](np.arange(wireLength))
+    muSet=mu-((not (alpha<=1 and alpha>=0))*1+(alpha<=1 and alpha>=0)*(1-alpha))*potential[parameters['potType']](np.arange(wireLength))
     if N_muVar!=1:
         muVarList=[muVarList.flatten()[int(N_muVar/wireLength*x)] for x in range(wireLength)]
 
-    muSet=muSet-(alpha2)*muVarList
+    muSet=muSet-((not (alpha<=1 and alpha>=0))*1+(alpha<=1 and alpha>=0)*(alpha))*muVarList
 
 
     if parameters['deltaVar']==0:
