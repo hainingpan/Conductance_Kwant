@@ -27,7 +27,7 @@ def main():
                # 'vz0':0,'vzNum':256,'vzStep': 0.002,'mu0':0,'muMax':1,'muStep':0.002,'muNum':0,
                'leadPos':0,'leadNum':1,
                'Q':0,
-               'x':'vz','y':0,'xMin':0,'xMax':2.048,'xNum':256,'xUnit':'meV',
+               'x':'vz','xMin':0,'xMax':2.048,'xNum':256,'xUnit':'meV',
                'alpha':-1,
                'error':0}
     if (rank==0):

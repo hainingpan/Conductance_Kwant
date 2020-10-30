@@ -42,7 +42,7 @@ def make_NS_junction(parameters):
 
     #smooth confinement
     potential={
-        0: lambda x: mu*x**0,
+        0: lambda x: x**0,
         'sin': lambda x: np.sin(x*pi/(0.1*wireLength))*potPeak,
         'sintheta': lambda x: potPeak*np.sin(x*pi/(wireLength/10))*(x<wireLength/10),
         'cos': lambda x: np.cos(3*x*pi/potSigma/2)*potPeak*(x<=potSigma),
