@@ -46,7 +46,7 @@ def make_NS_junction(parameters):
         'sin': lambda x: np.sin(x*pi/(0.1*wireLength))*potPeak,
         'sintheta': lambda x: potPeak*np.sin(x*pi/(wireLength/10))*(x<wireLength/10),
         'cos': lambda x: np.cos(3*x*pi/potSigma/2)*potPeak*(x<=potSigma),
-        'cos2': lambda x: (np.cos(x*pi/potSigma/2)*potPeak*(x<=potSigma)+np.sin((x-potSigma)/20*pi)*(x>potSigma))*(x<=(potSigma+20)),
+        'cos2': lambda x: (np.cos(x*pi/potSigma/2)*potPeak*(x<=potSigma)-np.sin((x-potSigma)/20*pi)*(x>potSigma))*(x<=(potSigma+20)),
         'sin2': lambda x: np.sin(x*2*pi/wireLength)*potPeak,
         'sinabs': lambda x: np.abs(np.sin(x*2*pi/wireLength))*potPeak,
         'lorentz': lambda x: potPeak*1.0/(((x-potPeakPos*wireLength)*a)**2+0.5),
