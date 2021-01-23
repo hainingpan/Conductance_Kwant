@@ -312,7 +312,7 @@ def main():
         sendbufGRL=np.empty((per,vBiasNumber))
         if (parameters['Q']!=0):
             sendbufQ=np.empty((per,1))          #fix phase
-            sendbufR=np.empty((per,8*8*2))
+            sendbufS=np.empty((per,8*8*2))
         for ii in range(per):
             parameters[parameters['x']]=parameters['xMin']+(ii+rank*per)*xStep
             # if parameters['muNum']==0:
@@ -333,7 +333,7 @@ def main():
                 if (parameters['Q']!=0):
                     if (vBias==0):
                         # sendbufQ[ii,:]=Maj.topologicalQ(parameters,junction)
-                        sendbufR[ii,:],sendbufQ[ii,:]=Maj.getSMatrix(parameters,junction)
+                        sendbufS[ii,:],sendbufQ[ii,:]=Maj.getSMatrix(parameters,junction)
 
 
             if (rank==0):
@@ -343,7 +343,7 @@ def main():
                 recvbufGRL=np.empty((tot,vBiasNumber))
                 if (parameters['Q']!=0):
                     recvbufQ=np.empty((tot,1))
-                    recvbufR=np.empty((tot,8*8*2))
+                    recvbufS=np.empty((tot,8*8*2))
             else:
                 recvbufGLL=None
                 recvbufGRR=None
@@ -351,7 +351,7 @@ def main():
                 recvbufGRL=None
                 if (parameters['Q']!=0):
                     recvbufQ=None
-                    recvbufR=None
+                    recvbufS=None
 
             comm.Gather(sendbufGLL,recvbufGLL,root=0)
             comm.Gather(sendbufGRR,recvbufGRR,root=0)
@@ -359,7 +359,7 @@ def main():
             comm.Gather(sendbufGRL,recvbufGRL,root=0)
             if (parameters['Q']!=0):
                 comm.Gather(sendbufQ,recvbufQ,root=0)
-                comm.Gather(sendbufR,recvbufR,root=0)
+                comm.Gather(sendbufS,recvbufS,root=0)
 
         if (rank==0):
             fn_mu=('m'+str(parameters['mu']))*(parameters['x']!='delta0')
@@ -406,7 +406,7 @@ def main():
             np.savetxt(fnRL+'.dat',recvbufGRL)
             if (parameters['Q']!=0):
                 np.savetxt(fn+'Q.dat',recvbufQ)
-                np.savetxt(fn+'R.dat',recvbufR)
+                np.savetxt(fn+'S.dat',recvbufS) #export S-matrix
 
             # if parameters['muNum']==0:
             #     xRange=np.arange(tot)*vzStep
