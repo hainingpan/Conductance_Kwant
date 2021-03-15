@@ -228,7 +228,7 @@ def main():
                 comm.Gather(sendbuf2,recvbuf2,root=0)
 
             if (rank==0):
-                fn_mu=('m'+str(parameters['mu']))*(parameters['x']!='delta0')
+                fn_mu=('m'+str(parameters['mu']))*(parameters['x']!='mu')
                 fn_Delta='D'+str(parameters['delta0'])*(parameters['x']!='delta0')
                 fn_alpha='a'+str(parameters['alpha_R'])*(parameters['x']!='alpha_R')
                 fn_wl='L'+str(int(parameters['wireLength']))
@@ -362,7 +362,7 @@ def main():
                 comm.Gather(sendbufS,recvbufS,root=0)
 
         if (rank==0):
-            fn_mu=('m'+str(parameters['mu']))*(parameters['x']!='delta0')
+            fn_mu=('m'+str(parameters['mu']))*(parameters['x']!='mu')
             fn_Delta='D'+str(parameters['delta0'])*(parameters['x']!='delta0')
             fn_alpha='a'+str(parameters['alpha_R'])*(parameters['x']!='delta0')
             fn_wl='L'+str(int(parameters['wireLength']))
