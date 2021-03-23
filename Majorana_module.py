@@ -68,6 +68,11 @@ def make_NS_junction(parameters):
     else:
         delta0=randList
 
+    if parameters['couplingSCSMVar']==0:
+        couplingSCSM=couplingSCSM*np.ones(wireLength)
+    else:
+        couplingSCSM=randList
+
     if vc!=0:
         if vz<vc:
             Delta=[x*np.sqrt(1-(vz/vc)**2) for x in delta0]
@@ -79,7 +84,7 @@ def make_NS_junction(parameters):
     if parameters['isSE']==0:
         scDelta=[x*PM.txs0 for x in Delta]
     else:
-        scDelta=[-couplingSCSM*(vBias*PM.t0s0+x*PM.txs0)/np.sqrt(x**2-vBias**2-np.sign(vBias)*1e-9j)*(y!=0) for x,y in zip(Delta,delta0)]
+        scDelta=[-couplingSCSM*(vBias*PM.t0s0+x*PM.txs0)/np.sqrt(x**2-vBias**2-np.sign(vBias)*1e-9j)*(y!=0) for x,y,couplingSCSM in zip(Delta,delta0,couplingSCSM)]
 
     if parameters['isDissipationVar']!=0:
         dissipation=(vz/dissipation)**6/100

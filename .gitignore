@@ -1,3 +1,5 @@
 
 *.pyc
 obs-del
+*.dat
+*.png

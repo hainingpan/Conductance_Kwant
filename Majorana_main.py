@@ -23,6 +23,7 @@ def main():
                'muVar':0,'muVarList':0,'muVarType':0,'scatterList':0,'N_muVar':1,
                'gVar':0,'randList':0,
                'deltaVar':0,
+               'couplingSCSMVar':0,
                'vz':0.0, 'vBias':0.0,'vBiasMin':-0.3,'vBiasMax':0.3,'vBiasNum':1001,
                # 'vz0':0,'vzNum':256,'vzStep': 0.002,'mu0':0,'muMax':1,'muStep':0.002,'muNum':0,
                'leadPos':0,'leadNum':1,
@@ -132,6 +133,12 @@ def main():
                 randList=np.random.normal(parameters['delta0'],parameters['deltaVar'],int(parameters['wireLength']))
                 while not (np.prod(randList>0)):
                     randList=np.random.normal(parameters['delta0'],parameters['deltaVar'],int(parameters['wireLength']))
+                parameters['randList']=randList
+
+            if (parameters['couplingSCSMVar']!=0):
+                randList=np.random.normal(parameters['couplingSCSM'],parameters['couplingSCSMVar'],int(parameters['wireLength']))
+                while not (np.prod(randList>0)):
+                    randList=np.random.normal(parameters['couplingSCSM'],parameters['couplingSCSMVar'],int(parameters['wireLength']))
                 parameters['randList']=randList
 
         if parameters['x'] not in ['mu','alpha_R','delta0',\
@@ -258,9 +265,10 @@ def main():
                 fn_vc=('vc'+str(parameters['vc']))*(parameters['isSE']==1)*(parameters['vc']!=0)*(parameters['x']!='vc')
                 fn_gVar=('gVar'+str(parameters['gVar']))*(parameters['gVar']!=0)
                 fn_deltaVar=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0)
+                fn_couplingSCSMVar=('gammaVar'+str(parameters['couplingSCSMVar']))*(parameters['couplingSCSMVar']!=0)
                 fn_vz=('vz'+str(parameters['vz']))*(parameters['x']!='vz')
                 fn_a=('alpha'+str(parameters['alpha']))*(parameters['alpha']<=1 and parameters['alpha']>=0)
-                fn=fn_vz+fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_muLead+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_a+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_bE+fn_range+fn_leadPos
+                fn=fn_vz+fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_muLead+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_a+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_couplingSCSMVar+fn_vc+fn_dissipation+fn_gVar+fn_bE+fn_range+fn_leadPos
 
                 np.savetxt(fn+'.dat',recvbuf)
                 if (parameters['Q']!=0):
@@ -391,10 +399,11 @@ def main():
             fn_vc=('vc'+str(parameters['vc']))*(parameters['isSE']==1)*(parameters['vc']!=0)*(parameters['x']!='vc')
             fn_gVar=('gVar'+str(parameters['gVar']))*(parameters['gVar']!=0)
             fn_deltaVar=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0)
+            fn_couplingSCSMVar=('gammaVar'+str(parameters['couplingSCSMVar']))*(parameters['couplingSCSMVar']!=0)
             fn_vz=('vz'+str(parameters['vz']))*(parameters['x']!='vz')
             fn_a=('alpha'+str(parameters['alpha']))*(parameters['alpha']<=1 and parameters['alpha']>=0)
 
-            fn=fn_vz+fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_muLead+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_a+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_vc+fn_dissipation+fn_gVar+fn_bE+fn_range
+            fn=fn_vz+fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_muLead+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_a+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_couplingSCSMVar+fn_vc+fn_dissipation+fn_gVar+fn_bE+fn_range
             fnLL=fn+'LL'
             fnRR=fn+'RR'
             fnLR=fn+'LR'
