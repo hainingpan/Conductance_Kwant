@@ -16,7 +16,7 @@ def make_NS_junction(parameters):
     potPeak = parameters['potPeak']     #peak of smooth confinement
     muLead = parameters['muLead']     #chemical potential of lead
     wireLength = int(parameters['wireLength'])       #Length of wire= $wireLength/100(um)
-    barrierNum = parameters['barrierNum']   # number of barrier
+    barrierNum = int(parameters['barrierNum'])   # number of barrier
     barrierE = parameters['barrierE']
     couplingSCSM = parameters['couplingSCSM']   #SM-SC coupling strength
     dissipation = parameters['dissipation']     #dissipation
