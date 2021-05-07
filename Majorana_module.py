@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 def make_NS_junction(parameters):
     a=parameters['a']   #lattice constant= 10a(nm)
-    t = 25/(a*a)   #hopping integral
+    t = (1000/(2*parameters['mass']*5.11e5*(10e-9*5.076e6)**2))*1/(a*a)   #hopping integral
     alpha = parameters['alpha_R']/(2.*a)     #reduced SOC alpha=(alpha_R)/(2a)
     vz = parameters['vz']       #Zeeman field
     delta0 = parameters['delta0']     #Proximitized SC gap
