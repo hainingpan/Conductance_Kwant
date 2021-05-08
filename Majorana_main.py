@@ -24,12 +24,12 @@ def main():
                'gVar':0,'randList':0,
                'deltaVar':0,
                'couplingSCSMVar':0,
-               'vz':0.0, 'vBias':0.0,'vBiasMin':-0.3,'vBiasMax':0.3,'vBiasNum':1001,
-               # 'vz0':0,'vzNum':256,'vzStep': 0.002,'mu0':0,'muMax':1,'muStep':0.002,'muNum':0,
+               'vz':0.0, 'vBias':0.0,'vBiasMin':-0.3,'vBiasMax':0.3,'vBiasNum':301,
                'leadPos':0,'leadNum':1,
                'Q':0,
                'x':'vz','xMin':0,'xMax':2.048,'xNum':256,'xUnit':'meV',
                'alpha':-1,
+               'colortheme':'seismic','vmin':0,'vmax':4,
                'error':0}
     if (rank==0):
         if vars>1:
@@ -164,14 +164,6 @@ def main():
     tot=int(parameters['xNum'])
     xStep=(parameters['xMax']-parameters['xMin'])/parameters['xNum']
 
-    # if parameters['muNum']==0:
-    #     vz0=parameters['vz0']
-    #     tot=int(parameters['vzNum'])
-    #     vzStep = parameters['vzStep']
-    # else:
-    #     mu0=parameters['mu0']
-    #     tot=int(parameters['muNum'])
-    #     muStep=parameters['muStep']
     np.warnings.filterwarnings('ignore')
     vBiasMin = parameters['vBiasMin']
     vBiasMax = parameters['vBiasMax']
@@ -192,11 +184,6 @@ def main():
 
             for ii in range(per):
                 parameters[parameters['x']]=parameters['xMin']+(ii+rank*per)*xStep
-                # if parameters['muNum']==0:
-                #     parameters['vz'] = vz0+(ii+rank*per)*vzStep
-                # else:
-                #     parameters['mu'] = mu0+(ii+rank*per)*muStep
-
                 if parameters['gVar']!=0:
                     parameters['randList']=randList*parameters['vz']
                 if parameters['isSE']==0:
@@ -244,10 +231,6 @@ def main():
                 fn_potType=str(parameters['potType'])*(parameters['potType']!=0)
                 fn_leadPos='L'*(parameters['leadPos']==0)+'R'*(parameters['leadPos']==1)
                 fn_range=('-'+parameters['x']+'('+str(parameters['xMin'])+','+str(parameters['xMax'])+')'+','+str(vBiasMax)+'-')
-                # if parameters['muNum']==0:
-                #     fn_range=('-'+str(vzStep*tot)+','+str(vBiasMax)+'-')*(parameters['muNum']==0)
-                # else:
-                #     fn_range=('-'+str(mu0)+','+str(mu0+muStep*tot)+','+str(vBiasMax)+'-')*(parameters['muNum']!=0)
                 fn_potPeak=('mx'+str(parameters['potPeak']))*(parameters['potType']!=0)*(parameters['x']!='potPeak')
                 fn_potPeakPos=('pk'+str(parameters['potPeakPos']))*((parameters['potType']=='lorentz')+( parameters['potType']=='lorentzsigmoid')+(parameters['potType']=='exp2'))*(parameters['x']!='potPeakPos')
                 fn_potSigma=('sg'+str(parameters['potSigma']))*((parameters['potType']=='exp')+(parameters['potType']=='sigmoid')+(parameters['potType']=='exp2')+(parameters['potType']=='cos')+(parameters['potType']=='cos2'))*(parameters['x']!='potSigma')
@@ -277,41 +260,36 @@ def main():
                 if parameters['isTV']==1:
                     np.savetxt(fn+'TV.dat',recvbuf2)
 
-                # if parameters['muNum']==0:
-                #     xRange=np.arange(tot)*vzStep
-                # else:
-                #     xRange=mu0+np.arange(tot)*muStep
                 xRange=np.linspace(parameters['xMin'],parameters['xMax'],tot)
-                fig=plt.figure()
-                plt.pcolormesh(xRange,vBiasRange,np.transpose(recvbuf), cmap='rainbow')
-                # if parameters['muNum']==0:
-                #     plt.xlabel('Vz(meV)')
-                # else:
-                #     plt.xlabel('mu(meV)')
-                plt.xlabel(parameters['x']+'('+parameters['xUnit']+')')
-                plt.ylabel(r'$V_\mathrm{bias}$ (meV)')
-                plt.colorbar()
-                plt.axis((xRange[0],xRange[-1],vBiasMin,vBiasMax))
-                fig.savefig(fn+'.png')
+                fig,ax=plt.subplots()
+                im=ax.pcolormesh(xRange,vBiasRange,np.transpose(recvbuf), cmap=parameters['colortheme'],vmin=parameters['vmin'],vmax=parameters['vmax'],shading='auto')
+                ax.set_xlabel(parameters['x']+'('+parameters['xUnit']+')')
+                ax.set_ylabel(r'$V_\mathrm{bias}$ (meV)')
+                axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
+                cb=plt.colorbar(im,cax=axins,ticks=[0,2,4])
+                cb.ax.set_title(r'$G(e^2/h)$')                
+                fig.savefig(fn+'.png',bbox_inches='tight')
 
                 if (parameters['Q']!=0):
-                    figQ=plt.figure()
-                    plt.plot(xRange,recvbufQ)
-                    plt.xlabel('Vz(meV)')
-                    plt.ylabel('det(r)')
+                    figQ,ax=plt.subplots()
+                    ax.plot(xRange,recvbufQ)
+                    ax.set_xlabel('Vz(meV)')
+                    ax.set_ylabel('det(r)')
                     plt.axis((xRange[0],xRange[-1],-1,1))
-                    figQ.savefig(fn+'Q.png')
+                    figQ.savefig(fn+'Q.png',bbox_inches='tight')
 
                 if parameters['isTV']!=0:
-                    fig2=plt.figure()
-                    # plt.pcolormesh(xRange,vBiasRange,np.transpose(recvbuf2))
-                    plt.plot(xRange,recvbuf2)
-                    plt.xlabel('Vz(meV)')
-                    plt.ylabel(r'$V_\mathrm{bias}$ (meV)')
-                    # plt.colorbar()
+                    fig2,ax=plt.subplots()
+                    # im=ax.pcolormesh(xRange,vBiasRange,np.transpose(recvbuf2))
+                    ax.plot(xRange,recvbuf2)
+                    ax.set_xlabel('Vz(meV)')
+                    ax.set_ylabel(r'$V_\mathrm{bias}$ (meV)')
+                    # axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
+                    cb=plt.colorbar(im,cax=axins,ticks=[0,2,4])
+                    cb.ax.set_title(r'$G(e^2/h)$')
                     # plt.axis((0,tot*vzStep,vBiasMin,vBiasMax))
                     plt.axis((xRange[0],xRange[-1],-1,1))
-                    fig2.savefig(fn+'TV.png')
+                    fig2.savefig(fn+'TV.png',bbox_inches='tight')
 
     elif parameters['leadNum']==2:
         sendbufGLL=np.empty((per,vBiasNumber))  #conductance
@@ -323,11 +301,6 @@ def main():
             sendbufS=np.empty((per,8*8*2))
         for ii in range(per):
             parameters[parameters['x']]=parameters['xMin']+(ii+rank*per)*xStep
-            # if parameters['muNum']==0:
-            #     parameters['vz'] = vz0+(ii+rank*per)*vzStep
-            # else:
-            #     parameters['mu'] = mu0+(ii+rank*per)*muStep
-
             if parameters['gVar']!=0:
                 parameters['randList']=randList*parameters['vz']
             if parameters['isSE']==0:
@@ -378,10 +351,6 @@ def main():
             fn_bE=('bE'+str(parameters['barrierE']))*(parameters['x']!='barrierE')
             fn_potType=str(parameters['potType'])*(parameters['potType']!=0)
             fn_range=('-'+parameters['x']+'('+str(parameters['xMin'])+','+str(parameters['xMax'])+')'+','+str(vBiasMax)+'-')
-            # if parameters['muNum']==0:
-            #     fn_range=('-'+str(vzStep*tot)+','+str(vBiasMax)+'-')*(parameters['muNum']==0)
-            # else:
-            #     fn_range=('-'+str(mu0)+','+str(mu0+muStep*tot)+','+str(vBiasMax)+'-')*(parameters['muNum']!=0)
             fn_potPeak=('mx'+str(parameters['potPeak']))*(parameters['potType']!=0)*(parameters['x']!='potPeak')
             fn_potPeakPos=('pk'+str(parameters['potPeakPos']))*((parameters['potType']=='lorentz')+( parameters['potType']=='lorentzsigmoid')+(parameters['potType']=='exp2'))*(parameters['x']!='potPeakPos')
             fn_potSigma=('sg'+str(parameters['potSigma']))*((parameters['potType']=='exp')+(parameters['potType']=='sigmoid')+(parameters['potType']=='exp2')+(parameters['potType']=='cos')+(parameters['potType']=='cos2'))*(parameters['x']!='potSigma')
@@ -417,70 +386,66 @@ def main():
                 np.savetxt(fn+'Q.dat',recvbufQ)
                 np.savetxt(fn+'S.dat',recvbufS) #export S-matrix
 
-            # if parameters['muNum']==0:
-            #     xRange=np.arange(tot)*vzStep
-            # else:
-            #     xRange=mu0+np.arange(tot)*muStep
+
             xRange=np.linspace(parameters['xMin'],parameters['xMax'],tot)
-            figLL=plt.figure()
-            plt.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGLL), cmap='rainbow')
-            # if parameters['muNum']==0:
-            #     plt.xlabel('Vz(meV)')
-            # else:
-            #     plt.xlabel('mu(meV)')
-            plt.xlabel(parameters['x']+'('+parameters['xUnit']+')')
-            plt.ylabel(r'$V_\mathrm{bias}$ (meV)')
-            plt.colorbar()
-            plt.axis((xRange[0],xRange[-1],vBiasMin,vBiasMax))
-            figLL.savefig(fnLL+'.png')
+            fig,ax=plt.subplots(2,2,sharex=True,sharey=True)
+            im=[ax.pcolormesh(xRange,vBiasRange,data.T,cmap=parameters['colortheme'],vmin=parameters['vmin'],vmax=parameters['vmax'],shading='auto') for ax,data in zip(ax.flatten(),(recvbufGLL,recvbufGRR,recvbufGLR,recvbufGRL))]
+            [ax.set_xlabel('{}({})'.format(parameters['x'],parameters['xUnit'])) for ax in ax[1,:]]
+            [ax.set_ylabel(r'$V_\mathrm{bias}$ (meV)') for ax in ax[:,0]]
+            axins=[ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes) for ax in ax.flatten()]
+            cb=[plt.colorbar(im,cax=axins,ticks=[0,2,4]) for im,axins in zip(im,axins)]
+            [cb.ax.set_title(r'$G(e^2/h)$') for cb in cb]
+            [ax.text(.5,1,text,transform=ax.transAxes,va='bottom',ha='center') for ax,text in zip(ax.flatten(),('LL','RR','LR','RL'))]
+            fig.savefig(fn+'.png',bbox_inches='tight')
 
-            figRR=plt.figure()
-            plt.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGRR), cmap='rainbow')
-            # if parameters['muNum']==0:
-            #     plt.xlabel('Vz(meV)')
-            # else:
-            #     plt.xlabel('mu(meV)')
-            plt.xlabel(parameters['x']+'('+parameters['xUnit']+')')
-            plt.ylabel(r'$V_\mathrm{bias}$ (meV)')
-            plt.colorbar()
-            plt.axis((xRange[0],xRange[-1],vBiasMin,vBiasMax))
-            figRR.savefig(fnRR+'.png')
+            # figLL,ax=plt.subplots()
+            # im=ax.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGLL), cmap=parameters['colortheme'],vmin=parameters['vmin'],vmax=parameters['vmax'],shading='auto')
 
-            figLR=plt.figure()
-            plt.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGLR), cmap='rainbow')
-            # if parameters['muNum']==0:
-            #     plt.xlabel('Vz(meV)')
-            # else:
-            #     plt.xlabel('mu(meV)')
-            plt.xlabel(parameters['x']+'('+parameters['xUnit']+')')
-            plt.ylabel(r'$V_\mathrm{bias}$ (meV)')
-            plt.colorbar()
-            plt.axis((xRange[0],xRange[-1],vBiasMin,vBiasMax))
-            figLR.savefig(fnLR+'.png')
+            # ax.set_xlabel(parameters['x']+'('+parameters['xUnit']+')')
+            # ax.set_ylabel(r'$V_\mathrm{bias}$ (meV)')
+            # axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
+            # cb=plt.colorbar(im,cax=axins,ticks=[0,2,4])
+            # cb.ax.set_title(r'$G(e^2/h)$')            
+            # figLL.savefig(fnLL+'.png')
 
-            figRL=plt.figure()
-            plt.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGRL), cmap='rainbow')
-            # if parameters['muNum']==0:
-            #     plt.xlabel('Vz(meV)')
-            # else:
-            #     plt.xlabel('mu(meV)')
-            plt.xlabel(parameters['x']+'('+parameters['xUnit']+')')
-            plt.ylabel(r'$V_\mathrm{bias}$ (meV)')
-            plt.colorbar()
-            plt.axis((xRange[0],xRange[-1],vBiasMin,vBiasMax))
-            figRL.savefig(fnRL+'.png')
+            # figRR,ax=plt.subplots()
+            # im=ax.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGRR), cmap=parameters['colortheme'],vmin=parameters['vmin'],vmax=parameters['vmax'],shading='auto')
+
+            # ax.set_xlabel(parameters['x']+'('+parameters['xUnit']+')')
+            # ax.set_ylabel(r'$V_\mathrm{bias}$ (meV)')
+            # axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
+            # cb=plt.colorbar(im,cax=axins,ticks=[0,2,4])
+            # cb.ax.set_title(r'$G(e^2/h)$')            
+            # figRR.savefig(fnRR+'.png')
+
+            # figLR,ax=plt.subplots()
+            # im=ax.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGLR), cmap=parameters['colortheme'],vmin=parameters['vmin'],vmax=parameters['vmax'],shading='auto')
+
+            # ax.set_xlabel(parameters['x']+'('+parameters['xUnit']+')')
+            # ax.set_ylabel(r'$V_\mathrm{bias}$ (meV)')
+            # axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
+            # cb=plt.colorbar(im,cax=axins,ticks=[0,2,4])
+            # cb.ax.set_title(r'$G(e^2/h)$')            
+            # figLR.savefig(fnLR+'.png')
+
+            # figRL,ax=plt.subplots()
+            # im=ax.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGRL), cmap=parameters['colortheme'],vmin=parameters['vmin'],vmax=parameters['vmax'],shading='auto')
+
+            # ax.set_xlabel(parameters['x']+'('+parameters['xUnit']+')')
+            # ax.set_ylabel(r'$V_\mathrm{bias}$ (meV)')
+            # axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
+            # cb=plt.colorbar(im,cax=axins,ticks=[0,2,4])
+            # cb.ax.set_title(r'$G(e^2/h)$')            
+            # figRL.savefig(fnRL+'.png')
 
             if (parameters['Q']==1):
-                figQ=plt.figure()
-                plt.plot(xRange,recvbufQ)
-                plt.xlabel('Vz(meV)')
-                plt.ylabel('det(r)')
+                figQ,ax=plt.subplots()
+                ax.plot(xRange,recvbufQ)
+                ax.set_xlabel('Vz(meV)')
+                ax.set_ylabel('det(r)')
                 plt.axis((xRange[0],xRange[-1],-1,1))
                 figQ.savefig(fn+'Q.png')
 
 
 if __name__=="__main__":
-    #start=time.time()
     main()
-    #end=time.time()
-    #print(end-start)
