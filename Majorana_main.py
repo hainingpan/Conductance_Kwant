@@ -388,12 +388,14 @@ def main():
 
 
             xRange=np.linspace(parameters['xMin'],parameters['xMax'],tot)
-            fig,ax=plt.subplots(2,2,sharex=True,sharey=True)
-            im=[ax.pcolormesh(xRange,vBiasRange,data.T,cmap=parameters['colortheme'],vmin=parameters['vmin'],vmax=parameters['vmax'],shading='auto') for ax,data in zip(ax.flatten(),(recvbufGLL,recvbufGRR,recvbufGLR,recvbufGRL))]
+            fig,ax=plt.subplots(2,2,sharex=True,sharey=True,tight_layout=True)
+            im=[ax.pcolormesh(xRange,vBiasRange,data.T,cmap=parameters['colortheme'],vmin=parameters['vmin'],vmax=parameters['vmax'],shading='auto') for ax,data in zip(ax[0,:],(recvbufGLL,recvbufGRR))]
+            im.append(ax[1,0].pcolormesh(xRange,vBiasRange,recvbufGLR.T,cmap=parameters['colortheme'],shading='auto'))
+            im.append(ax[1,1].pcolormesh(xRange,vBiasRange,recvbufGRL.T,cmap=parameters['colortheme'],shading='auto'))
             [ax.set_xlabel('{}({})'.format(parameters['x'],parameters['xUnit'])) for ax in ax[1,:]]
             [ax.set_ylabel(r'$V_\mathrm{bias}$ (meV)') for ax in ax[:,0]]
             axins=[ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes) for ax in ax.flatten()]
-            cb=[plt.colorbar(im,cax=axins,ticks=[0,2,4]) for im,axins in zip(im,axins)]
+            cb=[plt.colorbar(im,cax=axins) for im,axins in zip(im,axins)]
             [cb.ax.set_title(r'$G(e^2/h)$') for cb in cb]
             [ax.text(.5,1,text,transform=ax.transAxes,va='bottom',ha='center') for ax,text in zip(ax.flatten(),('LL','RR','LR','RL'))]
             fig.savefig(fn+'.png',bbox_inches='tight')
