@@ -1,4 +1,5 @@
 import matplotlib
+from pytest import param
 matplotlib.use('Agg')
 from mpi4py import MPI
 import numpy as np
@@ -16,7 +17,7 @@ size=comm.Get_size()
 def main():
     vars=len(sys.argv)
     parameters = {'mass':0.01519,'isTV':0,'a':1,'mu':.2,'alpha_R':5, 'delta0':0.2,'wireLength':1000,
-               'muLead':25.0, 'barrierNum':2,'barrierE':10.0, 'dissipation':0.0001,'isDissipationVar':0,
+               'muLead':25.0, 'barrierNum':2,'barrierE':10.0, 'dissipation':0.0001,'isDissipationVar':0,'barrierRelative':0,
                'isQD':0, 'qdPeak':0.4, 'qdLength':20, 'qdPeakR':0,'qdLengthR':0,
                'isSE':0, 'couplingSCSM':0.2, 'vc':0,
                'potType':0,'potPeakPos':0,'potSigma':1,'potPeak':0,'potPeakR':0,'potPeakPosR':0,'potSigmaR':0,
@@ -24,10 +25,11 @@ def main():
                'gVar':0,'randList':0,
                'deltaVar':0,
                'couplingSCSMVar':0,
-               'vz':0.0, 'vBias':0.0,'vBiasMin':-0.3,'vBiasMax':0.3,'vBiasNum':301,
+               'vz':0.0, 'vBias':0.0,
                'leadPos':0,'leadNum':1,
                'Q':0,
                'x':'vz','xMin':0,'xMax':2.048,'xNum':256,'xUnit':'meV',
+               'y':'vBias','yMin':-.3,'yMax':.3,'yNum':301,'yUnit':'mV',
                'alpha':-1,
                'colortheme':'seismic','vmin':0,'vmax':4,
                'error':0}
@@ -39,7 +41,7 @@ def main():
                     varName=re.search('(.)*(?=\=)',sys.argv[i]).group(0)
                     varValue=re.search('(?<=\=)(.)*',sys.argv[i]).group(0)
                     if varName in parameters:
-                        if varName in ['potType','muVarList','randList','muVarType','scatterList','xUnit','x']:
+                        if varName in ['potType','muVarList','randList','muVarType','scatterList','xUnit','x','y']:
                             parameters[varName]=varValue
                         else:
                             parameters[varName]=float(varValue)
@@ -103,8 +105,6 @@ def main():
                     prefactor=1/(4*np.pi*8.85418781762039e-12)*(1.60217662e-19/(5*parameters['a']*10e-9))*1e3
                     parameters['muVarList']=prefactor*np.array([np.sum(1/np.array([np.sqrt((site-xi/(parameters['a']*1e-2))**2+(5)**2) for xi in dat])) for site in range(int(parameters['wireLength']))])
 
-
-
         if (isinstance(parameters['randList'],str)):
             print('random list use filename:'+parameters['randList'])
             randfn=parameters['randList']
@@ -154,8 +154,6 @@ def main():
 
         print(parameters)
 
-
-
     parameters=comm.bcast(parameters,root=0)
     if parameters['error']!=0:   #for the slave to exit
 #        print('I am rank=',rank,'My flag is',parameters['error'],'I exit because',parameters['error']!=0)
@@ -164,19 +162,22 @@ def main():
     tot=int(parameters['xNum'])
     xStep=(parameters['xMax']-parameters['xMin'])/parameters['xNum']
 
-    np.warnings.filterwarnings('ignore')
-    vBiasMin = parameters['vBiasMin']
-    vBiasMax = parameters['vBiasMax']
-    vBiasNumber = int(parameters['vBiasNum'])
-    vBiasRange = np.linspace(vBiasMin, vBiasMax, vBiasNumber)
+    # np.warnings.filterwarnings('ignore')
+    parameters['yNum']=int(parameters['yNum'])
+    yRange=np.linspace(parameters['yMin'],parameters['yMax'],parameters['yNum'])
+
     randList=parameters['randList']
-    per=int(tot/size)
+    
+    if tot%size>0:
+        raise ValueError('The total number on x axis ({:d}) is not multiple of the cores requested ({:d})'.format(parameters['xNum'],size))
+    else:
+        per=tot//size
 
     if parameters['leadNum']==1:
         leadPos=int(parameters['leadPos'])
         for irun in range(leadPos+1):
             parameters['leadPos']=irun
-            sendbuf=np.empty((per,vBiasNumber))  #conductance
+            sendbuf=np.empty((per,parameters['yNum']))  #conductance
             if (parameters['Q']!=0):
                 sendbufQ=np.empty((per,1))
             if parameters['isTV']==1:
@@ -186,25 +187,26 @@ def main():
                 parameters[parameters['x']]=parameters['xMin']+(ii+rank*per)*xStep
                 if parameters['gVar']!=0:
                     parameters['randList']=randList*parameters['vz']
-                if parameters['isSE']==0:
+                if parameters['isSE']==0 and parameters['y']=='vBias':
                     junction=Maj.make_NS_junction(parameters)   #Change this if junction is voltage dependent, e.g. in Self energy
-                for index in range(vBiasNumber):
-                    vBias=vBiasRange[index]
-                    parameters['vBias']=vBias
-                    if parameters['isSE']==1:
+                for index in range(parameters['yNum']):
+                    parameters[parameters['y']]=yRange[index]
+                    if parameters['barrierRelative']!=0:
+                        parameters['barrierE']=parameters['mu']+parameters['barrierRelative']
+                    if not (parameters['isSE']==0 and parameters['y']=='vBias'):
                         junction=Maj.make_NS_junction(parameters)
 
                     sendbuf[ii,index]=Maj.conductance(parameters,junction)
-                    if parameters['isTV']!=0:
-                        if (vBias==0):
+                    if parameters['isTV']!=0 and parameters['y']=='vBias':
+                        if (parameters['vBias']==0):
                             sendbuf2[ii,:]=Maj.TV(parameters,junction)
 
                     if (parameters['Q']!=0):
-                        if (vBias==0):
+                        if (parameters['vBias']==0):
                             sendbufQ[ii,:]=Maj.topologicalQ(parameters,junction)
 
             if (rank==0):
-                recvbuf=np.empty((tot,vBiasNumber))
+                recvbuf=np.empty((tot,parameters['yNum']))
                 if (parameters['Q']!=0):
                     recvbufQ=np.empty((tot,1))
                 if parameters['isTV']!=0:
@@ -222,36 +224,38 @@ def main():
                 comm.Gather(sendbuf2,recvbuf2,root=0)
 
             if (rank==0):
-                fn_mu=('m'+str(parameters['mu']))*(parameters['x']!='mu')
-                fn_Delta='D'+str(parameters['delta0'])*(parameters['x']!='delta0')
-                fn_alpha='a'+str(parameters['alpha_R'])*(parameters['x']!='alpha_R')
-                fn_wl='L'+str(int(parameters['wireLength']))
-                fn_muLead='muL'+str(parameters['muLead'])*(parameters['x']!='muLead')
-                fn_bE=('bE'+str(parameters['barrierE']))*(parameters['x']!='barrierE')
-                fn_potType=str(parameters['potType'])*(parameters['potType']!=0)
-                fn_leadPos='L'*(parameters['leadPos']==0)+'R'*(parameters['leadPos']==1)
-                fn_range=('-'+parameters['x']+'('+str(parameters['xMin'])+','+str(parameters['xMax'])+')'+','+str(vBiasMax)+'-')
-                fn_potPeak=('mx'+str(parameters['potPeak']))*(parameters['potType']!=0)*(parameters['x']!='potPeak')
-                fn_potPeakPos=('pk'+str(parameters['potPeakPos']))*((parameters['potType']=='lorentz')+( parameters['potType']=='lorentzsigmoid')+(parameters['potType']=='exp2'))*(parameters['x']!='potPeakPos')
-                fn_potSigma=('sg'+str(parameters['potSigma']))*((parameters['potType']=='exp')+(parameters['potType']=='sigmoid')+(parameters['potType']=='exp2')+(parameters['potType']=='cos')+(parameters['potType']=='cos2'))*(parameters['x']!='potSigma')
-                fn_potPeakR=('mxR'+str(parameters['potPeakR']))*(parameters['potType']=='exp2')*(parameters['x']!='potPeakR')
-                fn_potPeakPosR=('pkR'+str(parameters['potPeakPosR']))*( parameters['potType']=='exp2')*(parameters['x']!='potPeakPosR')
-                fn_potSigmaR=('sgR'+str(parameters['potSigmaR']))*(parameters['potType']=='exp2')*(parameters['x']!='potSigmaR')
-                fn_muVar=('mVar'+str(parameters['muVar']))*(parameters['muVar']!=0)
-                fn_muVarType=('C')*(parameters['muVarType']=='Coulomb')
-                fn_dissipation=('G'+str(parameters['dissipation']))*(parameters['x']!='dissipation')
-                fn_qdLength=('dL'+str(int(parameters['qdLength'])))*(parameters['isQD']!=0)*(parameters['x']!='qdLength')
-                fn_qdPeak=('VD'+str(parameters['qdPeak']))*(parameters['isQD']!=0)*(parameters['x']!='qdPeak')
-                fn_qdLengthR=('dLR'+str(int(parameters['qdLengthR'])))*(parameters['isQD']!=0)*(parameters['qdLengthR']!=0)*(parameters['x']!='qdLengthR')
-                fn_qdPeakR=('VDR'+str(parameters['qdPeakR']))*(parameters['isQD']!=0)*(parameters['qdLengthR']!=0)*(parameters['x']!='qdPeakR')
-                fn_couplingSCSM=('g'+str(parameters['couplingSCSM']))*(parameters['isSE']==1)*(parameters['x']!='couplingSCSM')
-                fn_vc=('vc'+str(parameters['vc']))*(parameters['isSE']==1)*(parameters['vc']!=0)*(parameters['x']!='vc')
-                fn_gVar=('gVar'+str(parameters['gVar']))*(parameters['gVar']!=0)
-                fn_deltaVar=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0)
-                fn_couplingSCSMVar=('gammaVar'+str(parameters['couplingSCSMVar']))*(parameters['couplingSCSMVar']!=0)
-                fn_vz=('vz'+str(parameters['vz']))*(parameters['x']!='vz')
-                fn_a=('alpha'+str(parameters['alpha']))*(parameters['alpha']<=1 and parameters['alpha']>=0)
-                fn=fn_vz+fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_muLead+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_a+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_couplingSCSMVar+fn_vc+fn_dissipation+fn_gVar+fn_bE+fn_range+fn_leadPos
+                fn={}
+                fn['mu']=('m'+str(parameters['mu']))
+                fn['delta0']='D'+str(parameters['delta0'])
+                fn['alpha_R']='a'+str(parameters['alpha_R'])
+                fn['wireLength']='L'+str(int(parameters['wireLength']))
+                fn['muLead']='muL'+str(parameters['muLead'])
+                fn['barrierE']=('bE'+str(parameters['barrierE']))*(parameters['barrierRelative']==0)
+                fn['barrierRelative']=('bR'+str(parameters['barrierRelative']))*(parameters['barrierRelative']!=0)
+                fn['potType']=str(parameters['potType'])*(parameters['potType']!=0)
+                fn['leadPos']='L'*(parameters['leadPos']==0)+'R'*(parameters['leadPos']==1)
+                fn['range']=('-'+parameters['x']+'('+str(parameters['xMin'])+','+str(parameters['xMax'])+')'+','+parameters['y']+'('+str(parameters['yMin'])+','+str(parameters['yMax'])+')'+'-')
+                fn['potPeak']=('mx'+str(parameters['potPeak']))*(parameters['potType']!=0)
+                fn['potPeakPos']=('pk'+str(parameters['potPeakPos']))*((parameters['potType']=='lorentz')+( parameters['potType']=='lorentzsigmoid')+(parameters['potType']=='exp2'))
+                fn['potSigma']=('sg'+str(parameters['potSigma']))*((parameters['potType']=='exp')+(parameters['potType']=='sigmoid')+(parameters['potType']=='exp2')+(parameters['potType']=='cos')+(parameters['potType']=='cos2'))
+                fn['potPeakR']=('mxR'+str(parameters['potPeakR']))*(parameters['potType']=='exp2')
+                fn['potPeakPosR']=('pkR'+str(parameters['potPeakPosR']))*( parameters['potType']=='exp2')
+                fn['potSigmaR']=('sgR'+str(parameters['potSigmaR']))*(parameters['potType']=='exp2')
+                fn['muVar']=('mVar'+str(parameters['muVar']))*(parameters['muVar']!=0)
+                fn['muVarType']=('C')*(parameters['muVarType']=='Coulomb')
+                fn['dissipation']=('G'+str(parameters['dissipation']))
+                fn['qdLength']=('dL'+str(int(parameters['qdLength'])))*(parameters['isQD']!=0)
+                fn['qdPeak']=('VD'+str(parameters['qdPeak']))*(parameters['isQD']!=0)
+                fn['qdLengthR']=('dLR'+str(int(parameters['qdLengthR'])))*(parameters['isQD']!=0)*(parameters['qdLengthR']!=0)
+                fn['qdPeakR']=('VDR'+str(parameters['qdPeakR']))*(parameters['isQD']!=0)*(parameters['qdLengthR']!=0)
+                fn['couplingSCSM']=('g'+str(parameters['couplingSCSM']))*(parameters['isSE']==1)
+                fn['vc']=('vc'+str(parameters['vc']))*(parameters['isSE']==1)*(parameters['vc']!=0)
+                fn['gVar']=('gVar'+str(parameters['gVar']))*(parameters['gVar']!=0)
+                fn['deltaVar']=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0)
+                fn['couplingSCSMVar']=('gammaVar'+str(parameters['couplingSCSMVar']))*(parameters['couplingSCSMVar']!=0)
+                fn['vz']=('vz'+str(parameters['vz']))
+                fn['alpha']=('alpha'+str(parameters['alpha']))*(parameters['alpha']<=1 and parameters['alpha']>=0)
+                fn=fn['vz']+fn['mu']+fn['delta0']+fn['deltaVar']+fn['alpha_R']+fn['wireLength']+fn['muLead']+fn['potType']+fn['potPeak']+fn['potPeakPos']+fn['potSigma']+fn['potPeakR']+fn['potPeakPosR']+fn['potSigmaR']+fn['muVarType']+fn['muVar']+fn['alpha']+fn['qdPeak']+fn['qdLength']+fn['qdPeakR']+fn['qdLengthR']+fn['couplingSCSM']+fn['couplingSCSMVar']+fn['vc']+fn['dissipation']+fn['gVar']+fn['barrierE']+fn['range']+fn['leadPos']
 
                 np.savetxt(fn+'.dat',recvbuf)
                 if (parameters['Q']!=0):
@@ -262,9 +266,9 @@ def main():
 
                 xRange=np.linspace(parameters['xMin'],parameters['xMax'],tot)
                 fig,ax=plt.subplots()
-                im=ax.pcolormesh(xRange,vBiasRange,np.transpose(recvbuf), cmap=parameters['colortheme'],vmin=parameters['vmin'],vmax=parameters['vmax'],shading='auto')
-                ax.set_xlabel(parameters['x']+'('+parameters['xUnit']+')')
-                ax.set_ylabel(r'$V_\mathrm{bias}$ (meV)')
+                im=ax.pcolormesh(xRange,yRange,np.transpose(recvbuf), cmap=parameters['colortheme'],vmin=parameters['vmin'],vmax=parameters['vmax'],shading='auto')
+                ax.set_xlabel('{}({})'.format(parameters['x'],parameters['xUnit']))
+                ax.set_ylabel('{}({})'.format(parameters['y'],parameters['yUnit']))
                 axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
                 cb=plt.colorbar(im,cax=axins,ticks=[0,2,4])
                 cb.ax.set_title(r'$G(e^2/h)$')                
@@ -273,29 +277,26 @@ def main():
                 if (parameters['Q']!=0):
                     figQ,ax=plt.subplots()
                     ax.plot(xRange,recvbufQ)
-                    ax.set_xlabel('Vz(meV)')
+                    ax.set_xlabel(parameters['x']+'('+parameters['xUnit']+')')
                     ax.set_ylabel('det(r)')
                     plt.axis((xRange[0],xRange[-1],-1,1))
                     figQ.savefig(fn+'Q.png',bbox_inches='tight')
 
                 if parameters['isTV']!=0:
                     fig2,ax=plt.subplots()
-                    # im=ax.pcolormesh(xRange,vBiasRange,np.transpose(recvbuf2))
                     ax.plot(xRange,recvbuf2)
-                    ax.set_xlabel('Vz(meV)')
-                    ax.set_ylabel(r'$V_\mathrm{bias}$ (meV)')
-                    # axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
+                    ax.set_xlabel(parameters['x']+'('+parameters['xUnit']+')')
+                    ax.set_ylabel(parameters['y']+'('+parameters['yUnit']+')')
                     cb=plt.colorbar(im,cax=axins,ticks=[0,2,4])
                     cb.ax.set_title(r'$G(e^2/h)$')
-                    # plt.axis((0,tot*vzStep,vBiasMin,vBiasMax))
                     plt.axis((xRange[0],xRange[-1],-1,1))
                     fig2.savefig(fn+'TV.png',bbox_inches='tight')
 
     elif parameters['leadNum']==2:
-        sendbufGLL=np.empty((per,vBiasNumber))  #conductance
-        sendbufGRR=np.empty((per,vBiasNumber))
-        sendbufGLR=np.empty((per,vBiasNumber))
-        sendbufGRL=np.empty((per,vBiasNumber))
+        sendbufGLL=np.empty((per,parameters['yNum']))  #conductance
+        sendbufGRR=np.empty((per,parameters['yNum']))
+        sendbufGLR=np.empty((per,parameters['yNum']))
+        sendbufGRL=np.empty((per,parameters['yNum']))
         if (parameters['Q']!=0):
             sendbufQ=np.empty((per,1))          #fix phase
             sendbufS=np.empty((per,8*8*2))
@@ -303,25 +304,25 @@ def main():
             parameters[parameters['x']]=parameters['xMin']+(ii+rank*per)*xStep
             if parameters['gVar']!=0:
                 parameters['randList']=randList*parameters['vz']
-            if parameters['isSE']==0:
+            if parameters['isSE']==0 and parameters['y']=='vBias':
                 junction=Maj.make_NS_junction(parameters)   #Change this if junction is voltage dependent, e.g. in Self energy
-            for index in range(vBiasNumber):
-                vBias=vBiasRange[index]
-                parameters['vBias']=vBias
-                if parameters['isSE']==1:
+            for index in range(parameters['yNum']):
+                parameters[parameters['y']]=yRange[index]
+                if parameters['barrierRelative']!=0:
+                    parameters['barrierE']=parameters['mu']+parameters['barrierRelative']                
+                if not (parameters['isSE']==0 and parameters['y']=='vBias'):
                     junction=Maj.make_NS_junction(parameters)
                 (sendbufGLL[ii,index],sendbufGRR[ii,index],sendbufGLR[ii,index],sendbufGRL[ii,index])=Maj.conductance_matrix(parameters,junction)
                 if (parameters['Q']!=0):
-                    if (vBias==0):
-                        # sendbufQ[ii,:]=Maj.topologicalQ(parameters,junction)
+                    if (parameters['vBias']==0):
                         sendbufS[ii,:],sendbufQ[ii,:]=Maj.getSMatrix(parameters,junction)
 
 
             if (rank==0):
-                recvbufGLL=np.empty((tot,vBiasNumber))
-                recvbufGRR=np.empty((tot,vBiasNumber))
-                recvbufGLR=np.empty((tot,vBiasNumber))
-                recvbufGRL=np.empty((tot,vBiasNumber))
+                recvbufGLL=np.empty((tot,parameters['yNum']))
+                recvbufGRR=np.empty((tot,parameters['yNum']))
+                recvbufGLR=np.empty((tot,parameters['yNum']))
+                recvbufGRL=np.empty((tot,parameters['yNum']))
                 if (parameters['Q']!=0):
                     recvbufQ=np.empty((tot,1))
                     recvbufS=np.empty((tot,8*8*2))
@@ -343,36 +344,41 @@ def main():
                 comm.Gather(sendbufS,recvbufS,root=0)
 
         if (rank==0):
-            fn_mu=('m'+str(parameters['mu']))*(parameters['x']!='mu')
-            fn_Delta='D'+str(parameters['delta0'])*(parameters['x']!='delta0')
-            fn_alpha='a'+str(parameters['alpha_R'])*(parameters['x']!='delta0')
-            fn_wl='L'+str(int(parameters['wireLength']))
-            fn_muLead='muL'+str(parameters['muLead'])*(parameters['x']!='muLead')
-            fn_bE=('bE'+str(parameters['barrierE']))*(parameters['x']!='barrierE')
-            fn_potType=str(parameters['potType'])*(parameters['potType']!=0)
-            fn_range=('-'+parameters['x']+'('+str(parameters['xMin'])+','+str(parameters['xMax'])+')'+','+str(vBiasMax)+'-')
-            fn_potPeak=('mx'+str(parameters['potPeak']))*(parameters['potType']!=0)*(parameters['x']!='potPeak')
-            fn_potPeakPos=('pk'+str(parameters['potPeakPos']))*((parameters['potType']=='lorentz')+( parameters['potType']=='lorentzsigmoid')+(parameters['potType']=='exp2'))*(parameters['x']!='potPeakPos')
-            fn_potSigma=('sg'+str(parameters['potSigma']))*((parameters['potType']=='exp')+(parameters['potType']=='sigmoid')+(parameters['potType']=='exp2')+(parameters['potType']=='cos')+(parameters['potType']=='cos2'))*(parameters['x']!='potSigma')
-            fn_potPeakR=('mxR'+str(parameters['potPeakR']))*(parameters['potType']=='exp2')*(parameters['x']!='potPeakR')
-            fn_potPeakPosR=('pkR'+str(parameters['potPeakPosR']))*( parameters['potType']=='exp2')*(parameters['x']!='potPeakPosR')
-            fn_potSigmaR=('sgR'+str(parameters['potSigmaR']))*(parameters['potType']=='exp2')*(parameters['x']!='potSigmaR')
-            fn_muVar=('mVar'+str(parameters['muVar']))*(parameters['muVar']!=0)
-            fn_muVarType=('C')*(parameters['muVarType']=='Coulomb')
-            fn_dissipation=('G'+str(parameters['dissipation']))*(parameters['x']!='dissipation')
-            fn_qdLength=('dL'+str(int(parameters['qdLength'])))*(parameters['isQD']!=0)*(parameters['x']!='qdLength')
-            fn_qdPeak=('VD'+str(parameters['qdPeak']))*(parameters['isQD']!=0)*(parameters['x']!='qdPeak')
-            fn_qdLengthR=('dLR'+str(int(parameters['qdLengthR'])))*(parameters['isQD']!=0)*(parameters['qdLengthR']!=0)*(parameters['x']!='qdLengthR')
-            fn_qdPeakR=('VDR'+str(parameters['qdPeakR']))*(parameters['isQD']!=0)*(parameters['qdLengthR']!=0)*(parameters['x']!='qdPeakR')
-            fn_couplingSCSM=('g'+str(parameters['couplingSCSM']))*(parameters['isSE']==1)*(parameters['x']!='couplingSCSM')
-            fn_vc=('vc'+str(parameters['vc']))*(parameters['isSE']==1)*(parameters['vc']!=0)*(parameters['x']!='vc')
-            fn_gVar=('gVar'+str(parameters['gVar']))*(parameters['gVar']!=0)
-            fn_deltaVar=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0)
-            fn_couplingSCSMVar=('gammaVar'+str(parameters['couplingSCSMVar']))*(parameters['couplingSCSMVar']!=0)
-            fn_vz=('vz'+str(parameters['vz']))*(parameters['x']!='vz')
-            fn_a=('alpha'+str(parameters['alpha']))*(parameters['alpha']<=1 and parameters['alpha']>=0)
+            fn={}
+            fn['mu']=('m'+str(parameters['mu']))
+            fn['delta0']='D'+str(parameters['delta0'])
+            fn['alpha_R']='a'+str(parameters['alpha_R'])
+            fn['wireLength']='L'+str(int(parameters['wireLength']))
+            fn['muLead']='muL'+str(parameters['muLead'])
+            fn['barrierE']=('bE'+str(parameters['barrierE']))*(parameters['barrierRelative']==0)
+            fn['barrierRelative']=('bR'+str(parameters['barrierRelative']))*(parameters['barrierRelative']!=0)
+            fn['potType']=str(parameters['potType'])*(parameters['potType']!=0)
+            fn['range']=('-'+parameters['x']+'('+str(parameters['xMin'])+','+str(parameters['xMax'])+')'+','+parameters['y']+'('+str(parameters['yMin'])+','+str(parameters['yMax'])+')'+'-')
+            fn['potPeak']=('mx'+str(parameters['potPeak']))*(parameters['potType']!=0)
+            fn['potPeakPos']=('pk'+str(parameters['potPeakPos']))*((parameters['potType']=='lorentz')+( parameters['potType']=='lorentzsigmoid')+(parameters['potType']=='exp2'))
+            fn['potSigma']=('sg'+str(parameters['potSigma']))*((parameters['potType']=='exp')+(parameters['potType']=='sigmoid')+(parameters['potType']=='exp2')+(parameters['potType']=='cos')+(parameters['potType']=='cos2'))
+            fn['potPeakR']=('mxR'+str(parameters['potPeakR']))*(parameters['potType']=='exp2')
+            fn['potPeakPosR']=('pkR'+str(parameters['potPeakPosR']))*( parameters['potType']=='exp2')
+            fn['potSigmaR']=('sgR'+str(parameters['potSigmaR']))*(parameters['potType']=='exp2')
+            fn['muVar']=('mVar'+str(parameters['muVar']))*(parameters['muVar']!=0)
+            fn['muVarType']=('C')*(parameters['muVarType']=='Coulomb')
+            fn['dissipation']=('G'+str(parameters['dissipation']))
+            fn['qdLength']=('dL'+str(int(parameters['qdLength'])))*(parameters['isQD']!=0)
+            fn['qdPeak']=('VD'+str(parameters['qdPeak']))*(parameters['isQD']!=0)
+            fn['qdLengthR']=('dLR'+str(int(parameters['qdLengthR'])))*(parameters['isQD']!=0)*(parameters['qdLengthR']!=0)
+            fn['qdPeakR']=('VDR'+str(parameters['qdPeakR']))*(parameters['isQD']!=0)*(parameters['qdLengthR']!=0)
+            fn['couplingSCSM']=('g'+str(parameters['couplingSCSM']))*(parameters['isSE']==1)
+            fn['vc']=('vc'+str(parameters['vc']))*(parameters['isSE']==1)*(parameters['vc']!=0)
+            fn['gVar']=('gVar'+str(parameters['gVar']))*(parameters['gVar']!=0)
+            fn['deltaVar']=('DVar'+str(parameters['deltaVar']))*(parameters['deltaVar']!=0)
+            fn['couplingSCSMVar']=('gammaVar'+str(parameters['couplingSCSMVar']))*(parameters['couplingSCSMVar']!=0)
+            fn['vz']=('vz'+str(parameters['vz']))
+            fn['alpha']=('alpha'+str(parameters['alpha']))*(parameters['alpha']<=1 and parameters['alpha']>=0)
+            
+            fn[parameters['x']]=''
+            fn[parameters['y']]=''
 
-            fn=fn_vz+fn_mu+fn_Delta+fn_deltaVar+fn_alpha+fn_wl+fn_muLead+fn_potType+fn_potPeak+fn_potPeakPos+fn_potSigma+fn_potPeakR+fn_potPeakPosR+fn_potSigmaR+fn_muVarType+fn_muVar+fn_a+fn_qdPeak+fn_qdLength+fn_qdPeakR+fn_qdLengthR+fn_couplingSCSM+fn_couplingSCSMVar+fn_vc+fn_dissipation+fn_gVar+fn_bE+fn_range
+            fn=fn['vz']+fn['mu']+fn['delta0']+fn['deltaVar']+fn['alpha_R']+fn['wireLength']+fn['muLead']+fn['potType']+fn['potPeak']+fn['potPeakPos']+fn['potSigma']+fn['potPeakR']+fn['potPeakPosR']+fn['potSigmaR']+fn['muVarType']+fn['muVar']+fn['alpha']+fn['qdPeak']+fn['qdLength']+fn['qdPeakR']+fn['qdLengthR']+fn['couplingSCSM']+fn['couplingSCSMVar']+fn['vc']+fn['dissipation']+fn['gVar']+fn['barrierE']+fn['range']
             fnLL=fn+'LL'
             fnRR=fn+'RR'
             fnLR=fn+'LR'
@@ -389,65 +395,24 @@ def main():
 
             xRange=np.linspace(parameters['xMin'],parameters['xMax'],tot)
             fig,ax=plt.subplots(2,2,sharex=True,sharey=True,tight_layout=True)
-            im=[ax.pcolormesh(xRange,vBiasRange,data.T,cmap=parameters['colortheme'],vmin=parameters['vmin'],vmax=parameters['vmax'],shading='auto') for ax,data in zip(ax[0,:],(recvbufGLL,recvbufGRR))]
-            im.append(ax[1,0].pcolormesh(xRange,vBiasRange,recvbufGLR.T,cmap=parameters['colortheme'],shading='auto'))
-            im.append(ax[1,1].pcolormesh(xRange,vBiasRange,recvbufGRL.T,cmap=parameters['colortheme'],shading='auto'))
+            im=[ax.pcolormesh(xRange,yRange,data.T,cmap=parameters['colortheme'],vmin=parameters['vmin'],vmax=parameters['vmax'],shading='auto') for ax,data in zip(ax[0,:],(recvbufGLL,recvbufGRR))]
+            im.append(ax[1,0].pcolormesh(xRange,yRange,recvbufGLR.T,cmap=parameters['colortheme'],shading='auto'))
+            im.append(ax[1,1].pcolormesh(xRange,yRange,recvbufGRL.T,cmap=parameters['colortheme'],shading='auto'))
             [ax.set_xlabel('{}({})'.format(parameters['x'],parameters['xUnit'])) for ax in ax[1,:]]
-            [ax.set_ylabel(r'$V_\mathrm{bias}$ (meV)') for ax in ax[:,0]]
+            [ax.set_ylabel('{}({})'.format(parameters['y'],parameters['yUnit'])) for ax in ax[:,0]]
             axins=[ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes) for ax in ax.flatten()]
             cb=[plt.colorbar(im,cax=axins) for im,axins in zip(im,axins)]
             [cb.ax.set_title(r'$G(e^2/h)$') for cb in cb]
             [ax.text(.5,1,text,transform=ax.transAxes,va='bottom',ha='center') for ax,text in zip(ax.flatten(),('LL','RR','LR','RL'))]
             fig.savefig(fn+'.png',bbox_inches='tight')
 
-            # figLL,ax=plt.subplots()
-            # im=ax.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGLL), cmap=parameters['colortheme'],vmin=parameters['vmin'],vmax=parameters['vmax'],shading='auto')
-
-            # ax.set_xlabel(parameters['x']+'('+parameters['xUnit']+')')
-            # ax.set_ylabel(r'$V_\mathrm{bias}$ (meV)')
-            # axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
-            # cb=plt.colorbar(im,cax=axins,ticks=[0,2,4])
-            # cb.ax.set_title(r'$G(e^2/h)$')            
-            # figLL.savefig(fnLL+'.png')
-
-            # figRR,ax=plt.subplots()
-            # im=ax.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGRR), cmap=parameters['colortheme'],vmin=parameters['vmin'],vmax=parameters['vmax'],shading='auto')
-
-            # ax.set_xlabel(parameters['x']+'('+parameters['xUnit']+')')
-            # ax.set_ylabel(r'$V_\mathrm{bias}$ (meV)')
-            # axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
-            # cb=plt.colorbar(im,cax=axins,ticks=[0,2,4])
-            # cb.ax.set_title(r'$G(e^2/h)$')            
-            # figRR.savefig(fnRR+'.png')
-
-            # figLR,ax=plt.subplots()
-            # im=ax.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGLR), cmap=parameters['colortheme'],vmin=parameters['vmin'],vmax=parameters['vmax'],shading='auto')
-
-            # ax.set_xlabel(parameters['x']+'('+parameters['xUnit']+')')
-            # ax.set_ylabel(r'$V_\mathrm{bias}$ (meV)')
-            # axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
-            # cb=plt.colorbar(im,cax=axins,ticks=[0,2,4])
-            # cb.ax.set_title(r'$G(e^2/h)$')            
-            # figLR.savefig(fnLR+'.png')
-
-            # figRL,ax=plt.subplots()
-            # im=ax.pcolormesh(xRange,vBiasRange,np.transpose(recvbufGRL), cmap=parameters['colortheme'],vmin=parameters['vmin'],vmax=parameters['vmax'],shading='auto')
-
-            # ax.set_xlabel(parameters['x']+'('+parameters['xUnit']+')')
-            # ax.set_ylabel(r'$V_\mathrm{bias}$ (meV)')
-            # axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
-            # cb=plt.colorbar(im,cax=axins,ticks=[0,2,4])
-            # cb.ax.set_title(r'$G(e^2/h)$')            
-            # figRL.savefig(fnRL+'.png')
-
             if (parameters['Q']==1):
                 figQ,ax=plt.subplots()
                 ax.plot(xRange,recvbufQ)
-                ax.set_xlabel('Vz(meV)')
+                ax.set_xlabel('{}({})'.format(parameters['y'],parameters['yUnit']))
                 ax.set_ylabel('det(r)')
                 plt.axis((xRange[0],xRange[-1],-1,1))
                 figQ.savefig(fn+'Q.png')
-
 
 if __name__=="__main__":
     main()
