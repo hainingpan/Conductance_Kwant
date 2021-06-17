@@ -41,7 +41,7 @@ def main():
                     varName=re.search('(.)*(?=\=)',sys.argv[i]).group(0)
                     varValue=re.search('(?<=\=)(.)*',sys.argv[i]).group(0)
                     if varName in parameters:
-                        if varName in ['potType','muVarList','randList','muVarType','scatterList','xUnit','x','y']:
+                        if varName in ['potType','muVarList','randList','muVarType','scatterList','xUnit','yUnit','x','y']:
                             parameters[varName]=varValue
                         else:
                             parameters[varName]=float(varValue)
@@ -255,6 +255,8 @@ def main():
                 fn['couplingSCSMVar']=('gammaVar'+str(parameters['couplingSCSMVar']))*(parameters['couplingSCSMVar']!=0)
                 fn['vz']=('vz'+str(parameters['vz']))
                 fn['alpha']=('alpha'+str(parameters['alpha']))*(parameters['alpha']<=1 and parameters['alpha']>=0)
+                fn[parameters['x']]=''
+                fn[parameters['y']]=''                
                 fn=fn['vz']+fn['mu']+fn['delta0']+fn['deltaVar']+fn['alpha_R']+fn['wireLength']+fn['muLead']+fn['potType']+fn['potPeak']+fn['potPeakPos']+fn['potSigma']+fn['potPeakR']+fn['potPeakPosR']+fn['potSigmaR']+fn['muVarType']+fn['muVar']+fn['alpha']+fn['qdPeak']+fn['qdLength']+fn['qdPeakR']+fn['qdLengthR']+fn['couplingSCSM']+fn['couplingSCSMVar']+fn['vc']+fn['dissipation']+fn['gVar']+fn['barrierE']+fn['range']+fn['leadPos']
 
                 np.savetxt(fn+'.dat',recvbuf)
@@ -377,7 +379,7 @@ def main():
             
             fn[parameters['x']]=''
             fn[parameters['y']]=''
-
+            
             fn=fn['vz']+fn['mu']+fn['delta0']+fn['deltaVar']+fn['alpha_R']+fn['wireLength']+fn['muLead']+fn['potType']+fn['potPeak']+fn['potPeakPos']+fn['potSigma']+fn['potPeakR']+fn['potPeakPosR']+fn['potSigmaR']+fn['muVarType']+fn['muVar']+fn['alpha']+fn['qdPeak']+fn['qdLength']+fn['qdPeakR']+fn['qdLengthR']+fn['couplingSCSM']+fn['couplingSCSMVar']+fn['vc']+fn['dissipation']+fn['gVar']+fn['barrierE']+fn['range']
             fnLL=fn+'LL'
             fnRR=fn+'RR'
