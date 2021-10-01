@@ -149,36 +149,36 @@ def conductance_matrix(parameters,junction):
     GRL=sMatrix.transmission((1,0),(0,0))-sMatrix.transmission((1,1),(0,0))
     # return nparray or struct
     return GLL,GRR,GLR,GRL
-'''
-def topologicalQ(parameters,junction):
-    vBias=parameters['vBias']
-    sMatrix = kwant.smatrix(junction, vBias, check_hermiticity=False)
-    if parameters['leadNum']==1:
-        return np.abs(LA.det(sMatrix.data))
-    if parameters['leadNum']==2:
-        return np.abs(LA.det(sMatrix.submatrix(1,1)))
-'''
-def topologicalQ(parameters,junction):
-    vBias=parameters['vBias']
 
-    sMatrix = kwant.smatrix(junction, parameters['vBias'], check_hermiticity=False)
-    R = sMatrix.submatrix(0,0)
-    tv0 = LA.det(R)
-    basis_wf = sMatrix.lead_info[0].wave_functions
+# def topologicalQ(parameters,junction):
+#     vBias=parameters['vBias']
+#     sMatrix = kwant.smatrix(junction, vBias, check_hermiticity=False)
+#     if parameters['leadNum']==1:
+#         return np.abs(LA.det(sMatrix.data))
+#     if parameters['leadNum']==2:
+#         return np.abs(LA.det(sMatrix.submatrix(1,1)))
 
-    normalize_dict = {0:0,1:0,2:3,3:3,4:0,5:0,6:3,7:3}
-    phase_dict = {}
+# def topologicalQ(parameters,junction):
+#     vBias=parameters['vBias']
 
-    for n in range(8):
-        m = normalize_dict[n]
-        phase_dict[n]= (-1)**m*basis_wf[m,n]/abs(basis_wf[m,n])
-    fixphase=np.conjugate(phase_dict[0]*phase_dict[1]*phase_dict[2]*phase_dict[3])* phase_dict[4]*phase_dict[5]*phase_dict[6]*phase_dict[7]
-    # print('R-topo:')
-    # print(R.round(3))
-    # print('det='+str(tv0)+'  phase='+str(fixphase))
-    tv = tv0*fixphase
-    # print('tv='+str(tv))
-    return tv
+#     sMatrix = kwant.smatrix(junction, parameters['vBias'], check_hermiticity=False)
+#     R = sMatrix.submatrix(0,0)
+#     tv0 = LA.det(R)
+#     basis_wf = sMatrix.lead_info[0].wave_functions
+
+#     normalize_dict = {0:0,1:0,2:3,3:3,4:0,5:0,6:3,7:3}
+#     phase_dict = {}
+
+#     for n in range(8):
+#         m = normalize_dict[n]
+#         phase_dict[n]= (-1)**m*basis_wf[m,n]/abs(basis_wf[m,n])
+#     fixphase=np.conjugate(phase_dict[0]*phase_dict[1]*phase_dict[2]*phase_dict[3])* phase_dict[4]*phase_dict[5]*phase_dict[6]*phase_dict[7]
+#     # print('R-topo:')
+#     # print(R.round(3))
+#     # print('det='+str(tv0)+'  phase='+str(fixphase))
+#     tv = tv0*fixphase
+#     # print('tv='+str(tv))
+#     return tv
 
 def getSMatrix(parameters,junction):
     vBias=parameters['vBias']
@@ -194,44 +194,43 @@ def getSMatrix(parameters,junction):
         phase_dict[n]= (-1)**m*basis_wf[m,n]/abs(basis_wf[m,n])
 
     fixphase=np.conjugate(phase_dict[0]*phase_dict[1]*phase_dict[2]*phase_dict[3])* phase_dict[4]*phase_dict[5]*phase_dict[6]*phase_dict[7]
-    # print('R-sm: ')
-    # R = R*fixphase
-    # print(R[:4,:4].round(3))
-    # print('det='+str(LA.det(R[:4,:4]))+'  phase='+str(fixphase))
-    R = R.flatten().view(float)
-    return R,fixphase
+    R=R
+    TVL,TVR=LA.det(R[:4,:4]),LA.det(R[4:,4:])
+    assert (np.imag(TVL)<1e-10 and np.imag(TVR)<1e-10),'TVL and TVR are not real with the imag=({:e},{:e})'.format(np.imag(TVL),np.imag(TVR))
+    TVL,TVR=np.real((fixphase*TVL,fixphase*TVR))
+    return R,TVL,TVR
 
-def TVmap(parameters,junction):
-    vBias=parameters['vBias']   #TV is not suitable to define large value deviated from 0
-    sMatrix = kwant.smatrix(junction, vBias, check_hermiticity=False)
-    R = sMatrix.submatrix(0,0)
-    tv0 = LA.det(R)
-    basis_wf = sMatrix.lead_info[0].wave_functions
-    normalize_dict = {0:0,1:0,2:3,3:3,4:0,5:0,6:3,7:3}
-    phase_dict = {}
-    for n in range(8):
-        m = normalize_dict[n]
-        phase_dict[n]= (-1)**m*basis_wf[m,n]/abs(basis_wf[m,n])
+# def TVmap(parameters,junction):
+#     vBias=parameters['vBias']   #TV is not suitable to define large value deviated from 0
+#     sMatrix = kwant.smatrix(junction, vBias, check_hermiticity=False)
+#     R = sMatrix.submatrix(0,0)
+#     tv0 = LA.det(R)
+#     basis_wf = sMatrix.lead_info[0].wave_functions
+#     normalize_dict = {0:0,1:0,2:3,3:3,4:0,5:0,6:3,7:3}
+#     phase_dict = {}
+#     for n in range(8):
+#         m = normalize_dict[n]
+#         phase_dict[n]= (-1)**m*basis_wf[m,n]/abs(basis_wf[m,n])
 
-    tv = tv0*np.conjugate(phase_dict[0]*phase_dict[1]*phase_dict[2]*phase_dict[3])* phase_dict[4]    *phase_dict[5]*phase_dict[6]*phase_dict[7]
-    return tv
+#     tv = tv0*np.conjugate(phase_dict[0]*phase_dict[1]*phase_dict[2]*phase_dict[3])* phase_dict[4]*phase_dict[5]*phase_dict[6]*phase_dict[7]
+#     return tv
 
-def conductance_TV(parameters,junction):
-    vBias=parameters['vBias']
-    sMatrix = kwant.smatrix(junction, vBias, check_hermiticity=False)
-    R = sMatrix.submatrix(0,0)
-    G = 2.0
-    for (i,j) in [(0,0),(0,1),(1,0),(1,1)]:
-        G = G - abs(R[i,j])**2 + abs(R[2+i,j])**2
+# def conductance_TV(parameters,junction):
+#     vBias=parameters['vBias']
+#     sMatrix = kwant.smatrix(junction, vBias, check_hermiticity=False)
+#     R = sMatrix.submatrix(0,0)
+#     G = 2.0
+#     for (i,j) in [(0,0),(0,1),(1,0),(1,1)]:
+#         G = G - abs(R[i,j])**2 + abs(R[2+i,j])**2
 
-    tv0 = LA.det(R)
-    basis_wf = sMatrix.lead_info[0].wave_functions
-    normalize_dict = {0:0,1:0,2:3,3:3,4:0,5:0,6:3,7:3}
-    phase_dict = {}
-    for n in range(8):
-        m = normalize_dict[n]
-        phase_dict[n]= (-1)**m*basis_wf[m,n]/abs(basis_wf[m,n])
+#     tv0 = LA.det(R)
+#     basis_wf = sMatrix.lead_info[0].wave_functions
+#     normalize_dict = {0:0,1:0,2:3,3:3,4:0,5:0,6:3,7:3}
+#     phase_dict = {}
+#     for n in range(8):
+#         m = normalize_dict[n]
+#         phase_dict[n]= (-1)**m*basis_wf[m,n]/abs(basis_wf[m,n])
 
-    tv = tv0*np.conjugate(phase_dict[0]*phase_dict[1]*phase_dict[2]*phase_dict[3])* phase_dict[4]    *phase_dict[5]*phase_dict[6]*phase_dict[7]
+#     tv = tv0*np.conjugate(phase_dict[0]*phase_dict[1]*phase_dict[2]*phase_dict[3])* phase_dict[4]*phase_dict[5]*phase_dict[6]*phase_dict[7]
 
-    return G,tv
+#     return G,tv

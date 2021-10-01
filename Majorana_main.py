@@ -9,6 +9,7 @@ import re
 import matplotlib.pyplot as plt
 import time
 import argparse
+import pickle
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
@@ -16,7 +17,7 @@ size=comm.Get_size()
 
 def main():
     vars=len(sys.argv)
-    parameters = {'mass':0.01519,'isTV':0,'a':1,'mu':.2,'alpha_R':5, 'delta0':0.2,'wireLength':1000,
+    parameters = {'mass':0.01519,'a':1,'mu':.2,'alpha_R':5, 'delta0':0.2,'wireLength':1000,
                'muLead':25.0, 'barrierNum':2,'barrierE':10.0, 'dissipation':0.0001,'isDissipationVar':0,'barrierRelative':0,
                'isQD':0, 'qdPeak':0.4, 'qdLength':20, 'qdPeakR':0,'qdLengthR':0,
                'isSE':0, 'couplingSCSM':0.2, 'vc':0,
@@ -27,7 +28,7 @@ def main():
                'couplingSCSMVar':0,
                'vz':0.0, 'vBias':0.0,
                'leadPos':0,'leadNum':1,
-               'Q':0,
+               'isS':0,
                'x':'vz','xMin':0,'xMax':2.048,'xNum':256,'xUnit':'meV',
                'y':'vBias','yMin':-.3,'yMax':.3,'yNum':301,'yUnit':'mV',
                'alpha':-1,
@@ -178,10 +179,7 @@ def main():
         for irun in range(leadPos+1):
             parameters['leadPos']=irun
             sendbuf=np.empty((per,parameters['yNum']))  #conductance
-            if (parameters['Q']!=0):
-                sendbufQ=np.empty((per,1))
-            if parameters['isTV']==1:
-                sendbuf2=np.empty((per,1)) #topological visibility
+            
 
             for ii in range(per):
                 parameters[parameters['x']]=parameters['xMin']+(ii+rank*per)*xStep
@@ -197,31 +195,14 @@ def main():
                         junction=Maj.make_NS_junction(parameters)
 
                     sendbuf[ii,index]=Maj.conductance(parameters,junction)
-                    if parameters['isTV']!=0 and parameters['y']=='vBias':
-                        if (parameters['vBias']==0):
-                            sendbuf2[ii,:]=Maj.TV(parameters,junction)
 
-                    if (parameters['Q']!=0):
-                        if (parameters['vBias']==0):
-                            sendbufQ[ii,:]=Maj.topologicalQ(parameters,junction)
+                    assert parameters['isS']!=0,'The number of lead should be 2 when export Smatrix'
 
             if (rank==0):
                 recvbuf=np.empty((tot,parameters['yNum']))
-                if (parameters['Q']!=0):
-                    recvbufQ=np.empty((tot,1))
-                if parameters['isTV']!=0:
-                    recvbuf2=np.empty((tot,1))
             else:
                 recvbuf=None
-                if (parameters['Q']!=0):
-                    recvbufQ=None
-                if parameters['isTV']==1:
-                    recvbuf2=None
             comm.Gather(sendbuf,recvbuf,root=0)
-            if (parameters['Q']!=0):
-                comm.Gather(sendbufQ,recvbufQ,root=0)
-            if parameters['isTV']!=0:
-                comm.Gather(sendbuf2,recvbuf2,root=0)
 
             if (rank==0):
                 fn={}
@@ -259,13 +240,6 @@ def main():
                 fn[parameters['y']]=''                
                 fn=fn['vz']+fn['mu']+fn['delta0']+fn['deltaVar']+fn['alpha_R']+fn['wireLength']+fn['muLead']+fn['potType']+fn['potPeak']+fn['potPeakPos']+fn['potSigma']+fn['potPeakR']+fn['potPeakPosR']+fn['potSigmaR']+fn['muVarType']+fn['muVar']+fn['alpha']+fn['qdPeak']+fn['qdLength']+fn['qdPeakR']+fn['qdLengthR']+fn['couplingSCSM']+fn['couplingSCSMVar']+fn['vc']+fn['dissipation']+fn['gVar']+fn['barrierE']+fn['range']+fn['leadPos']
 
-                np.savetxt(fn+'.dat',recvbuf)
-                if (parameters['Q']!=0):
-                   np.savetxt(fn+'Q.dat',recvbufQ)
-
-                if parameters['isTV']==1:
-                    np.savetxt(fn+'TV.dat',recvbuf2)
-
                 xRange=np.linspace(parameters['xMin'],parameters['xMax'],tot)
                 fig,ax=plt.subplots()
                 im=ax.pcolormesh(xRange,yRange,np.transpose(recvbuf), cmap=parameters['colortheme'],vmin=parameters['vmin'],vmax=parameters['vmax'],shading='auto')
@@ -276,32 +250,15 @@ def main():
                 cb.ax.set_title(r'$G(e^2/h)$')                
                 fig.savefig(fn+'.png',bbox_inches='tight')
 
-                if (parameters['Q']!=0):
-                    figQ,ax=plt.subplots()
-                    ax.plot(xRange,recvbufQ)
-                    ax.set_xlabel(parameters['x']+'('+parameters['xUnit']+')')
-                    ax.set_ylabel('det(r)')
-                    plt.axis((xRange[0],xRange[-1],-1,1))
-                    figQ.savefig(fn+'Q.png',bbox_inches='tight')
-
-                if parameters['isTV']!=0:
-                    fig2,ax=plt.subplots()
-                    ax.plot(xRange,recvbuf2)
-                    ax.set_xlabel(parameters['x']+'('+parameters['xUnit']+')')
-                    ax.set_ylabel(parameters['y']+'('+parameters['yUnit']+')')
-                    cb=plt.colorbar(im,cax=axins,ticks=[0,2,4])
-                    cb.ax.set_title(r'$G(e^2/h)$')
-                    plt.axis((xRange[0],xRange[-1],-1,1))
-                    fig2.savefig(fn+'TV.png',bbox_inches='tight')
-
     elif parameters['leadNum']==2:
         sendbufGLL=np.empty((per,parameters['yNum']))  #conductance
         sendbufGRR=np.empty((per,parameters['yNum']))
         sendbufGLR=np.empty((per,parameters['yNum']))
         sendbufGRL=np.empty((per,parameters['yNum']))
-        if (parameters['Q']!=0):
-            sendbufQ=np.empty((per,1))          #fix phase
-            sendbufS=np.empty((per,8*8*2))
+        if (parameters['isS']!=0):
+            sendbufS=np.empty((per,8,8),dtype='complex128')
+            sendbufTVL=np.empty(per)
+            sendbufTVR=np.empty(per)
         for ii in range(per):
             parameters[parameters['x']]=parameters['xMin']+(ii+rank*per)*xStep
             if parameters['gVar']!=0:
@@ -315,9 +272,9 @@ def main():
                 if not (parameters['isSE']==0 and parameters['y']=='vBias'):
                     junction=Maj.make_NS_junction(parameters)
                 (sendbufGLL[ii,index],sendbufGRR[ii,index],sendbufGLR[ii,index],sendbufGRL[ii,index])=Maj.conductance_matrix(parameters,junction)
-                if (parameters['Q']!=0):
+                if (parameters['isS']!=0):
                     if (parameters['vBias']==0):
-                        sendbufS[ii,:],sendbufQ[ii,:]=Maj.getSMatrix(parameters,junction)
+                        sendbufS[ii,:,:],sendbufTVL[ii],sendbufTVR[ii]=Maj.getSMatrix(parameters, junction)
 
 
             if (rank==0):
@@ -325,25 +282,28 @@ def main():
                 recvbufGRR=np.empty((tot,parameters['yNum']))
                 recvbufGLR=np.empty((tot,parameters['yNum']))
                 recvbufGRL=np.empty((tot,parameters['yNum']))
-                if (parameters['Q']!=0):
-                    recvbufQ=np.empty((tot,1))
-                    recvbufS=np.empty((tot,8*8*2))
+                if (parameters['isS']!=0):
+                    recvbufS=np.empty((tot,8,8),dtype='complex128')
+                    recvbufTVL=np.empty(tot)
+                    recvbufTVR=np.empty(tot)
             else:
                 recvbufGLL=None
                 recvbufGRR=None
                 recvbufGLR=None
                 recvbufGRL=None
-                if (parameters['Q']!=0):
-                    recvbufQ=None
+                if (parameters['isS']!=0):
                     recvbufS=None
+                    recvbufTVL=None
+                    recvbufTVR=None
 
             comm.Gather(sendbufGLL,recvbufGLL,root=0)
             comm.Gather(sendbufGRR,recvbufGRR,root=0)
             comm.Gather(sendbufGLR,recvbufGLR,root=0)
             comm.Gather(sendbufGRL,recvbufGRL,root=0)
-            if (parameters['Q']!=0):
-                comm.Gather(sendbufQ,recvbufQ,root=0)
+            if (parameters['isS']!=0):
                 comm.Gather(sendbufS,recvbufS,root=0)
+                comm.Gather(sendbufTVL,recvbufTVL,root=0)
+                comm.Gather(sendbufTVR,recvbufTVR,root=0)
 
         if (rank==0):
             fn={}
@@ -390,10 +350,9 @@ def main():
             np.savetxt(fnRR+'.dat',recvbufGRR)
             np.savetxt(fnLR+'.dat',recvbufGLR)
             np.savetxt(fnRL+'.dat',recvbufGRL)
-            if (parameters['Q']!=0):
-                np.savetxt(fn+'Q.dat',recvbufQ)
-                np.savetxt(fn+'S.dat',recvbufS) #export S-matrix
-
+            if (parameters['isS']!=0):
+                with open(fn+'s.pickle','wb') as f:
+                    pickle.dump([recvbufS,recvbufTVL,recvbufTVR],f)
 
             xRange=np.linspace(parameters['xMin'],parameters['xMax'],tot)
             fig,ax=plt.subplots(2,2,sharex=True,sharey=True,tight_layout=True)
@@ -408,13 +367,15 @@ def main():
             [ax.text(.5,1,text,transform=ax.transAxes,va='bottom',ha='center') for ax,text in zip(ax.flatten(),('LL','RR','LR','RL'))]
             fig.savefig(fn+'.png',bbox_inches='tight')
 
-            if (parameters['Q']==1):
-                figQ,ax=plt.subplots()
-                ax.plot(xRange,recvbufQ)
+            if (parameters['isS']==1):
+                figTV,ax=plt.subplots()
+                ax.plot(xRange,recvbufTVL,lw=1,color='r',label='L')
+                ax.plot(xRange,recvbufTVR,lw=1,color='b',label='R')
                 ax.set_xlabel('{}({})'.format(parameters['y'],parameters['yUnit']))
-                ax.set_ylabel('det(r)')
-                plt.axis((xRange[0],xRange[-1],-1,1))
-                figQ.savefig(fn+'Q.png')
+                ax.set_ylabel('TV')
+                ax.legend()
+                # plt.axis((xRange[0],xRange[-1],-1,1))
+                figTV.savefig(fn+'TV.png')
 
 if __name__=="__main__":
     main()
