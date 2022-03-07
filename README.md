@@ -10,13 +10,15 @@ To run it in parallel, use `mpirun -np 32 python -m mpi4py.futures Majorana_main
 
 # Help
 `python Majorana_main.py -h` shows the definitions for all parameters.
+
 ## Imhomogeneous Potential type
 *NB: Some rare types of inhomogeneous potentials have been removed in the newer branch `refactoring-2`.*
 ![`cos`](cos.png)
 ![`exp`](exp.png)
 ![`exp2`](exp2.png)
 
-# Requisite
+# Requirements
+[`kwant`](https://kwant-project.org/), [`mpi4py`](https://mpi4py.readthedocs.io/en/stable/install.html), [`tinyarray`](https://pypi.org/project/tinyarray/)
 
 
 # To Do:

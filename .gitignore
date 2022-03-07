@@ -4,3 +4,6 @@ obs-del
 *.dat
 *.png
 *.pickle
+!cos.png
+!exp.png
+!exp2.png

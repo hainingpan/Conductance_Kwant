@@ -7,7 +7,6 @@ import argparse
 import pickle
 from Majorana_utils import Nanowire
 import time
-from functools import partial
 import random
 import sys
 from collections import defaultdict,OrderedDict
