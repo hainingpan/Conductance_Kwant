@@ -143,7 +143,7 @@ def filename(args):
     if args.SE:
         fn['coupling_SC_SM']='g{}'.format(args.coupling_SC_SM)
         fn['coupling_SC_SM_Var']='gammaVar{}'.format(coupling_SC_SM_Var) if args.coupling_SC_SM_Var>0 else ''
-        fn['Vzc']='Vzc{}'.format(args.Vzc) if args.Vzc<float('inf')
+        fn['Vzc']='Vzc{}'.format(args.Vzc) if args.Vzc<float('inf') else ''
     
     fn['gVar']='gVar{}'.format(args.gVar) if args.gVar>0 else ''
     fn['dissipation']='G{}'.format(args.dissipation) if args.dissipation>0 else ''
