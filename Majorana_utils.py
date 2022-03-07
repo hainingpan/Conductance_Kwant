@@ -66,7 +66,7 @@ class Nanowire:
         assert self.args.lead_num==len(self.args.lead_pos), 'The number of leads ({}) is not equal to the position information ({})'.format(args.lead_num,args.lead_pos)
 
         if len(self.args.muVar_fn)>0:
-            print('Use guassian disorder file:{}'.format(self.args.muVar_fn))
+            # print('Use guassian disorder file:{}'.format(self.args.muVar_fn))
             try:
                 self.muVar_list=np.loadtxt(self.args.muVar_fn)
             except:
@@ -77,7 +77,7 @@ class Nanowire:
             self.muVar_list=rng_muVar.normal(size=self.wire_num)*self.args.muVar
 
         if len(self.args.random_fn)>0:
-            print('Use random file:'.format(self.args.random_fn))
+            # print('Use random file:'.format(self.args.random_fn))
             try:
                 self.random_list=np.loadtxt(self.args.random_fn)
             except:
