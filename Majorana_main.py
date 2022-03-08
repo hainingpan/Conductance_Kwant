@@ -231,9 +231,9 @@ if __name__=='__main__':
     y_range=np.linspace(args.y_min, args.y_max,args.y_num)
     inputs=[(args,x,y) for x in x_range for y in y_range]
     
-    # with MPIPoolExecutor() as executor:
-    #     rs=list(executor.map(wrapper,inputs))
-    rs=list(map(wrapper,inputs))
+    with MPIPoolExecutor() as executor:
+        rs=list(executor.map(wrapper,inputs))
+    # rs=list(map(wrapper,inputs))
 
     G_raw,TVL_raw,TVR_raw,kappa_raw,LDOS_raw=zip(*rs)
     G=postprocess_G(G_raw)
