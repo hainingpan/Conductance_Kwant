@@ -12,7 +12,7 @@ import sys
 from collections import defaultdict,OrderedDict
 from itertools import repeat
    
-def parse_arguments(parser):
+def parse_arguments(parser,inputs=None):
     '''
     Parse input arguments for the nanowire parameters. The detailed description can be invoked by `python Majorana_main.py -h`
 
@@ -90,8 +90,10 @@ def parse_arguments(parser):
     parser.add_argument('-conductance','--conductance',action='store_true',help='flag for calculating the conductance spectrum (default True)')
     parser.add_argument('-LDOS','--LDOS',action='store_true',help='flag for calculating the LDOS (default False)')
     parser.add_argument('-wavefunction','--wavefunction',action='store_true',help='flag for calculating the wavefunction (default False)')
-
-    args=parser.parse_args()
+    if inputs is None:
+        args=parser.parse_args()
+    else:
+        args=parser.parse_args(inputs)
     args.muVar_seed=random.randrange(sys.maxsize) if args.muVar_seed is None else args.muVar_seed
     args.random_seed=random.randrange(sys.maxsize) if args.random_seed is None else args.random_seed
     return args
@@ -107,7 +109,8 @@ def wrapper(inputs):
         LDOS=None
 
     if args.wavefunction:
-        pass
+        assert args.y=='V_bias', "y has to be v_bias to calculate wavefunction" 
+        nw.wavefunction(x,y)
     
     return [G,TVL,TVR,kappa,LDOS]
 
@@ -228,9 +231,9 @@ if __name__=='__main__':
     y_range=np.linspace(args.y_min, args.y_max,args.y_num)
     inputs=[(args,x,y) for x in x_range for y in y_range]
     
-    with MPIPoolExecutor() as executor:
-        rs=list(executor.map(wrapper,inputs))
-    # rs=list(map(wrapper,inputs))
+    # with MPIPoolExecutor() as executor:
+    #     rs=list(executor.map(wrapper,inputs))
+    rs=list(map(wrapper,inputs))
 
     G_raw,TVL_raw,TVR_raw,kappa_raw,LDOS_raw=zip(*rs)
     G=postprocess_G(G_raw)

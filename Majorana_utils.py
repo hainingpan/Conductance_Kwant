@@ -4,6 +4,7 @@ import tinyarray
 import time
 import matplotlib.pyplot as plt
 from itertools import repeat
+from scipy.sparse.linalg import eigsh
 
 s0 = tinyarray.array([[1, 0], [0, 1]])
 sx = tinyarray.array([[0, 1], [1, 0]])
@@ -202,6 +203,68 @@ class Nanowire:
             self.get_hamiltonian_bare()
         ham=self.hamiltonian_bare.finalized()
         return self._Green_function(ham.hamiltonian_submatrix())
+    
+    def _fix_phase(self,wf,pos):
+        '''P=\sigma_y \otimes \tau_y K, when applied to the Nambu basis: (u_up,u_down,v_down, v_up) -> (-v*_up,v*_down,u*_down,-u*_up)
+        Need expansion of details.
+        '''
+        if pos:
+            return wf*np.exp(-1j*np.angle(wf[0]))
+        else:
+            return -wf*np.exp(-1j*np.angle(wf[3]))
+
+    def _sumindex(self,wf):
+        return np.sum(np.abs(wf.reshape((-1,4)))**2,axis=1)
+
+    # def wavefunction(self,x,y):
+    #     assert self.args.dissipation==0, "Dissipation is not zero ({}).".format(self.args.dissipation)
+    #     if self.args.SE:
+    #         setattr(self.args, self.args.x,x)
+    #         setattr(self.args, self.args.y,y)
+    #         self.get_hamiltonian_bare()
+    #         ham_pos=self.get_hamiltonian_bare().finalized().hamiltonian_submatrix()
+    #         vals_pos,vecs_pos=eigsh(ham_pos,sigma=y)
+    #         idx_pos=np.abs(vals_pos-y).argmin()
+
+    #         setattr(self.args, self.args.y,-y)
+    #         ham_neg=self.get_hamiltonian_bare().finalized().hamiltonian_submatrix()
+    #         vals_neg,vecs_neg=eigsh(ham_neg,sigma=-y)
+    #         idx_neg=np.abs(vals_neg+y).argmin()
+
+    #         val_neg,val_pos=vals_neg[idx_neg],vals_pos[idx_pos]
+    #         assert abs(val_pos+val_neg)<eps, 'E_pos ({}) is not equal to E_neg({})'.format(val_pos,val_neg)
+
+    #         vec_neg,vec_pos=vecs_neg[:,idx_neg],vecs_pos[:,idx_pos]
+    #         vec_neg=self._fix_phase(vec_neg,False)
+    #         vec_pos=self._fix_phase(vec_pos,True)
+    #         vec_1=(vec_pos+vec_neg)/np.sqrt(2)
+    #         vec_2=1j*(vec_pos-vec_neg)/np.sqrt(2)
+    #         return val_pos,self._sumindex(vec_pos), self._sumindex(vec_1), self._sumindex(vec_2)
+    #     else:
+    #         pass
+
+    def wavefunction(self,x,y):
+        assert self.args.dissipation==0, "Dissipation is not zero ({}).".format(self.args.dissipation)
+        if self.args.SE:
+            setattr(self.args, self.args.x,x)
+            setattr(self.args, self.args.y,y)
+            ham=self.get_hamiltonian_bare().finalized().hamiltonian_submatrix()
+            vals_pos,vecs_pos=eigsh(ham,sigma=y)
+            idx=np.abs(vals_pos-y).argmin()
+            val_pos,vec_pos=vals_pos[idx],vecs_pos[:,idx]
+            vec_neg=np.kron(np.eye(vec_pos.shape[0]//4),np.fliplr(np.diag([-1,1,1,-1])))@vec_pos.conj()
+
+            vec_neg=self._fix_phase(vec_neg,False)
+            vec_pos=self._fix_phase(vec_pos,True)
+
+            vec_1=(vec_pos+vec_neg)/np.sqrt(2)
+            vec_2=1j*(vec_pos-vec_neg)/np.sqrt(2)
+            return val_pos,self._sumindex(vec_pos), self._sumindex(vec_1), self._sumindex(vec_2)
+        else:
+            pass
+
+
+
 
     def conductance(self,x,y):
         setattr(self.args, self.args.x,x)

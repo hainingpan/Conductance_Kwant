@@ -1,5 +1,5 @@
 # Semiconductor-superconductor nanowire
-This repository summarizes all the codes in my Majorana-related works during Ph.D.
+This repository summarizes all the codes in my Majorana-related works during my Ph.D.
 
 # Usage
 `python Majorana_main.py -mu=1 -L=1 -Delta0=0.2 -cond -LDOS` calculates the conductance (`-cond`) and LDOS (`-LDOS`) of a nanowire with wire length being 1 micron, chemical potential in the semiconductor being 1 meV, and superconductor gap being 0.2 meV. 
@@ -14,6 +14,9 @@ To run it in parallel, use `mpirun -np 32 python -m mpi4py.futures Majorana_main
 
 ### `-LDOS`
 * Local density of states as a function of `x` and `y` where `y` has to be `V_bias`. The third axis is the spatial position.
+
+### `-wavefunction`
+* Wavefunction is better visualized using `jupyter notebook`.
 
 # Help
 `python Majorana_main.py -h` shows the definitions for all parameters.
@@ -35,7 +38,7 @@ To run it in parallel, use `mpirun -np 32 python -m mpi4py.futures Majorana_main
 
 # Legacy
 
-This code is greatly expanded before I graduate for the completeness. The previous version can be found in the directory `legacy` where the previous `README.md` is as follows for record keeping purpose. The major difference in the naming rule is also tracked as
+This code is expanded for completeness. The previous version can be found in the directory `legacy` where the previous `README.md` is as follows for record-keeping purposes. The major difference in the naming rule is also tracked as
 
 |old|new|
 |---|---|
@@ -88,7 +91,7 @@ This code is greatly expanded before I graduate for the completeness. The previo
 >
 >
 >
->* `python Majorana_main.py wireLength=100`  Run on single core, for a nanowire with 100 sites where lattice constant is 10nm. So the total length is 1um. * `mpiexec -n 4 python -m mpi4py.futures Majorana_adaptive.py wireLength=100` Run on local MPI executor pool. using adaptive sampling instead of uniform grid sampling* `a=1`    lattice constance, unit is 10nm
+>* `python Majorana_main.py wireLength=100`  Run on single-core, for a nanowire with 100 sites where lattice constant is 10nm. So the total length is 1um. * `mpiexec -n 4 python -m mpi4py.futures Majorana_adaptive.py wireLength=100` Run on local MPI executor pool. using adaptive sampling instead of uniform grid sampling* `a=1`    lattice constance, unit is 10nm
 >
 >* `alpha_R=5`    Spin-orbital coupling, unit is eV*nm
 >* `mpirun -n 4 python Majorana_main.py wireLength=100 leadNum=2` Run on local multiple cores, for a 1 um nanowire with both lead attached to calculate nonlocal conductance
