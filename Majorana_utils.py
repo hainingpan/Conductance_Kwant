@@ -233,7 +233,7 @@ class Nanowire:
                 kappa=s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0))
                 assert s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0))-(s_matrix.transmission((1,0),(0,0))+s_matrix.transmission((1,1),(0,0)))< eps, 'not same magnitude {} != {}'.format(s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0)),(s_matrix.transmission((1,0),(0,0))+s_matrix.transmission((1,1),(0,0))))
             else:
-                TVL,TVR,kappa=repeat(None,4)
+                TVL,TVR,kappa=repeat(None,3)
         return G,TVL,TVR,kappa
 
         
