@@ -183,8 +183,8 @@ class Nanowire:
         if self.args.lead_num==1:
             junction=self._lead(self.hamiltonian_bare,lead_pos)            
         elif self.args.lead_num==2:
-            junction=self._lead(self.hamiltonian_bare,'R')
             junction=self._lead(self.hamiltonian_bare,'L')
+            junction=self._lead(self.hamiltonian_bare,'R')
         return junction
 
     def _Green_function(self,ham,delta=1e-3):
@@ -212,7 +212,7 @@ class Nanowire:
                 hamiltonian_lead=self.get_hamiltonian_lead(lead_pos).finalized()
                 s_matrix=kwant.smatrix(hamiltonian_lead,self.args.V_bias,check_hermiticity=False)
                 G[lead_pos]=s_matrix.submatrix((0,0),(0,0)).shape[0]-s_matrix.transmission((0,0),(0,0))+s_matrix.transmission((0,1),(0,0))
-            S,TVL,TVR=repeat(None,3)
+            TVL,TVR,kappa=repeat(None,3)
         elif self.args.lead_num==2:
             hamiltonian_lead=self.get_hamiltonian_lead().finalized()
             s_matrix=kwant.smatrix(hamiltonian_lead,self.args.V_bias,check_hermiticity=False)
@@ -230,9 +230,11 @@ class Nanowire:
                 assert (np.imag(TVL)<eps and np.imag(TVR)<eps),'TVL and TVR are not real with imag=({:e},{:e})'.format(np.imag(TVL),np.imag(TVR))
                 TVL=np.real(fixphase*TVL)
                 TVR=np.real(fixphase*TVR)
+                kappa=s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0))
+                assert s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0))-(s_matrix.transmission((1,0),(0,0))+s_matrix.transmission((1,1),(0,0)))< eps, 'not same magnitude {} != {}'.format(s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0)),(s_matrix.transmission((1,0),(0,0))+s_matrix.transmission((1,1),(0,0))))
             else:
-                S,TVL,TVR=repeat(None,3)
-        return G,S,TVL,TVR
+                TVL,TVR,kappa=repeat(None,4)
+        return G,TVL,TVR,kappa
 
         
 

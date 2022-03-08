@@ -1,12 +1,19 @@
 # Semiconductor-superconductor nanowire
-This repository summarizes all the codes Majorana-related work in my Ph.D. work.
+This repository summarizes all the codes in my Majorana-related works during Ph.D.
 
 # Usage
 `python Majorana_main.py -mu=1 -L=1 -Delta0=0.2 -cond -LDOS` calculates the conductance (`-cond`) and LDOS (`-LDOS`) of a nanowire with wire length being 1 micron, chemical potential in the semiconductor being 1 meV, and superconductor gap being 0.2 meV. 
 
 To run it in parallel, use `mpirun -np 32 python -m mpi4py.futures Majorana_main.py -mu=1 -L=1 -Delta0=0.2 -cond -LDOS`, where 32 cores are used.
 
+## Output
+### `-cond`
+* `-lead_num=1` `-lead_pos=L` or `-lead_pos=R`: conductance.
+* `-lead_num=1` `-lead_pos=LR`: conductance from the left end and right end, separately.
+* `-lead_num=2` `-lead_pos=LR`: nonlocal conductance, topological visibility (`TVL`, `TVR`), thermal conductance (`kappa`)
 
+### `-LDOS`
+* Local density of states as a function of `x` and `y` where `y` has to be `V_bias`. The third axis is the spatial position.
 
 # Help
 `python Majorana_main.py -h` shows the definitions for all parameters.

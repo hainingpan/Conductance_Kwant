@@ -68,7 +68,6 @@ def parse_arguments(parser):
     # lead
     parser.add_argument('-lead_pos','--lead_pos',default='L',type=str,choices=['L','R','LR','RL'],help='position of lead')   # for lead in lead_pos
     parser.add_argument('-lead_num','--lead_num',default=1,type=int,choices=[1,2],help='number of leads')
-    # parser.add_argument('-S','--S',action='store_true',help='flag for exporting S-matrix')
     # plot conductance spectrum
     parser.add_argument('-x','--x',default='Vz',type=str,help='scan of x-axis')
     parser.add_argument('-Vz','--Vz',default=0,type=float,help='Zeeman field (meV)')
@@ -100,7 +99,7 @@ def parse_arguments(parser):
 def wrapper(inputs):
     args,x,y=inputs
     nw=Nanowire(args)
-    G,S,TVL,TVR=nw.conductance(x,y) if args.conductance else repeat(None,4)
+    G,TVL,TVR,kappa=nw.conductance(x,y) if args.conductance else repeat(None,4)
     if args.LDOS:
         assert args.y=='V_bias', "y has to be v_bias to calculate LDOS" 
         LDOS=nw.LDOS(x,y)
@@ -110,7 +109,7 @@ def wrapper(inputs):
     if args.wavefunction:
         pass
     
-    return [G,S,TVL,TVR,LDOS]
+    return [G,TVL,TVR,kappa,LDOS]
 
 def postprocess_G(G_raw):
     
@@ -166,8 +165,8 @@ def plot(fn):
                 cb=plt.colorbar(im,cax=axins)
                 cb.ax.set_title(r'$G(e^2/h)$')
                 ax.text(.5,1,key,transform=ax.transAxes,va='bottom',ha='center')
-            ax.set_xlabel(r'${}$({})'.format(args.x,args.x_unit))
-            ax.set_ylabel(r'${}$({})'.format(args.y,args.y_unit))
+            ax.set_xlabel('{}({})'.format(args.x,args.x_unit))
+            ax.set_ylabel('{}({})'.format(args.y,args.y_unit))
         elif len(G.keys())==2:
             fig,axs=plt.subplots(1,2,tight_layout=True)
             for ax,key in zip(axs,['L','R']):
@@ -177,8 +176,8 @@ def plot(fn):
                 cb=plt.colorbar(im,cax=axins)
                 cb.ax.set_title(r'$G(e^2/h)$')
                 ax.text(.5,1,key,transform=ax.transAxes,va='bottom',ha='center')
-                ax.set_xlabel(r'${}$({})'.format(args.x,args.x_unit))
-            axs[0].set_ylabel(r'${}$({})'.format(args.y,args.y_unit))
+                ax.set_xlabel('{}({})'.format(args.x,args.x_unit))
+            axs[0].set_ylabel('{}({})'.format(args.y,args.y_unit))
         elif len(G.keys())==4:
             fig,axs=plt.subplots(3,2,tight_layout=True)
             for ax,key in zip(axs.flatten()[:4],['LL','RR','LR','RL']):
@@ -188,12 +187,14 @@ def plot(fn):
                 cb=plt.colorbar(im,cax=axins)
                 cb.ax.set_title(r'$G(e^2/h)$')
                 ax.text(.5,1,key,transform=ax.transAxes,va='bottom',ha='center')
-            [ax.set_xlabel(r'${}$({})'.format(args.x,args.x_unit)) for ax in axs[-1]]
-            [ax.set_ylabel(r'${}$({})'.format(args.y,args.y_unit)) for ax in axs[:,0]]
-            for ax, TV, text in zip(axs[2],[TVL,TVR],'LR'):
-                ax.plot(x_range,TV)
-                ax.text(.5,1,text,transform=ax.transAxes,va='bottom',ha='center')
-            axs[2,0].set_xlabel('TV')
+            [ax.set_xlabel('{}({})'.format(args.x,args.x_unit)) for ax in axs[-1,:]]
+            [ax.set_ylabel('{}({})'.format(args.y,args.y_unit)) for ax in axs[:,0]]
+            axs[2,0].plot(x_range,TVL,label='L',color='r')
+            axs[2,0].plot(x_range,TVR,label='R',color='b')
+            axs[2,0].set_ylabel('TV')
+            axs[2,0].legend()
+            axs[2,1].plot(x_range,kappa)
+            axs[2,1].set_ylabel(r'$\kappa/\kappa_0$')
         fig.savefig('{}_cond.png'.format(fn),bbox_inches='tight')
     if args.LDOS:
         pass
@@ -203,9 +204,9 @@ def savedata(fn):
     data['args']=args
     if args.conductance:
         data['G']=G
-        data['S']=S
         data['TVL']=TVL
         data['TVR']=TVR
+        data['kappa']=kappa
     if args.LDOS:
         data['LDOS']=LDOS
     if args.wavefunction:
@@ -231,11 +232,11 @@ if __name__=='__main__':
         rs=list(executor.map(wrapper,inputs))
     # rs=list(map(wrapper,inputs))
 
-    G_raw,S_raw,TVL_raw,TVR_raw,LDOS_raw=zip(*rs)
+    G_raw,TVL_raw,TVR_raw,kappa_raw,LDOS_raw=zip(*rs)
     G=postprocess_G(G_raw)
-    S=postprocess_S(S_raw)
     TVL=postprocess_S(TVL_raw)
     TVR=postprocess_S(TVR_raw)
+    kappa=postprocess_S(kappa_raw)
     LDOS=postprocess_LDOS(LDOS_raw)
 
 
