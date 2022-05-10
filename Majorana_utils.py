@@ -149,7 +149,7 @@ class Nanowire:
     
     def _Vz_list(self):
         '''random disorder in g factor'''
-        self.Vz_list=self.args.Vz*np.ones(self.wire_num) if self.args.gVar==0 else self.random_list
+        self.Vz_list=self.args.Vz*np.ones(self.wire_num) if self.args.gVar==0 else self.random_list*self.args.Vz
 
     def _QD(self):
         ''' quantum dot '''
