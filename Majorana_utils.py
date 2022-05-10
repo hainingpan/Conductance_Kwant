@@ -155,9 +155,9 @@ class Nanowire:
         ''' quantum dot '''
         if self.args.QD:
             for x in range(self.QD_num):
-                self.hamiltonian_bare[self.lat(x)]=(2*self.t-self.args.mu+self.args.QD_peak*np.exp(-(x*self.args.a)**2/self.args.QD_L**2))*tzs0+self.Vz_list[x]*t0sx-1j*self.args.dissipation*t0s0
+                self.hamiltonian_bare[self.lat(x)]=(2*self.t-self.args.mu+self.args.QD_peak*np.exp(-(x*self.args.a*1e-3)**2/self.args.QD_L**2))*tzs0+self.Vz_list[x]*t0sx-1j*self.args.dissipation*t0s0
             for x in range(self.QD_num_R):
-                self.hamiltonian_bare[self.lat(self.wire_num-x-1)]=(2*self.t-self.args.mu+self.args.QD_peak_R*np.exp(-(x*self.args.a)**2/self.args.QD_L_R**2))*tzs0+self.Vz_list[x]*t0sx-1j*self.args.dissipation*t0s0
+                self.hamiltonian_bare[self.lat(self.wire_num-x-1)]=(2*self.t-self.args.mu+self.args.QD_peak_R*np.exp(-(x*self.args.a*1e-3)**2/self.args.QD_L_R**2))*tzs0+self.Vz_list[x]*t0sx-1j*self.args.dissipation*t0s0
         
     def _lead(self,junction,lead_pos):
         if self.args.barrier_relative is not None:
