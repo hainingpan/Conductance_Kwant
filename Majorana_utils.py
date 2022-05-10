@@ -145,7 +145,7 @@ class Nanowire:
         self.Delta0_list=self.args.Delta0*np.ones(self.wire_num) if self.args.DeltaVar==0 else self.random_list
         self.coupling_SC_SM_list=self.args.coupling_SC_SM*np.ones(self.wire_num) if self.args.coupling_SC_SM_Var==0 else self.random_list
         self.Delta_list=np.zeros(self.wire_num) if self.args.Vz>self.args.Vzc else self.Delta0_list*np.sqrt(1-(self.args.Vz/self.args.Vzc)**2)
-        self.SC_Delta_list=[-coupling_SC_SM*(self.args.V_bias*t0s0+Delta*txs0)/np.sqrt(Delta**2-self.args.V_bias**2-np.sign(self.args.V_bias)*1e-9j)*(Delta0>0) for Delta, Delta0, coupling_SC_SM  in zip(self.Delta_list,self.Delta0_list,self.coupling_SC_SM_list)] if self.args.SE else [Delta*txs0 for Delta in self.Delta_list]
+        self.SC_Delta_list=[-coupling_SC_SM*(self.args.V_bias*t0s0+Delta*txs0)/np.sqrt(Delta**2-self.args.V_bias**2-(2*(self.args.V_bias>=0)-1)*1e-9j)*(Delta0>0) for Delta, Delta0, coupling_SC_SM  in zip(self.Delta_list,self.Delta0_list,self.coupling_SC_SM_list)] if self.args.SE else [Delta*txs0 for Delta in self.Delta_list]
     
     def _Vz_list(self):
         '''random disorder in g factor'''
