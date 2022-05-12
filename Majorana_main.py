@@ -137,7 +137,7 @@ def filename(args):
         fn['pot_type']='{}'.format(args.pot_type)
         fn['pot_peak']='mx{}'.format(args.pot_peak) if args.pot_peak_R==0 else 'mx{},{}'.format(args.pot_peak,args.pot_peak_R)
         fn['pot_peak_pos']='pk{}'.format(args.pot_peak_pos) if args.pot_peak_pos_R==0 else 'pp{},{}'.format(args.pot_peak_pos,args.pot_peak_pos_R)
-        fn['pot_sigma']='sg{}'.format(args.pot_peak_sigma) if args.pot_sigma_R==0 else 'sg{},{}'.format(args.pot_peak_sigma,args.pot_peak_sigma_R)
+        fn['pot_sigma']='sg{}'.format(args.pot_sigma) if args.pot_sigma_R==0 else 'sg{},{}'.format(args.pot_sigma,args.pot_sigma_R)
     fn['muVar']='mVar{}'.format(args.muVar) if args.muVar>0 else ''
     if args.QD:
         fn['QD_L']='dL{}'.format(args.QD_L) if args.QD_L_R==0 else 'dL{},{}'.format(args.QD_L,args.QD_L_R)
