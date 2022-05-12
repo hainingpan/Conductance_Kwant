@@ -64,7 +64,7 @@ class Nanowire:
         self.QD_num_R=self.args.QD_L_R*1000/self.args.a
         assert abs(self.QD_num_R-round(self.QD_num_R))<eps, 'The length of the quantum dot on the right ({} um) and the lattice constant ({} nm) are not commensurate.'.format(self.args.QD_L,self.args.a)
         self.QD_num_R=int(self.QD_num_R)
-        assert self.args.lead_num==len(self.args.lead_pos), 'The number of leads ({}) is not equal to the position information ({})'.format(args.lead_num,args.lead_pos)
+        # assert self.args.lead_num==len(self.args.lead_pos), 'The number of leads ({}) is not equal to the position information ({})'.format(args.lead_num,args.lead_pos)
 
         if len(self.args.muVar_fn)>0:
             # print('Use guassian disorder file:{}'.format(self.args.muVar_fn))
@@ -108,8 +108,8 @@ class Nanowire:
         self._potential={
         '0': lambda x: 0*x,
         'cos': lambda x: np.cos(3*x*np.pi/self.args.pot_sigma/2)*self.args.pot_peak*(x<=self.args.pot_sigma),
-        'exp': lambda x: self.args.pot_peak*(np.exp(-((x-self.args.pot_peak_pos))**2/(2*self.args.pot_sigma**2))),
-        'exp2': lambda x: self.args.pot_peak*(np.exp(-((x-self.args.pot_peak_pos))**2/(2*self.args.pot_sigma**2)))+self.args.pot_peak_R*(np.exp(-((x-self.args.pot_peak_pos_R))**2/(2*self.args.pot_sigma_R**2)))        
+        'exp': lambda x: self.args.pot_peak*(np.exp(-(x-self.args.pot_peak_pos)**2/(2*self.args.pot_sigma**2))),
+        'exp2': lambda x: self.args.pot_peak*(np.exp(-(x-self.args.pot_peak_pos)**2/(2*self.args.pot_sigma**2)))+self.args.pot_peak_R*(np.exp(-(x-self.args.pot_peak_pos_R)**2/(2*self.args.pot_sigma_R**2)))        
         }
         assert self.args.pot_type in self._potential, 'Potential type ({}) is not defined.'.format(self.args.pot_type)
 

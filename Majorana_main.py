@@ -163,7 +163,7 @@ def plot(fn):
         if len(G.keys())==1:
             fig,ax=plt.subplots(tight_layout=True)
             for key, value in G.items():
-                im=ax.pcolormesh(x_range,y_range,value.T,cmap=args.cmap,vmin=args.vmin,vmax=args.vmax,shading='auto')
+                im=ax.pcolormesh(x_range,y_range,value.T,cmap=args.cmap,vmin=args.vmin,vmax=args.vmax,shading='auto',rasterized=True)
                 axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
                 cb=plt.colorbar(im,cax=axins)
                 cb.ax.set_title(r'$G(e^2/h)$')
@@ -174,7 +174,7 @@ def plot(fn):
             fig,axs=plt.subplots(1,2,tight_layout=True)
             for ax,key in zip(axs,['L','R']):
                 value=G[key]
-                im=ax.pcolormesh(x_range,y_range,value.T,cmap=args.cmap,vmin=args.vmin,vmax=args.vmax,shading='auto')
+                im=ax.pcolormesh(x_range,y_range,value.T,cmap=args.cmap,vmin=args.vmin,vmax=args.vmax,shading='auto',rasterized=True)
                 axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
                 cb=plt.colorbar(im,cax=axins)
                 cb.ax.set_title(r'$G(e^2/h)$')
@@ -185,7 +185,7 @@ def plot(fn):
             fig,axs=plt.subplots(3,2,tight_layout=True)
             for ax,key in zip(axs.flatten()[:4],['LL','RR','LR','RL']):
                 value=G[key]
-                im=ax.pcolormesh(x_range,y_range,value.T,cmap=args.cmap,vmin=args.vmin if key in ['LL','RR'] else None,vmax=args.vmax if key in ['LL','RR'] else None,shading='auto')
+                im=ax.pcolormesh(x_range,y_range,value.T,cmap=args.cmap,vmin=args.vmin if key in ['LL','RR'] else None,vmax=args.vmax if key in ['LL','RR'] else None,shading='auto',rasterized=True)
                 axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
                 cb=plt.colorbar(im,cax=axins)
                 cb.ax.set_title(r'$G(e^2/h)$')
@@ -198,7 +198,7 @@ def plot(fn):
             axs[2,0].legend()
             axs[2,1].plot(x_range,kappa)
             axs[2,1].set_ylabel(r'$\kappa/\kappa_0$')
-        fig.savefig('{}_cond.png'.format(fn),bbox_inches='tight')
+        fig.savefig('{}_cond.png'.format(fn),bbox_inches='tight',dpi=1000)
     if args.LDOS:
         pass
 
@@ -220,6 +220,7 @@ def savedata(fn):
 
 
 if __name__=='__main__':
+    # np.seterr(all='raise')
     parser=argparse.ArgumentParser()
     args=parse_arguments(parser)
     print(args)
