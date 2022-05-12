@@ -161,7 +161,7 @@ def filename(args):
 def plot(fn):
     if args.conductance:
         if len(G.keys())==1:
-            fig,ax=plt.subplots(tight_layout=True)
+            fig,ax=plt.subplots(tight_layout=True,figsize=(6.8,4))
             for key, value in G.items():
                 im=ax.pcolormesh(x_range,y_range,value.T,cmap=args.cmap,vmin=args.vmin,vmax=args.vmax,shading='auto',rasterized=True)
                 axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
@@ -171,7 +171,7 @@ def plot(fn):
             ax.set_xlabel('{}({})'.format(args.x,args.x_unit))
             ax.set_ylabel('{}({})'.format(args.y,args.y_unit))
         elif len(G.keys())==2:
-            fig,axs=plt.subplots(1,2,tight_layout=True)
+            fig,axs=plt.subplots(1,2,tight_layout=True,figsize=(6.8*2,4))
             for ax,key in zip(axs,['L','R']):
                 value=G[key]
                 im=ax.pcolormesh(x_range,y_range,value.T,cmap=args.cmap,vmin=args.vmin,vmax=args.vmax,shading='auto',rasterized=True)
@@ -182,7 +182,7 @@ def plot(fn):
                 ax.set_xlabel('{}({})'.format(args.x,args.x_unit))
             axs[0].set_ylabel('{}({})'.format(args.y,args.y_unit))
         elif len(G.keys())==4:
-            fig,axs=plt.subplots(3,2,tight_layout=True)
+            fig,axs=plt.subplots(3,2,tight_layout=True,figsize=(6.8*2,4*3))
             for ax,key in zip(axs.flatten()[:4],['LL','RR','LR','RL']):
                 value=G[key]
                 im=ax.pcolormesh(x_range,y_range,value.T,cmap=args.cmap,vmin=args.vmin if key in ['LL','RR'] else None,vmax=args.vmax if key in ['LL','RR'] else None,shading='auto',rasterized=True)

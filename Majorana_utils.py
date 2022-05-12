@@ -290,7 +290,7 @@ class Nanowire:
                 phase = np.array([(-1)**m*basis_wf[m,n]/abs(basis_wf[m,n]) for n,m in enumerate(normalize)])
                 fixphase=np.conj(np.prod(phase[:4]))*np.prod(phase[4:])
                 TVL,TVR=np.linalg.det(S[:4,:4]),np.linalg.det(S[4:,4:])
-                assert (np.imag(TVL)<eps and np.imag(TVR)<eps),'TVL and TVR are not real with imag=({:e},{:e})'.format(np.imag(TVL),np.imag(TVR))
+                assert (np.abs(TVL.imag)<eps and np.abs(TVR.imag)<eps),'TVL and TVR are not real with imag=({:e},{:e})'.format(TVL.imag,TVR.imag)
                 TVL=np.real(fixphase*TVL)
                 TVR=np.real(fixphase*TVR)
                 kappa=s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0))
