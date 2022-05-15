@@ -40,7 +40,8 @@ tzsz = np.kron(sz,sz)
 _m_e=9.1093837015e-31 # kg
 _hbar=1.0545718e-34 # J.s
 _e=1.60217662e-19 # C
-eps=1e-10
+_eps=1e-10
+_TV_eps=1e-5
 class Nanowire:
     def __init__(self,args):
         '''
@@ -56,13 +57,13 @@ class Nanowire:
         # self.t=25
         self.alpha_R=self.args.alpha/(2*self.args.a*10)*1000
         self.wire_num=self.args.L*1000/self.args.a
-        assert abs(self.wire_num-round(self.args.L*1000/self.args.a))<eps, 'The wire length ({} um) and the lattice constant ({} nm) are not commensurate.'.format(self.args.L,self.args.a)
+        assert abs(self.wire_num-round(self.args.L*1000/self.args.a))<_eps, 'The wire length ({} um) and the lattice constant ({} nm) are not commensurate.'.format(self.args.L,self.args.a)
         self.wire_num=int(self.wire_num)
         self.QD_num=self.args.QD_L*1000/self.args.a
-        assert abs(self.QD_num-round(self.QD_num))<eps,'The length of the quantum dot on the left ({} um) and the lattice constant ({} nm) are not commensurate.'.format(self.args.QD_L,self.args.a)
+        assert abs(self.QD_num-round(self.QD_num))<_eps,'The length of the quantum dot on the left ({} um) and the lattice constant ({} nm) are not commensurate.'.format(self.args.QD_L,self.args.a)
         self.QD_num=int(self.QD_num)
         self.QD_num_R=self.args.QD_L_R*1000/self.args.a
-        assert abs(self.QD_num_R-round(self.QD_num_R))<eps, 'The length of the quantum dot on the right ({} um) and the lattice constant ({} nm) are not commensurate.'.format(self.args.QD_L,self.args.a)
+        assert abs(self.QD_num_R-round(self.QD_num_R))<_eps, 'The length of the quantum dot on the right ({} um) and the lattice constant ({} nm) are not commensurate.'.format(self.args.QD_L,self.args.a)
         self.QD_num_R=int(self.QD_num_R)
         # assert self.args.lead_num==len(self.args.lead_pos), 'The number of leads ({}) is not equal to the position information ({})'.format(args.lead_num,args.lead_pos)
 
@@ -159,18 +160,22 @@ class Nanowire:
             for x in range(self.QD_num_R):
                 self.hamiltonian_bare[self.lat(self.wire_num-x-1)]=(2*self.t-self.args.mu+self.args.QD_peak_R*np.exp(-(x*self.args.a*1e-3)**2/self.args.QD_L_R**2))*tzs0+self.Vz_list[x]*t0sx-1j*self.args.dissipation*t0s0
         
-    def _lead(self,junction,lead_pos):
+    def _lead(self,junction,lead_pos,zero_barrier):
         if self.args.barrier_relative is not None:
             self.args.barrier_E=self.args.mu+self.args.barrier_relative
+        if zero_barrier:
+            barrier_E=0
+        else:
+            barrier_E=self.args.barrier_E
         if lead_pos=='L':
-            junction[(self.lat(x) for x in range(self.args.barrier_num))]=(2*self.t-self.args.mu+self.args.barrier_E)*tzs0+ self.args.Vz*t0sx
+            junction[(self.lat(x) for x in range(self.args.barrier_num))]=(2*self.t-self.args.mu+barrier_E)*tzs0+ self.args.Vz*t0sx
             sym_L=kwant.TranslationalSymmetry([-self.args.a])
             lead_L=kwant.Builder(sym_L,conservation_law=-tzs0)
             lead_L[self.lat(0)]=(2*self.t-self.args.mu_lead)*tzs0+self.args.Vz*t0sx
             lead_L[self.lat(0),self.lat(1)]=-self.t*tzs0-1j*self.alpha_R*tzsy
             junction.attach_lead(lead_L)
         elif lead_pos=='R':
-            junction[(self.lat(self.wire_num-x-1) for x in range(self.args.barrier_num))]=(2*self.t-self.args.mu+self.args.barrier_E)*tzs0+ self.args.Vz*t0sx
+            junction[(self.lat(self.wire_num-x-1) for x in range(self.args.barrier_num))]=(2*self.t-self.args.mu+barrier_E)*tzs0+ self.args.Vz*t0sx
             sym_R=kwant.TranslationalSymmetry([self.args.a])
             lead_R=kwant.Builder(sym_R,conservation_law=-tzs0)
             lead_R[self.lat(0)]=(2*self.t-self.args.mu_lead)*tzs0+self.args.Vz*t0sx
@@ -178,14 +183,14 @@ class Nanowire:
             junction.attach_lead(lead_R)
         return junction
 
-    def get_hamiltonian_lead(self,lead_pos=None):
+    def get_hamiltonian_lead(self,lead_pos=None,zero_barrier=False):
         if not hasattr(self, 'hamitonian_bare'):
             self.get_hamiltonian_bare()
         if self.args.lead_num==1:
-            junction=self._lead(self.hamiltonian_bare,lead_pos)            
+            junction=self._lead(self.hamiltonian_bare,lead_pos,zero_barrier=zero_barrier)            
         elif self.args.lead_num==2:
-            junction=self._lead(self.hamiltonian_bare,'L')
-            junction=self._lead(self.hamiltonian_bare,'R')
+            junction=self._lead(self.hamiltonian_bare,'L',zero_barrier=zero_barrier)
+            junction=self._lead(self.hamiltonian_bare,'R',zero_barrier=zero_barrier)
         return junction
 
     def _Green_function(self,ham,delta=1e-3):
@@ -232,7 +237,7 @@ class Nanowire:
     #         idx_neg=np.abs(vals_neg+y).argmin()
 
     #         val_neg,val_pos=vals_neg[idx_neg],vals_pos[idx_pos]
-    #         assert abs(val_pos+val_neg)<eps, 'E_pos ({}) is not equal to E_neg({})'.format(val_pos,val_neg)
+    #         assert abs(val_pos+val_neg)<_eps, 'E_pos ({}) is not equal to E_neg({})'.format(val_pos,val_neg)
 
     #         vec_neg,vec_pos=vecs_neg[:,idx_neg],vecs_pos[:,idx_pos]
     #         vec_neg=self._fix_phase(vec_neg,False)
@@ -283,21 +288,31 @@ class Nanowire:
             G['RR']=s_matrix.submatrix((1,0),(1,0)).shape[0]-s_matrix.transmission((1,0),(1,0))+s_matrix.transmission((1,1),(1,0))
             G['LR']=s_matrix.transmission((0,0),(1,0))-s_matrix.transmission((0,1),(1,0))
             G['RL']=s_matrix.transmission((1,0),(0,0))-s_matrix.transmission((1,1),(0,0))
-            if abs(self.args.V_bias)<eps:
-                S=s_matrix.data
-                basis_wf = s_matrix.lead_info[0].wave_functions
-                normalize=[0,0,3,3,0,0,3,3]
-                phase = np.array([(-1)**m*basis_wf[m,n]/abs(basis_wf[m,n]) for n,m in enumerate(normalize)])
-                fixphase=np.conj(np.prod(phase[:4]))*np.prod(phase[4:])
-                TVL,TVR=np.linalg.det(S[:4,:4]),np.linalg.det(S[4:,4:])
-                assert (np.abs(TVL.imag)<eps and np.abs(TVR.imag)<eps),'TVL and TVR are not real with imag=({:e},{:e})'.format(TVL.imag,TVR.imag)
-                TVL=np.real(fixphase*TVL)
-                TVR=np.real(fixphase*TVR)
+            # _eps, assert
+            if abs(self.args.V_bias)<_eps:
+                TVL,TVR=self.get_TV()
+
                 kappa=s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0))
-                assert s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0))-(s_matrix.transmission((1,0),(0,0))+s_matrix.transmission((1,1),(0,0)))< eps, 'not same magnitude {} != {}'.format(s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0)),(s_matrix.transmission((1,0),(0,0))+s_matrix.transmission((1,1),(0,0))))
+                assert s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0))-(s_matrix.transmission((1,0),(0,0))+s_matrix.transmission((1,1),(0,0)))< _eps, 'Thermal conductance for both directions are not the same: {} != {}'.format(s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0)),(s_matrix.transmission((1,0),(0,0))+s_matrix.transmission((1,1),(0,0))))
             else:
                 TVL,TVR,kappa=repeat(None,3)
         return G,TVL,TVR,kappa
+
+    def get_TV(self):
+        # barrier is set to zero when calculated TV
+        hamiltonian_lead=self.get_hamiltonian_lead(zero_barrier=True).finalized()
+        s_matrix=kwant.smatrix(hamiltonian_lead,0,check_hermiticity=False)
+
+        S=s_matrix.data
+        basis_wf = s_matrix.lead_info[0].wave_functions
+        normalize=[0,0,3,3,0,0,3,3]
+        phase = np.array([(-1)**m*basis_wf[m,n]/abs(basis_wf[m,n]) for n,m in enumerate(normalize)])
+        fixphase=np.conj(np.prod(phase[:4]))*np.prod(phase[4:])
+        TVL,TVR=np.linalg.det(S[:4,:4]),np.linalg.det(S[4:,4:])
+        assert (np.abs(TVL.imag)<_TV_eps and np.abs(TVR.imag)<_TV_eps),'TVL and TVR are not real with imag=({:e},{:e})'.format(TVL.imag,TVR.imag)
+        TVL=np.real(fixphase*TVL)
+        TVR=np.real(fixphase*TVR)
+        return TVL,TVR
 
         
 
