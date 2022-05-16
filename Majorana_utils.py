@@ -42,6 +42,7 @@ _hbar=1.0545718e-34 # J.s
 _e=1.60217662e-19 # C
 _eps=1e-10
 _TV_eps=1e-5
+_kappa_eps=1e-5
 class Nanowire:
     def __init__(self,args):
         '''
@@ -293,7 +294,7 @@ class Nanowire:
                 TVL,TVR=self.get_TV()
 
                 kappa=s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0))
-                assert s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0))-(s_matrix.transmission((1,0),(0,0))+s_matrix.transmission((1,1),(0,0)))< _eps, 'Thermal conductance for both directions are not the same: {} != {}'.format(s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0)),(s_matrix.transmission((1,0),(0,0))+s_matrix.transmission((1,1),(0,0))))
+                assert s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0))-(s_matrix.transmission((1,0),(0,0))+s_matrix.transmission((1,1),(0,0)))< _kappa_eps, 'Thermal conductance for both directions are not the same: {} != {}'.format(s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0)),(s_matrix.transmission((1,0),(0,0))+s_matrix.transmission((1,1),(0,0))))
             else:
                 TVL,TVR,kappa=repeat(None,3)
         return G,TVL,TVR,kappa
