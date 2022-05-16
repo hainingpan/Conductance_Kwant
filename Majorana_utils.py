@@ -281,7 +281,7 @@ class Nanowire:
                 hamiltonian_lead=self.get_hamiltonian_lead(lead_pos).finalized()
                 s_matrix=kwant.smatrix(hamiltonian_lead,self.args.V_bias,check_hermiticity=False)
                 G[lead_pos]=s_matrix.submatrix((0,0),(0,0)).shape[0]-s_matrix.transmission((0,0),(0,0))+s_matrix.transmission((0,1),(0,0))
-            TVL,TVR,kappa=repeat(None,3)
+            TV,kappa=repeat(None,2)
         elif self.args.lead_num==2:
             hamiltonian_lead=self.get_hamiltonian_lead().finalized()
             s_matrix=kwant.smatrix(hamiltonian_lead,self.args.V_bias,check_hermiticity=False)
@@ -291,13 +291,14 @@ class Nanowire:
             G['RL']=s_matrix.transmission((1,0),(0,0))-s_matrix.transmission((1,1),(0,0))
             # _eps, assert
             if abs(self.args.V_bias)<_eps:
-                TVL,TVR=self.get_TV()
-
-                kappa=s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0))
-                assert s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0))-(s_matrix.transmission((1,0),(0,0))+s_matrix.transmission((1,1),(0,0)))< _kappa_eps, 'Thermal conductance for both directions are not the same: {} != {}'.format(s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0)),(s_matrix.transmission((1,0),(0,0))+s_matrix.transmission((1,1),(0,0))))
+                TV=self.get_TV()
+                kappa={}
+                kappa['LR']=s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0))+s_matrix.transmission((0,1),(1,0))+s_matrix.transmission((0,1),(1,1))
+                kappa['RL']=s_matrix.transmission((1,0),(0,0))+s_matrix.transmission((1,1),(0,0))+s_matrix.transmission((1,1),(0,0))+s_matrix.transmission((1,1),(0,1))
+                # assert s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0))-(s_matrix.transmission((1,0),(0,0))+s_matrix.transmission((1,1),(0,0)))< _kappa_eps, 'Thermal conductance for both directions are not the same: {} != {}'.format(s_matrix.transmission((0,0),(1,0))+s_matrix.transmission((0,1),(1,0)),(s_matrix.transmission((1,0),(0,0))+s_matrix.transmission((1,1),(0,0))))
             else:
-                TVL,TVR,kappa=repeat(None,3)
-        return G,TVL,TVR,kappa
+                TV,kappa=repeat(None,2)
+        return G,TV,kappa
 
     def get_TV(self):
         # barrier is set to zero when calculated TV
@@ -313,7 +314,8 @@ class Nanowire:
         assert (np.abs(TVL.imag)<_TV_eps and np.abs(TVR.imag)<_TV_eps),'TVL and TVR are not real with imag=({:e},{:e})'.format(TVL.imag,TVR.imag)
         TVL=np.real(fixphase*TVL)
         TVR=np.real(fixphase*TVR)
-        return TVL,TVR
+        TV={'L':TVL,'R':TVR}
+        return TV
 
         
 

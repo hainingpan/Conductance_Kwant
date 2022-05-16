@@ -101,7 +101,7 @@ def parse_arguments(parser,inputs=None):
 def wrapper(inputs):
     args,x,y=inputs
     nw=Nanowire(args)
-    G,TVL,TVR,kappa=nw.conductance(x,y) if args.conductance else repeat(None,4)
+    G,TV,kappa=nw.conductance(x,y) if args.conductance else repeat(None,4)
     if args.LDOS:
         assert args.y=='V_bias', "y has to be v_bias to calculate LDOS" 
         LDOS=nw.LDOS(x,y)
@@ -112,14 +112,18 @@ def wrapper(inputs):
         assert args.y=='V_bias', "y has to be v_bias to calculate wavefunction" 
         nw.wavefunction(x,y)
     
-    return [G,TVL,TVR,kappa,LDOS]
+    return [G,TV,kappa,LDOS]
 
 def postprocess_G(G_raw):
     
     return {lead_pos:np.array([G[lead_pos] for G in G_raw]).reshape((args.x_num,args.y_num)) for lead_pos in G_raw[0].keys()} if args.conductance else None
 
 def postprocess_S(S_raw):
-    return np.array([S for S in S_raw if S is not None]) if args.conductance else None
+    for S in S_raw:
+        if S is not None:
+            keys=S.keys()
+            break
+    return {lead_pos:np.array([S[lead_pos] for S in S_raw if S is not None]) for lead_pos in keys} if args.conductance else None
 
 def postprocess_LDOS(LDOS_raw):
     return np.array(list(LDOS_raw)).reshape((args.x_num,args.y_num,-1)) if args.LDOS else None
@@ -192,12 +196,14 @@ def plot(fn):
                 ax.text(.5,1,key,transform=ax.transAxes,va='bottom',ha='center')
             [ax.set_xlabel('{}({})'.format(args.x,args.x_unit)) for ax in axs[-1,:]]
             [ax.set_ylabel('{}({})'.format(args.y,args.y_unit)) for ax in axs[:,0]]
-            axs[2,0].plot(x_range,TVL,label='L',color='r')
-            axs[2,0].plot(x_range,TVR,label='R',color='b')
+            axs[2,0].plot(x_range,TV['L'],label='L',color='r')
+            axs[2,0].plot(x_range,TV['R'],label='R',color='b')
             axs[2,0].set_ylabel('TV')
             axs[2,0].legend()
-            axs[2,1].plot(x_range,kappa)
+            axs[2,1].plot(x_range,kappa['LR'],label='LR',color='r')
+            axs[2,1].plot(x_range,kappa['RL'],label='RL',color='b')
             axs[2,1].set_ylabel(r'$\kappa/\kappa_0$')
+            axs[2,1].legend()
         fig.savefig('{}_cond.png'.format(fn),bbox_inches='tight',dpi=1000)
     if args.LDOS:
         pass
@@ -207,8 +213,7 @@ def savedata(fn):
     data['args']=args
     if args.conductance:
         data['G']=G
-        data['TVL']=TVL
-        data['TVR']=TVR
+        data['TV']=TV
         data['kappa']=kappa
     if args.LDOS:
         data['LDOS']=LDOS
@@ -236,10 +241,9 @@ if __name__=='__main__':
         rs=list(executor.map(wrapper,inputs))
     # rs=list(map(wrapper,inputs))
 
-    G_raw,TVL_raw,TVR_raw,kappa_raw,LDOS_raw=zip(*rs)
+    G_raw,TV_raw,kappa_raw,LDOS_raw=zip(*rs)
     G=postprocess_G(G_raw)
-    TVL=postprocess_S(TVL_raw)
-    TVR=postprocess_S(TVR_raw)
+    TV=postprocess_S(TV_raw)
     kappa=postprocess_S(kappa_raw)
     LDOS=postprocess_LDOS(LDOS_raw)
 
