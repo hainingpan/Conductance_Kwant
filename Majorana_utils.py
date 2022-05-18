@@ -244,7 +244,7 @@ class Nanowire:
 
             vec_1=(vec_pos+vec_neg)/np.sqrt(2)
             vec_2=1j*(vec_pos-vec_neg)/np.sqrt(2)
-            return {'val_p':val_pos,'wf_p':self._sumindex(vec_pos),'wf_1': self._sumindex(vec_1),'wf_2':self._sumindex(vec_2),'ansatz':y}
+            return {'val_p':val_pos,'wf_p':self._sumindex(vec_pos),'wf_1': self._sumindex(vec_1),'wf_2':self._sumindex(vec_2),'ansatz':y,'x':x}
         else:
             pass
 
