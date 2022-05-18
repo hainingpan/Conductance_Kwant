@@ -228,33 +228,6 @@ class Nanowire:
     def _sumindex(self,wf):
         return np.sum(np.abs(wf.reshape((-1,4)))**2,axis=1)
 
-    # def wavefunction(self,x,y):
-    #     assert self.args.dissipation==0, "Dissipation is not zero ({}).".format(self.args.dissipation)
-    #     if self.args.SE:
-    #         setattr(self.args, self.args.x,x)
-    #         setattr(self.args, self.args.y,y)
-    #         self.get_hamiltonian_bare()
-    #         ham_pos=self.get_hamiltonian_bare().finalized().hamiltonian_submatrix()
-    #         vals_pos,vecs_pos=eigsh(ham_pos,sigma=y)
-    #         idx_pos=np.abs(vals_pos-y).argmin()
-
-    #         setattr(self.args, self.args.y,-y)
-    #         ham_neg=self.get_hamiltonian_bare().finalized().hamiltonian_submatrix()
-    #         vals_neg,vecs_neg=eigsh(ham_neg,sigma=-y)
-    #         idx_neg=np.abs(vals_neg+y).argmin()
-
-    #         val_neg,val_pos=vals_neg[idx_neg],vals_pos[idx_pos]
-    #         assert abs(val_pos+val_neg)<_eps, 'E_pos ({}) is not equal to E_neg({})'.format(val_pos,val_neg)
-
-    #         vec_neg,vec_pos=vecs_neg[:,idx_neg],vecs_pos[:,idx_pos]
-    #         vec_neg=self._fix_phase(vec_neg,False)
-    #         vec_pos=self._fix_phase(vec_pos,True)
-    #         vec_1=(vec_pos+vec_neg)/np.sqrt(2)
-    #         vec_2=1j*(vec_pos-vec_neg)/np.sqrt(2)
-    #         return val_pos,self._sumindex(vec_pos), self._sumindex(vec_1), self._sumindex(vec_2)
-    #     else:
-    #         pass
-
     def wavefunction(self,x,y):
         assert self.args.dissipation==0, "Dissipation is not zero ({}).".format(self.args.dissipation)
         if self.args.SE:
@@ -271,7 +244,7 @@ class Nanowire:
 
             vec_1=(vec_pos+vec_neg)/np.sqrt(2)
             vec_2=1j*(vec_pos-vec_neg)/np.sqrt(2)
-            return val_pos,self._sumindex(vec_pos), self._sumindex(vec_1), self._sumindex(vec_2)
+            return {'val_p':val_pos,'wf_p':self._sumindex(vec_pos),'wf_1': self._sumindex(vec_1),'wf_2':self._sumindex(vec_2),'ansatz':y}
         else:
             pass
 

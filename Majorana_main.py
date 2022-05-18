@@ -246,17 +246,19 @@ def plot_energy(energies,args):
     ax.set_ylabel('{}({})'.format(args.y,args.y_unit))
     return fig
 
-def plot_wavefunction(vals_pos,trial,args,wf_pos=None,wf_1=None,wf_2=None):
-    wire=np.linspace(0,args.L,wf_pos.shape[0])
-    fig,ax=plt.subplots()
-    if wf_pos is not None:
-        ax.plot(wire,wf_pos,'k')
-    if wf_1 is not None:
-        ax.plot(wire,wf_1,'r')
-    if wf_1 is not None:
-        ax.plot(wire,wf_2,'b')
-    ax.set_title('E={:.5f}\n$E_{{trial}}$={:.5f}\n$\Delta E$={:e}'.format(vals_pos,trial,trial-vals_pos))
-    return fig,ax
+def plot_wavefunction(result,args):
+    if args.SE:
+        wire=np.linspace(0,args.L,result['wf_p'].shape[0])
+        fig,ax=plt.subplots()
+        ax.plot(wire,result['wf_p'],'k',label='$|\Psi|^2$')
+        ax.plot(wire,result['wf_1'],'r',label='$|\Psi|^2$')
+        ax.plot(wire,result['wf_2'],'b',label='$|\Psi|^2$')
+        ax.set_title('E={:.5f}\n$E_{{trial}}$={:.5f}\n$\Delta E$={:e}'.format(result['val_p'],result['ansatz'],result['ansatz']-result['val_p']))
+        ax.legend()
+        ax.set_xlabel('L ($\mu$m)')
+        return fig,ax
+    else:
+        pass
 
 def plot(fn):
     if args.conductance:
