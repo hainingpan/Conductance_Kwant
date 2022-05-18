@@ -171,73 +171,108 @@ def filename(args):
     fn['barrier_E']='' if args.barrier_relative is None else 'bE{}'.format(args.barrier_E)
     fn['barrier_E']='bE{}'.format(args.barrier_E) if args.barrier_relative is None else 'bR{}'.format(args.barrier_relative)
     fn['range']='-{}({},{}),{}({},{})-'.format(args.x,args.x_min,args.x_max,args.y,args.y_min,args.y_max)
-    fn['lead_pos']='{}'.format(args.lead_pos)
+    fn['lead']='{}{}'.format(args.lead_num,args.lead_pos)
     fn[args.x]=''
     fn[args.y]=''
     return ''.join(fn.values())
 
+def plot_G_1(x_range,y_range,G,args):
+    '''One lead
+    '''
+
+    fig,ax=plt.subplots(tight_layout=True,figsize=(6.8,4))
+    for key, value in G.items():
+        im=ax.pcolormesh(x_range,y_range,value.T,cmap=args.cmap,vmin=args.vmin,vmax=args.vmax,shading='auto',rasterized=True)
+        axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
+        cb=plt.colorbar(im,cax=axins)
+        cb.ax.set_title(r'$G(e^2/h)$')
+        ax.text(.5,1,key,transform=ax.transAxes,va='bottom',ha='center')
+    ax.set_xlabel('{}({})'.format(args.x,args.x_unit))
+    ax.set_ylabel('{}({})'.format(args.y,args.y_unit))
+    return fig
+def plot_G_2(x_range,y_range,G,args):
+    '''One lead with both sides
+    '''
+    fig,axs=plt.subplots(1,2,tight_layout=True,figsize=(6.8*2,4))
+    for ax,key in zip(axs,['L','R']):
+        value=G[key]
+        im=ax.pcolormesh(x_range,y_range,value.T,cmap=args.cmap,vmin=args.vmin,vmax=args.vmax,shading='auto',rasterized=True)
+        axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
+        cb=plt.colorbar(im,cax=axins)
+        cb.ax.set_title(r'$G(e^2/h)$')
+        ax.text(.5,1,key,transform=ax.transAxes,va='bottom',ha='center')
+        ax.set_xlabel('{}({})'.format(args.x,args.x_unit))
+    axs[0].set_ylabel('{}({})'.format(args.y,args.y_unit))
+    return fig
+def plot_G_4(x_range,y_range,G,args):
+    '''Two leads
+    '''
+    fig,axs=plt.subplots(3,2,tight_layout=True,figsize=(6.8*2,4*3))
+    for ax,key in zip(axs.flatten()[:4],['LL','RR','LR','RL']):
+        value=G[key]
+        im=ax.pcolormesh(x_range,y_range,value.T,cmap=args.cmap,vmin=args.vmin if key in ['LL','RR'] else None,vmax=args.vmax if key in ['LL','RR'] else None,shading='auto',rasterized=True)
+        axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
+        cb=plt.colorbar(im,cax=axins)
+        cb.ax.set_title(r'$G(e^2/h)$')
+        ax.text(.5,1,key,transform=ax.transAxes,va='bottom',ha='center')
+    [ax.set_xlabel('{}({})'.format(args.x,args.x_unit)) for ax in axs[-1,:]]
+    [ax.set_ylabel('{}({})'.format(args.y,args.y_unit)) for ax in axs[:,0]]
+    axs[2,0].plot(x_range,TV['L'],label='L',color='r')
+    axs[2,0].plot(x_range,TV['R'],label='R',color='b')
+    axs[2,0].set_ylabel('TV')
+    axs[2,0].legend()
+    axs[2,1].plot(x_range,kappa['LR'],label='LR',color='r')
+    axs[2,1].plot(x_range,kappa['RL'],label='RL',color='b')
+    axs[2,1].set_ylabel(r'$\kappa/\kappa_0$')
+    axs[2,1].legend()
+    return fig
+def plot_LDOS(x_range,y_range,LDOS,args):
+    fig,ax=plt.subplots(tight_layout=True,figsize=(6.8,4))
+    DOS=LDOS.sum(axis=-1)
+    im=ax.pcolormesh(x_range,y_range,DOS.T,cmap='inferno',shading='auto',rasterized=True,norm=colors.LogNorm(vmin=DOS.min(), vmax=DOS.max()))
+    axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
+    cb=plt.colorbar(im,cax=axins)
+    cb.ax.set_title(r'LDOS')
+    ax.set_xlabel('{}({})'.format(args.x,args.x_unit))
+    ax.set_ylabel('{}({})'.format(args.y,args.y_unit))
+    return fig
+
+def plot_energy(energies,args):
+    fig,ax=plt.subplots(tight_layout=True,figsize=(6.8,4))
+    energy_pts=np.vstack([np.array([key*np.ones_like(val),val]).T for key,val in energies.items()])
+    ax.scatter(*energy_pts.T,color='k',marker='.',s=5)
+    ax.set_xlim([args.x_min,args.x_max])
+    ax.set_xlabel('{}({})'.format(args.x,args.x_unit))
+    ax.set_ylabel('{}({})'.format(args.y,args.y_unit))
+    return fig
+
+def plot_wavefunction(vals_pos,trial,args,wf_pos=None,wf_1=None,wf_2=None):
+    wire=np.linspace(0,args.L,wf_pos.shape[0])
+    fig,ax=plt.subplots()
+    if wf_pos is not None:
+        ax.plot(wire,wf_pos,'k')
+    if wf_1 is not None:
+        ax.plot(wire,wf_1,'r')
+    if wf_1 is not None:
+        ax.plot(wire,wf_2,'b')
+    ax.set_title('E={:.5f}\n$E_{{trial}}$={:.5f}\n$\Delta E$={:e}'.format(vals_pos,trial,trial-vals_pos))
+    return fig,ax
 
 def plot(fn):
     if args.conductance:
         if len(G.keys())==1:
-            fig,ax=plt.subplots(tight_layout=True,figsize=(6.8,4))
-            for key, value in G.items():
-                im=ax.pcolormesh(x_range,y_range,value.T,cmap=args.cmap,vmin=args.vmin,vmax=args.vmax,shading='auto',rasterized=True)
-                axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
-                cb=plt.colorbar(im,cax=axins)
-                cb.ax.set_title(r'$G(e^2/h)$')
-                ax.text(.5,1,key,transform=ax.transAxes,va='bottom',ha='center')
-            ax.set_xlabel('{}({})'.format(args.x,args.x_unit))
-            ax.set_ylabel('{}({})'.format(args.y,args.y_unit))
+            fig=plot_G_1(x_range, y_range, G, args)
         elif len(G.keys())==2:
-            fig,axs=plt.subplots(1,2,tight_layout=True,figsize=(6.8*2,4))
-            for ax,key in zip(axs,['L','R']):
-                value=G[key]
-                im=ax.pcolormesh(x_range,y_range,value.T,cmap=args.cmap,vmin=args.vmin,vmax=args.vmax,shading='auto',rasterized=True)
-                axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
-                cb=plt.colorbar(im,cax=axins)
-                cb.ax.set_title(r'$G(e^2/h)$')
-                ax.text(.5,1,key,transform=ax.transAxes,va='bottom',ha='center')
-                ax.set_xlabel('{}({})'.format(args.x,args.x_unit))
-            axs[0].set_ylabel('{}({})'.format(args.y,args.y_unit))
+            fig=plot_G_2(x_range, y_range, G, args)
         elif len(G.keys())==4:
-            fig,axs=plt.subplots(3,2,tight_layout=True,figsize=(6.8*2,4*3))
-            for ax,key in zip(axs.flatten()[:4],['LL','RR','LR','RL']):
-                value=G[key]
-                im=ax.pcolormesh(x_range,y_range,value.T,cmap=args.cmap,vmin=args.vmin if key in ['LL','RR'] else None,vmax=args.vmax if key in ['LL','RR'] else None,shading='auto',rasterized=True)
-                axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
-                cb=plt.colorbar(im,cax=axins)
-                cb.ax.set_title(r'$G(e^2/h)$')
-                ax.text(.5,1,key,transform=ax.transAxes,va='bottom',ha='center')
-            [ax.set_xlabel('{}({})'.format(args.x,args.x_unit)) for ax in axs[-1,:]]
-            [ax.set_ylabel('{}({})'.format(args.y,args.y_unit)) for ax in axs[:,0]]
-            axs[2,0].plot(x_range,TV['L'],label='L',color='r')
-            axs[2,0].plot(x_range,TV['R'],label='R',color='b')
-            axs[2,0].set_ylabel('TV')
-            axs[2,0].legend()
-            axs[2,1].plot(x_range,kappa['LR'],label='LR',color='r')
-            axs[2,1].plot(x_range,kappa['RL'],label='RL',color='b')
-            axs[2,1].set_ylabel(r'$\kappa/\kappa_0$')
-            axs[2,1].legend()
+            fig=plot_G_4(x_range, y_range, G, args)
         fig.savefig('{}_cond.png'.format(fn),bbox_inches='tight',dpi=1000)
     if args.LDOS:
-        fig,ax=plt.subplots(tight_layout=True,figsize=(6.8,4))
-        DOS=LDOS.sum(axis=-1)
-        im=ax.pcolormesh(x_range,y_range,DOS.T,cmap='inferno',shading='auto',rasterized=True,norm=colors.LogNorm(vmin=DOS.min(), vmax=DOS.max()))
-        axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
-        cb=plt.colorbar(im,cax=axins)
-        cb.ax.set_title(r'LDOS')
-        ax.set_xlabel('{}({})'.format(args.x,args.x_unit))
-        ax.set_ylabel('{}({})'.format(args.y,args.y_unit))
+        fig=plot_LDOS(x_range, y_range, LDOS, args)
         fig.savefig('{}_LDOS.png'.format(fn),bbox_inches='tight',dpi=1000)
     if args.energy:
         if args.SE:
-            fig,ax=plt.subplots(tight_layout=True,figsize=(6.8,4))
-            for key,val in energies.items():
-                ax.scatter(key*np.ones_like(val),val,color='k',marker='.',s=5)
-            ax.set_xlim([args.x_min,args.x_max])
-            ax.set_xlabel('{}({})'.format(args.x,args.x_unit))
-            ax.set_ylabel('{}({})'.format(args.y,args.y_unit))
+            fig=plot_energy(energies, args)
             fig.savefig('{}_energy.png'.format(fn),bbox_inches='tight',dpi=1000)
         else:
             pass
