@@ -3,6 +3,7 @@ matplotlib.use('Agg')
 from mpi4py.futures import MPIPoolExecutor
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 import argparse
 import pickle
 from Majorana_utils import Nanowire
@@ -89,6 +90,7 @@ def parse_arguments(parser,inputs=None):
     # Calculation type
     parser.add_argument('-conductance','--conductance',action='store_true',help='flag for calculating the conductance spectrum (default True)')
     parser.add_argument('-LDOS','--LDOS',action='store_true',help='flag for calculating the LDOS (default False)')
+    parser.add_argument('-energy','--energy',action='store_true',help='flag for calculating the energy (default False)')
     parser.add_argument('-wavefunction','--wavefunction',action='store_true',help='flag for calculating the wavefunction (default False)')
     if inputs is None:
         args=parser.parse_args()
@@ -101,7 +103,7 @@ def parse_arguments(parser,inputs=None):
 def wrapper(inputs):
     args,x,y=inputs
     nw=Nanowire(args)
-    G,TV,kappa=nw.conductance(x,y) if args.conductance else repeat(None,4)
+    G,TV,kappa=nw.conductance(x,y) if args.conductance else repeat(None,3)
     if args.LDOS:
         assert args.y=='V_bias', "y has to be v_bias to calculate LDOS" 
         LDOS=nw.LDOS(x,y)
@@ -208,7 +210,18 @@ def plot(fn):
             axs[2,1].legend()
         fig.savefig('{}_cond.png'.format(fn),bbox_inches='tight',dpi=1000)
     if args.LDOS:
+        fig,ax=plt.subplots(tight_layout=True,figsize=(6.8,4))
+        DOS=LDOS.sum(axis=-1)
+        im=ax.pcolormesh(x_range,y_range,DOS.T,cmap='inferno',shading='auto',rasterized=True,norm=colors.LogNorm(vmin=DOS.min(), vmax=DOS.max()))
+        axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
+        cb=plt.colorbar(im,cax=axins)
+        cb.ax.set_title(r'LDOS')
+        ax.set_xlabel('{}({})'.format(args.x,args.x_unit))
+        ax.set_ylabel('{}({})'.format(args.y,args.y_unit))
+        fig.savefig('{}_LDOS.png'.format(fn),bbox_inches='tight',dpi=1000)
+    if args.energy:
         pass
+
 
 def savedata(fn):
     data={}
@@ -221,6 +234,8 @@ def savedata(fn):
         data['LDOS']=LDOS
     if args.wavefunction:
         pass
+    if args.energy:
+        data['energy']=energy
 
     with open('{}.pickle'.format(fn),'wb') as f:
         pickle.dump(data,f)

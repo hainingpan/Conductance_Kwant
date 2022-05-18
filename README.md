@@ -35,6 +35,7 @@ To run it in parallel, use `mpirun -np 32 python -m mpi4py.futures Majorana_main
 - [ ] Extend y-axis beyond the energy (bias voltage) in calculating the LDOS
 - [ ] Incorporate the finite temperature (only support when y is v_bias)
 - [ ] Add the wavefunction
+- [ ] Energy spectrum
 
 # Legacy
 
