@@ -12,6 +12,7 @@ import random
 import sys
 from collections import defaultdict,OrderedDict
 from itertools import repeat
+from scipy.signal import find_peaks
    
 def parse_arguments(parser,inputs=None):
     '''
@@ -110,6 +111,16 @@ def wrapper(inputs):
     else:
         LDOS=None
 
+    if args.energy:
+        assert args.y=='V_bias', "y has to be v_bias to calculate LDOS" 
+        if args.SE:
+            if LDOS is None:
+                LDOS=nw.LDOS(x,y)
+        else:
+            # ED
+            pass
+    else:
+        pass    
     if args.wavefunction:
         assert args.y=='V_bias', "y has to be v_bias to calculate wavefunction" 
         nw.wavefunction(x,y)
@@ -130,7 +141,7 @@ def postprocess_S(S_raw):
     return {lead_pos:np.array([S[lead_pos] for S in S_raw if S is not None]) for lead_pos in keys} if args.conductance else None
 
 def postprocess_LDOS(LDOS_raw):
-    return np.array(list(LDOS_raw)).reshape((args.x_num,args.y_num,-1)) if args.LDOS else None
+    return np.array(list(LDOS_raw)).reshape((args.x_num,args.y_num,-1)) if args.LDOS or args.energy and args.SE else None
 
 def filename(args):
     fn=OrderedDict()
@@ -220,7 +231,16 @@ def plot(fn):
         ax.set_ylabel('{}({})'.format(args.y,args.y_unit))
         fig.savefig('{}_LDOS.png'.format(fn),bbox_inches='tight',dpi=1000)
     if args.energy:
-        pass
+        if args.SE:
+            fig,ax=plt.subplots(tight_layout=True,figsize=(6.8,4))
+            for key,val in energies.items():
+                ax.scatter(key*np.ones_like(val),val,color='k',marker='.',s=5)
+            ax.set_xlim([args.x_min,args.x_max])
+            ax.set_xlabel('{}({})'.format(args.x,args.x_unit))
+            ax.set_ylabel('{}({})'.format(args.y,args.y_unit))
+            fig.savefig('{}_energy.png'.format(fn),bbox_inches='tight',dpi=1000)
+        else:
+            pass
 
 
 def savedata(fn):
@@ -235,11 +255,29 @@ def savedata(fn):
     if args.wavefunction:
         pass
     if args.energy:
-        data['energy']=energy
+        data['energies']=energies
 
     with open('{}.pickle'.format(fn),'wb') as f:
         pickle.dump(data,f)
 
+def detect_peaks(LDOS):
+    ''' detect peaks to find the divergence of the green's function
+    '''
+    assert args.SE, 'Use ED for systems without self-energy'
+    energies={}
+    DOS=LDOS.sum(axis=-1)
+    vbias_list=np.linspace(args.y_min,args.y_max,args.y_num)
+    assert args.x=='Vz', 'x axis only supports Vz'
+    x_list=np.linspace(args.x_min,args.x_max,args.x_num)
+    for ind in range(DOS.shape[0]):
+        x=x_list[ind]
+        vbias_max=args.Delta0*np.sqrt(1-(x/args.Vzc)**2)
+        DOS_line=DOS[ind,:]
+        pks,_=find_peaks(DOS_line,prominence=1)
+        vbias_pks=vbias_list[pks]
+        energies[x]=vbias_pks[np.abs(vbias_pks)<=vbias_max]
+    return energies
+        
 
 if __name__=='__main__':
     # np.seterr(all='raise')
@@ -263,6 +301,9 @@ if __name__=='__main__':
     TV=postprocess_S(TV_raw)
     kappa=postprocess_S(kappa_raw)
     LDOS=postprocess_LDOS(LDOS_raw)
+
+    if args.energy and args.SE:
+        energies=detect_peaks(LDOS)
 
 
     fn=filename(args)

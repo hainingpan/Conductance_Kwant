@@ -37,6 +37,9 @@ To run it in parallel, use `mpirun -np 32 python -m mpi4py.futures Majorana_main
 - [ ] Add the wavefunction
 - [ ] Energy spectrum
 
+# Prerequisite:
+`SciPy`,`Kwant`, `NumPy`, `matplotlib`
+
 # Legacy
 
 This code is expanded for completeness. The previous version can be found in the directory `legacy` where the previous `README.md` is as follows for record-keeping purposes. The major difference in the naming rule is also tracked as

@@ -205,11 +205,17 @@ class Nanowire:
         '''
         setattr(self.args, self.args.x,x)
         setattr(self.args, self.args.y,y)
-        if not hasattr(self, 'hamitonian_bare'):
-            self.get_hamiltonian_bare()
-        ham=self.hamiltonian_bare.finalized()
+        # if not hasattr(self, 'hamitonian_bare'):
+        #     self.get_hamiltonian_bare()
+        # ham=self.hamiltonian_bare.finalized()
+
+        # ugly implementation to enforce zero dissipation
+        dissipation_tmp=self.args.dissipation
+        self.args.dissipation=0
+        ham=self.get_hamiltonian_bare().finalized()
+        self.args.dissipation=dissipation_tmp
         return self._Green_function(ham.hamiltonian_submatrix())
-    
+
     def _fix_phase(self,wf,pos):
         '''P=\sigma_y \otimes \tau_y K, when applied to the Nambu basis: (u_up,u_down,v_down, v_up) -> (-v*_up,v*_down,u*_down,-u*_up)
         Need expansion of details.
