@@ -230,23 +230,21 @@ class Nanowire:
         return np.sum(np.abs(wf.reshape((-1,4)))**2,axis=1)
 
     def wavefunction(self,x,y):
-        if self.args.SE:
-            setattr(self.args, self.args.x,x)
-            setattr(self.args, self.args.y,y)
-            ham=self.get_hamiltonian_bare().finalized().hamiltonian_submatrix()
-            vals_pos,vecs_pos=eigsh(ham,sigma=y)
-            idx=np.abs(vals_pos-y).argmin()
-            val_pos,vec_pos=vals_pos[idx],vecs_pos[:,idx]
-            vec_neg=np.kron(np.eye(vec_pos.shape[0]//4),np.fliplr(np.diag([-1,1,1,-1])))@vec_pos.conj()
+        ''' Find the wavefunction that has an energy closest to y'''
+        setattr(self.args, self.args.x,x)
+        setattr(self.args, self.args.y,y)
+        ham=self.get_hamiltonian_bare().finalized().hamiltonian_submatrix()
+        vals_pos,vecs_pos=eigsh(ham,sigma=y)
+        idx=np.abs(vals_pos-y).argmin()
+        val_pos,vec_pos=vals_pos[idx],vecs_pos[:,idx]
+        vec_neg=np.kron(np.eye(vec_pos.shape[0]//4),np.fliplr(np.diag([-1,1,1,-1])))@vec_pos.conj()
 
-            vec_neg=self._fix_phase(vec_neg,False)
-            vec_pos=self._fix_phase(vec_pos,True)
+        vec_neg=self._fix_phase(vec_neg,False)
+        vec_pos=self._fix_phase(vec_pos,True)
 
-            vec_1=(vec_pos+vec_neg)/np.sqrt(2)
-            vec_2=1j*(vec_pos-vec_neg)/np.sqrt(2)
-            return {'val_p':val_pos,'wf_p':self._sumindex(vec_pos),'wf_1': self._sumindex(vec_1),'wf_2':self._sumindex(vec_2),'ansatz':y,'x':x}
-        else:
-            pass
+        vec_1=(vec_pos+vec_neg)/np.sqrt(2)
+        vec_2=1j*(vec_pos-vec_neg)/np.sqrt(2)
+        return {'val_p':val_pos,'wf_p':self._sumindex(vec_pos),'wf_1': self._sumindex(vec_1),'wf_2':self._sumindex(vec_2),'ansatz':y,'x':x}
 
     def ED(self,x,y):
         ''' y, should be vbias, which will be ignored

@@ -259,19 +259,16 @@ def plot_energy(energies,args):
 
 
 def plot_wavefunction(result,args,fig=None,ax=None):
-    if args.SE:
-        wire=np.linspace(0,args.L,result['wf_p'].shape[0])
-        if fig is None and ax is None:
-            fig,ax=plt.subplots()
-        ax.plot(wire,result['wf_p'],'k',label='$|\Psi|^2$')
-        ax.plot(wire,result['wf_1'],'r',label='$|\gamma_1|^2$')
-        ax.plot(wire,result['wf_2'],'b',label='$|\gamma_2|^2$')
-        ax.set_title('E={:.5f}\n$E_{{trial}}$={:.5f}\n$\Delta E$={:e}'.format(result['val_p'],result['ansatz'],result['ansatz']-result['val_p']))
-        ax.legend()
-        ax.set_xlabel('L ($\mu$m)')
-        return fig,ax
-    else:
-        pass
+    wire=np.linspace(0,args.L,result['wf_p'].shape[0])
+    if fig is None and ax is None:
+        fig,ax=plt.subplots()
+    ax.plot(wire,result['wf_p'],'k',label='$|\Psi|^2$')
+    ax.plot(wire,result['wf_1'],'r',label='$|\gamma_1|^2$')
+    ax.plot(wire,result['wf_2'],'b',label='$|\gamma_2|^2$')
+    ax.set_title('E={:.5f}\n$E_{{trial}}$={:.5f}\n$\Delta E$={:e}'.format(result['val_p'],result['ansatz'],result['ansatz']-result['val_p']))
+    ax.legend()
+    ax.set_xlabel('L ($\mu$m)')
+    return fig,ax
 
 def plot(fn):
     if args.conductance:
