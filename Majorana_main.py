@@ -148,7 +148,7 @@ def postprocess_LDOS(LDOS_raw):
     return np.array(list(LDOS_raw)).reshape((args.x_num,args.y_num,-1)) if args.LDOS or args.energy and args.SE else None
 
 def postprocess_En(En_raw):
-    return np.array([En for En in En_raw if En is not None])
+    return {x:energy for x,energy in zip(np.linspace(args.x_min, args.x_max,args.x_num),np.array([En for En in En_raw if En is not None]))}
 
 def filename(args):
     fn=OrderedDict()
@@ -246,11 +246,8 @@ def plot_LDOS(x_range,y_range,LDOS,args):
 
 def plot_energy(energies,args):
     fig,ax=plt.subplots(tight_layout=True,figsize=(6.8,4))
-    if args.SE:
-        energy_pts=np.vstack([np.array([key*np.ones_like(val),val]).T for key,val in energies.items()])
-        ax.scatter(*energy_pts.T,color='k',marker='.',s=5)
-    else:
-        ax.plot(np.linspace(args.x_min, args.x_max,args.x_num),energies,color='k')
+    energy_pts=np.vstack([np.array([key*np.ones_like(val),val]).T for key,val in energies.items()])
+    ax.scatter(*energy_pts.T,color='k',marker='.',s=5)
     ax.set_xlim([args.x_min,args.x_max])
     ax.set_ylim([args.y_min,args.y_max])
     ax.set_xlabel('{}({})'.format(args.x,args.x_unit))
