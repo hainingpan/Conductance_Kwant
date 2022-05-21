@@ -112,20 +112,24 @@ def wrapper(inputs):
         LDOS=None
 
     if args.energy:
-        assert args.y=='V_bias', "y has to be v_bias to calculate LDOS" 
+        assert args.y=='V_bias', "y has to be v_bias to calculate LDOS."
+        assert args.dissipation==0, "Disispation ({}) should be set to zero.".format(args.dissipation)
+        assert args.barrier_E==0,'Tunnel ({}) barrier should be 0.'.format(args.barrier_E)
         if args.SE:
             if LDOS is None:
                 LDOS=nw.LDOS(x,y)
         else:
-            # ED
-            pass
+            En = nw.ED(x,y)
     else:
-        pass    
+        En=None    
+
     if args.wavefunction:
-        assert args.y=='V_bias', "y has to be v_bias to calculate wavefunction" 
+        assert args.y=='V_bias', "y has to be v_bias to calculate LDOS."
+        assert args.dissipation==0, "Disispation ({}) should be set to zero.".format(args.dissipation)
+        assert args.barrier_E==0,'Tunnel ({}) barrier should be 0.'.format(args.barrier_E)
         nw.wavefunction(x,y)
     
-    return [G,TV,kappa,LDOS]
+    return [G,TV,kappa,LDOS,En]
 
 def postprocess_G(G_raw):
     
@@ -142,6 +146,9 @@ def postprocess_S(S_raw):
 
 def postprocess_LDOS(LDOS_raw):
     return np.array(list(LDOS_raw)).reshape((args.x_num,args.y_num,-1)) if args.LDOS or args.energy and args.SE else None
+
+def postprocess_En(En_raw):
+    return np.array([En for En in En_raw if En is not None])
 
 def filename(args):
     fn=OrderedDict()
@@ -239,12 +246,17 @@ def plot_LDOS(x_range,y_range,LDOS,args):
 
 def plot_energy(energies,args):
     fig,ax=plt.subplots(tight_layout=True,figsize=(6.8,4))
-    energy_pts=np.vstack([np.array([key*np.ones_like(val),val]).T for key,val in energies.items()])
-    ax.scatter(*energy_pts.T,color='k',marker='.',s=5)
+    if args.SE:
+        energy_pts=np.vstack([np.array([key*np.ones_like(val),val]).T for key,val in energies.items()])
+        ax.scatter(*energy_pts.T,color='k',marker='.',s=5)
+    else:
+        ax.plot(np.linspace(args.x_min, args.x_max,args.x_num),energies,color='k')
     ax.set_xlim([args.x_min,args.x_max])
+    ax.set_ylim([args.y_min,args.y_max])
     ax.set_xlabel('{}({})'.format(args.x,args.x_unit))
     ax.set_ylabel('{}({})'.format(args.y,args.y_unit))
     return fig
+
 
 def plot_wavefunction(result,args,fig=None,ax=None):
     if args.SE:
@@ -274,11 +286,8 @@ def plot(fn):
         fig=plot_LDOS(x_range, y_range, LDOS, args)
         fig.savefig('{}_LDOS.png'.format(fn),bbox_inches='tight',dpi=1000)
     if args.energy:
-        if args.SE:
-            fig=plot_energy(energies, args)
-            fig.savefig('{}_energy.png'.format(fn),bbox_inches='tight',dpi=1000)
-        else:
-            pass
+        fig=plot_energy(energies, args)
+        fig.savefig('{}_energy.png'.format(fn),bbox_inches='tight',dpi=1000)
 
 
 def savedata(fn):
@@ -334,15 +343,15 @@ if __name__=='__main__':
         rs=list(executor.map(wrapper,inputs))
     # rs=list(map(wrapper,inputs))
 
-    G_raw,TV_raw,kappa_raw,LDOS_raw=zip(*rs)
+    G_raw,TV_raw,kappa_raw,LDOS_raw,En_raw=zip(*rs)
     G=postprocess_G(G_raw)
     TV=postprocess_S(TV_raw)
     kappa=postprocess_S(kappa_raw)
+    energies=postprocess_En(En_raw)
     LDOS=postprocess_LDOS(LDOS_raw)
 
     if args.energy and args.SE:
         energies=detect_peaks(LDOS)
-
 
     fn=filename(args)
     plot(fn=fn)

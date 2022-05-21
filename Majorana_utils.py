@@ -66,6 +66,7 @@ class Nanowire:
         self.QD_num_R=self.args.QD_L_R*1000/self.args.a
         assert abs(self.QD_num_R-round(self.QD_num_R))<_eps, 'The length of the quantum dot on the right ({} um) and the lattice constant ({} nm) are not commensurate.'.format(self.args.QD_L,self.args.a)
         self.QD_num_R=int(self.QD_num_R)
+        assert np.abs(self.args.y_max-self.args.y_min)/self.args.y_num>_eps, 'The number of points on y axis ({}) is too large.'.format(self.args.y_num)
         # assert self.args.lead_num==len(self.args.lead_pos), 'The number of leads ({}) is not equal to the position information ({})'.format(args.lead_num,args.lead_pos)
 
         if len(self.args.muVar_fn)>0:
@@ -229,7 +230,6 @@ class Nanowire:
         return np.sum(np.abs(wf.reshape((-1,4)))**2,axis=1)
 
     def wavefunction(self,x,y):
-        assert self.args.dissipation==0, "Dissipation is not zero ({}).".format(self.args.dissipation)
         if self.args.SE:
             setattr(self.args, self.args.x,x)
             setattr(self.args, self.args.y,y)
@@ -248,6 +248,16 @@ class Nanowire:
         else:
             pass
 
+    def ED(self,x,y):
+        ''' y, should be vbias, which will be ignored
+        '''
+        setattr(self.args, self.args.x,x)
+        setattr(self.args, self.args.y,y)
+        if abs(self.args.V_bias)<_eps:
+            ham=self.get_hamiltonian_bare().finalized().hamiltonian_submatrix()
+            return sorted(eigsh(ham,sigma=y,k=80,return_eigenvectors=False))
+        else:
+            return None
 
 
 
