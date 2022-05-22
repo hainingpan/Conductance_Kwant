@@ -1,4 +1,4 @@
-# Semiconductor-superconductor nanowire
+# 1D Semiconductor-superconductor nanowire
 This repository summarizes all the codes in my Majorana-related works during my Ph.D.
 
 # Usage
