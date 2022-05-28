@@ -16,7 +16,7 @@ from scipy.signal import find_peaks
    
 def parse_arguments(parser,args=None):
     '''
-    Parse input arguments for the nanowire parameters. The detailed description can be invoked by `python Majorana_main.py -h`
+    Parse input arguments for the nanowire parameters. The detailed description can be invoked by `python Majorana_main.py -h`.
 
     Parameters
     ----------
@@ -102,7 +102,7 @@ def parse_arguments(parser,args=None):
 
 def wrapper(inputs):
     '''
-    Wrap all the functions needed
+    Wrap all the functions and sent to parallel.
     
     Parameters
     ----------
@@ -112,7 +112,7 @@ def wrapper(inputs):
     Returns
     -------
     List
-        The list of [G,TV,kappa,LDOS,En] for conductance, topological visibility, thermal condutance, local density of states, energy spaectrum
+        The list of [G,TV,kappa,LDOS,En] for conductance, topological visibility, thermal condutance, local density of states, energy spaectrum.
     '''
     args,x,y=inputs
     nw=Nanowire(args)
@@ -145,7 +145,7 @@ def wrapper(inputs):
 
 def postprocess_G(G_raw):
     '''
-    Postprocessing original conductance `G_raw` from the `wrapper`
+    Postprocessing original conductance `G_raw` from the `wrapper`.
     
     Parameters
     ----------
@@ -193,7 +193,7 @@ def postprocess_LDOS(LDOS_raw):
     Returns
     -------
     np.array
-            The 3D array of LDOS with the dimension of (`x_num`,`y_num`,`wire_num`)
+            The 3D array of LDOS with the dimension of (`x_num`,`y_num`,`wire_num`).
     '''
     return np.array(list(LDOS_raw)).reshape((args.x_num,args.y_num,-1)) if args.LDOS or args.energy and args.SE else None
 
@@ -261,11 +261,11 @@ def plot_G_1(x_range,y_range,G,args):
     Parameters
     ----------
     x_range : np.array
-            Range of x-axis, default is `x_min` to `x_max`
+            Range of x-axis, default is `x_min` to `x_max`.
     y_range : np.array
-            Range of y-axis, default is `y_min` to `y_max`
+            Range of y-axis, default is `y_min` to `y_max`.
     G : dict
-        Conductance with labels of 'L' or 'R'
+        Conductance with labels of 'L' or 'R'.
     args : argparse.ArgumentParser
             Arguments.
     Returns
@@ -292,11 +292,11 @@ def plot_G_2(x_range,y_range,G,args):
     Parameters
     ----------
     x_range : np.array
-            Range of x-axis, default is `x_min` to `x_max`
+            Range of x-axis, default is `x_min` to `x_max`.
     y_range : np.array
-            Range of y-axis, default is `y_min` to `y_max`
+            Range of y-axis, default is `y_min` to `y_max`.
     G : dict
-        Conductance with labels of 'L'/'R'
+        Conductance with labels of 'L'/'R'.
     args : argparse.ArgumentParser
             Arguments.
     Returns
@@ -323,11 +323,11 @@ def plot_G_4(x_range,y_range,G,args):
     Parameters
     ----------
     x_range : np.array
-            Range of x-axis, default is `x_min` to `x_max`
+            Range of x-axis, default is `x_min` to `x_max`.
     y_range : np.array
-            Range of y-axis, default is `y_min` to `y_max`
+            Range of y-axis, default is `y_min` to `y_max`.
     G : dict
-        Conductance with labels of 'LL'/'RR'/'LR'/'RL'
+        Conductance with labels of 'LL'/'RR'/'LR'/'RL'.
     args : argparse.ArgumentParser
             Arguments.
     Returns
@@ -362,11 +362,11 @@ def plot_LDOS(x_range,y_range,LDOS,args):
     Parameters
     ----------
     x_range : np.array
-            Range of x-axis, default is `x_min` to `x_max`
+            Range of x-axis, default is `x_min` to `x_max`.
     y_range : np.array
-            Range of y-axis, default is `y_min` to `y_max`
+            Range of y-axis, default is `y_min` to `y_max`.
     LDOS : np.array
-            LDOS in 2D array with (x_num,y_num)
+            LDOS in 2D array with (x_num,y_num).
     args : argparse.ArgumentParser
             Arguments.
     Returns
@@ -447,7 +447,6 @@ def plot(fn):
     ----------
     fn : str
             The filename for pickle file. 
-    
     '''
     if args.conductance:
         if len(G.keys())==1:
@@ -473,7 +472,6 @@ def savedata(fn):
     ----------
     fn : str
         The filename for pickle file.
-    
     '''
     data={}
     data['args']=args

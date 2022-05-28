@@ -49,12 +49,12 @@ class Nanowire:
     '''
     def __init__(self,args):
         '''
-        Initialize Nanowire parameters
+        Initialize Nanowire parameters.
     
         Parameters
         ----------
         args : argsparse.ArgumentParser
-                The input arguments for the nanowire
+                The input arguments for the nanowire.
         '''
         self.args=args
         self.t=1e3/_e*_hbar**2/(2*self.args.mass*_m_e*(self.args.a*1e-9)**2)
@@ -323,12 +323,12 @@ class Nanowire:
         Parameters
         ----------
         wf : np.array
-            The BdG wave function (4*wire_num,1), where the basis is wire \otimes tau \otimes sigma
+            The BdG wave function (4*wire_num,1), where the basis is wire \otimes tau \otimes sigma.
         
         Returns
         -------
         np.array
-            The spin averaged wave function (wire_num,1)
+            The spin averaged wave function (wire_num,1).
         '''
         return np.sum(np.abs(wf.reshape((-1,4)))**2,axis=1)
 
@@ -365,17 +365,17 @@ class Nanowire:
 
     def ED(self,x,y):
         '''
-        Get the eigenvalues from exact diagonlization.  Y should be `V_bias`, which is however ignored because the Hamiltonian does not depend on `V_bias`
+        Get the eigenvalues from exact diagonlization.  Y should be `V_bias`, which is however ignored because the Hamiltonian does not depend on `V_bias`.
         
         Parameters
         ----------
         arg1 : type
-                Description_of_arg1
+                Description_of_arg1.
         
         Returns
         -------
         return1 : np.array
-                All eigenvalues (4*wire_num,1)
+                All eigenvalues (4*wire_num,1).
         '''
         setattr(self.args, self.args.x,x)
         setattr(self.args, self.args.y,y)
@@ -419,7 +419,7 @@ class Nanowire:
         Returns
         -------
         float
-            The calculated conductance 
+            The calculated conductance.
         '''
         if len(lead)==1:
             return s_matrix.submatrix((0,0),(0,0)).shape[0]-s_matrix.transmission((0,0),(0,0))+s_matrix.transmission((0,1),(0,0))
