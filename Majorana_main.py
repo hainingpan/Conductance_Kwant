@@ -14,18 +14,20 @@ from collections import defaultdict,OrderedDict
 from itertools import repeat
 from scipy.signal import find_peaks
    
-def parse_arguments(parser,inputs=None):
+def parse_arguments(parser,args=None):
     '''
     Parse input arguments for the nanowire parameters. The detailed description can be invoked by `python Majorana_main.py -h`
 
     Parameters
     ----------
     parser : argparse.ArgumentParser
-            The input arguments for the nanowire.
+            The uninitialized arguments for the nanowire.
+    args : List of string or None
+        If args==None, sys.argv[1:] is parsed. Otherwise, the `args` is parsed.
 
     Returns
     -------
-    args : targparse.ArgumentParser
+    args : argparse.ArgumentParser
             Arguments after `add_argument`.
     '''
     parser.add_argument('-mass','--mass',default=0.01519,type=float,help='effective mass (m_e)')
@@ -93,15 +95,25 @@ def parse_arguments(parser,inputs=None):
     parser.add_argument('-LDOS','--LDOS',action='store_true',help='flag for calculating the LDOS (default False)')
     parser.add_argument('-energy','--energy',action='store_true',help='flag for calculating the energy (default False)')
     parser.add_argument('-wavefunction','--wavefunction',action='store_true',help='flag for calculating the wavefunction (default False)')
-    if inputs is None:
-        args=parser.parse_args()
-    else:
-        args=parser.parse_args(inputs)
+    args=parser.parse_args(args)
     args.muVar_seed=random.randrange(sys.maxsize) if args.muVar_seed is None else args.muVar_seed
     args.random_seed=random.randrange(sys.maxsize) if args.random_seed is None else args.random_seed
     return args
 
 def wrapper(inputs):
+    '''
+    Wrap all the functions needed
+    
+    Parameters
+    ----------
+    inputs : (argparse.ArgumentParser,float,float)
+            Which point of (x,y) to be evaluated given the parameters in `args`.
+    
+    Returns
+    -------
+    List
+        The list of [G,TV,kappa,LDOS,En] for conductance, topological visibility, thermal condutance, local density of states, energy spaectrum
+    '''
     args,x,y=inputs
     nw=Nanowire(args)
     G,TV,kappa=nw.conductance(x,y) if args.conductance else repeat(None,3)
@@ -132,10 +144,35 @@ def wrapper(inputs):
     return [G,TV,kappa,LDOS,En]
 
 def postprocess_G(G_raw):
+    '''
+    Postprocessing original conductance `G_raw` from the `wrapper`
     
+    Parameters
+    ----------
+    G_raw : tuple
+            The tuple of conductance, where each element in the tuple is a dictionary containing 'L' or 'R' for left and right conductance, etc. 
+    
+    Returns
+    -------
+    dict 
+        The dictionary for conductance, where keys are `lead_pos` and values are conductance spectrum of a np.array with the dimension of `x_num` and `y_num`.
+    '''
     return {lead_pos:np.array([G[lead_pos] for G in G_raw]).reshape((args.x_num,args.y_num)) for lead_pos in G_raw[0].keys()} if args.conductance else None
 
 def postprocess_S(S_raw):
+    '''
+    Postprocessing the original TV and thermal conductance `S_raw` from the `wrapper`. Note that these only are defined at zero bias. So None returned from `wrapper` should be ignored.
+    
+    Parameters
+    ----------
+    S_raw : tuple
+            The tuple of conductance, where each element in the tuple is a dictionary containing 'L' or 'R' for left and right conductance, etc. 
+    
+    Returns
+    -------
+    dict 
+        The dictionary for conductance, where keys are `lead_pos` and values are conductance spectrum of a np.array with the dimension of `x_num` and `y_num`.
+    '''
     for S in S_raw:
         if S is not None:
             keys=S.keys()
@@ -145,12 +182,46 @@ def postprocess_S(S_raw):
     return {lead_pos:np.array([S[lead_pos] for S in S_raw if S is not None]) for lead_pos in keys} if args.conductance else None
 
 def postprocess_LDOS(LDOS_raw):
+    '''
+    Postprocessing the original LDOS from the `wrapper`.
+    
+    Parameters
+    ----------
+    LDOS_raw : tuple
+            The tuple of LDOS, where each element in the tuple is a 1d array with `(wire_num,1)`.
+    
+    Returns
+    -------
+    np.array
+            The 3D array of LDOS with the dimension of (`x_num`,`y_num`,`wire_num`)
+    '''
     return np.array(list(LDOS_raw)).reshape((args.x_num,args.y_num,-1)) if args.LDOS or args.energy and args.SE else None
 
 def postprocess_En(En_raw):
+    '''
+    Postprocessing the original energy spectrum from the `wrapper`. 
+    
+    Parameters
+    ----------
+    En_raw : tuple
+            The tuple of energy spectrum, where each element in the tuple is a 1d array with `(4*wire_num,1)`.
+    
+    Returns
+    -------
+    dict
+        The dict for the energy spectrum, where keys are x values and values are y values. 
+    '''
     return {x:energy for x,energy in zip(np.linspace(args.x_min, args.x_max,args.x_num),np.array([En for En in En_raw if En is not None]))}
 
 def filename(args):
+    '''
+    Generate file name.
+    
+    Returns
+    -------
+    string
+        The filename to be exported. 
+    '''
     fn=OrderedDict()
     fn['Vz']='Vz{}'.format(args.Vz)
     fn['mu']='m{}'.format(args.mu)
@@ -184,7 +255,23 @@ def filename(args):
     return ''.join(fn.values())
 
 def plot_G_1(x_range,y_range,G,args):
-    '''One lead
+    '''
+    Plot the conductance in the nanowire with one lead.
+    
+    Parameters
+    ----------
+    x_range : np.array
+            Range of x-axis, default is `x_min` to `x_max`
+    y_range : np.array
+            Range of y-axis, default is `y_min` to `y_max`
+    G : dict
+        Conductance with labels of 'L' or 'R'
+    args : argparse.ArgumentParser
+            Arguments.
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        Figure of plotting the LDOS.
     '''
 
     fig,ax=plt.subplots(tight_layout=True,figsize=(6.8,4))
@@ -197,8 +284,25 @@ def plot_G_1(x_range,y_range,G,args):
     ax.set_xlabel('{}({})'.format(args.x,args.x_unit))
     ax.set_ylabel('{}({})'.format(args.y,args.y_unit))
     return fig
+
 def plot_G_2(x_range,y_range,G,args):
-    '''One lead with both sides
+    '''
+    Plot the conductance in the nanowire with one lead but with both sides alternatively.
+    
+    Parameters
+    ----------
+    x_range : np.array
+            Range of x-axis, default is `x_min` to `x_max`
+    y_range : np.array
+            Range of y-axis, default is `y_min` to `y_max`
+    G : dict
+        Conductance with labels of 'L'/'R'
+    args : argparse.ArgumentParser
+            Arguments.
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        Figure of plotting the LDOS.
     '''
     fig,axs=plt.subplots(1,2,tight_layout=True,figsize=(6.8*2,4))
     for ax,key in zip(axs,['L','R']):
@@ -211,8 +315,25 @@ def plot_G_2(x_range,y_range,G,args):
         ax.set_xlabel('{}({})'.format(args.x,args.x_unit))
     axs[0].set_ylabel('{}({})'.format(args.y,args.y_unit))
     return fig
+
 def plot_G_4(x_range,y_range,G,args):
-    '''Two leads
+    '''
+    Plot the conductance in the nanowire with 2 leads.
+    
+    Parameters
+    ----------
+    x_range : np.array
+            Range of x-axis, default is `x_min` to `x_max`
+    y_range : np.array
+            Range of y-axis, default is `y_min` to `y_max`
+    G : dict
+        Conductance with labels of 'LL'/'RR'/'LR'/'RL'
+    args : argparse.ArgumentParser
+            Arguments.
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        Figure of plotting the LDOS.
     '''
     fig,axs=plt.subplots(3,2,tight_layout=True,figsize=(6.8*2,4*3))
     for ax,key in zip(axs.flatten()[:4],['LL','RR','LR','RL']):
@@ -233,7 +354,26 @@ def plot_G_4(x_range,y_range,G,args):
     axs[2,1].set_ylabel(r'$\kappa/\kappa_0$')
     axs[2,1].legend()
     return fig
+
 def plot_LDOS(x_range,y_range,LDOS,args):
+    '''
+    Plot LDOS
+    
+    Parameters
+    ----------
+    x_range : np.array
+            Range of x-axis, default is `x_min` to `x_max`
+    y_range : np.array
+            Range of y-axis, default is `y_min` to `y_max`
+    LDOS : np.array
+            LDOS in 2D array with (x_num,y_num)
+    args : argparse.ArgumentParser
+            Arguments.
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        Figure of plotting the LDOS.
+    '''
     fig,ax=plt.subplots(tight_layout=True,figsize=(6.8,4))
     DOS=LDOS.sum(axis=-1)
     im=ax.pcolormesh(x_range,y_range,DOS.T,cmap='inferno',shading='auto',rasterized=True,norm=colors.LogNorm(vmin=DOS.min(), vmax=DOS.max()))
@@ -245,6 +385,19 @@ def plot_LDOS(x_range,y_range,LDOS,args):
     return fig
 
 def plot_energy(energies,args):
+    '''
+    Plot the energy spectrum
+    
+    Parameters
+    ----------
+    energies : dict
+            The dict for the energy spectrum, where keys are x values and values are y values. 
+    
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+            Figure of plotting the energy spectrum.
+    '''
     fig,ax=plt.subplots(tight_layout=True,figsize=(6.8,4))
     energy_pts=np.vstack([np.array([key*np.ones_like(val),val]).T for key,val in energies.items()])
     ax.scatter(*energy_pts.T,color='k',marker='.',s=5)
@@ -256,6 +409,25 @@ def plot_energy(energies,args):
 
 
 def plot_wavefunction(result,args,fig=None,ax=None):
+    '''
+    Plot the wave function of BdG Hamiltonian, and Majorana basis, respectively.
+    
+    Parameters
+    ----------
+    args : argparse.ArgumentParser
+            Inlucding this argument because args.L is needed.
+    fig : matplotlib.figure.Figure, default=None
+            Create a fig if not provided
+    ax : matplotlib.axes._subplots.AxesSubplot
+            Create a ax if not provided
+    
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+            fig
+    ax : matplotlib.axes._subplots.AxesSubplot
+            ax
+    '''
     wire=np.linspace(0,args.L,result['wf_p'].shape[0])
     if fig is None and ax is None:
         fig,ax=plt.subplots()
@@ -268,6 +440,15 @@ def plot_wavefunction(result,args,fig=None,ax=None):
     return fig,ax
 
 def plot(fn):
+    '''
+    Plot the conductance, LDOS, energy spectrums, and save as png.
+    
+    Parameters
+    ----------
+    fn : str
+            The filename for pickle file. 
+    
+    '''
     if args.conductance:
         if len(G.keys())==1:
             fig=plot_G_1(x_range, y_range, G, args)
@@ -285,6 +466,15 @@ def plot(fn):
 
 
 def savedata(fn):
+    '''
+    Dump all data into pickle.
+    
+    Parameters
+    ----------
+    fn : str
+        The filename for pickle file.
+    
+    '''
     data={}
     data['args']=args
     if args.conductance:
@@ -302,7 +492,18 @@ def savedata(fn):
         pickle.dump(data,f)
 
 def detect_peaks(LDOS):
-    ''' detect peaks to find the divergence of the green's function
+    '''
+    Detect peaks to find the divergence of the LDOS from the green's function.
+    
+    Parameters
+    ----------
+    LDOS : type
+            LDOS
+    
+    Returns
+    -------
+    energies : dict
+            Dict for the energy spectrum which are abstracted from the peaks, where the keys are `x` and the values are `y` (`V_bias`).
     '''
     assert args.SE, 'Use ED for systems without self-energy'
     energies={}
