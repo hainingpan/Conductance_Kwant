@@ -10,7 +10,7 @@ To run it in parallel using `$N` cores, use `mpirun -np $N_cores python -m mpi4p
 ### `-cond`
 * `-lead_num=1` `-lead_pos=L` or `-lead_pos=R`: conductance.
 * `-lead_num=1` `-lead_pos=LR`: conductance from the left end and right end, separately.
-* `-lead_num=2` `-lead_pos=LR`: nonlocal conductance, topological visibility (`TVL`, `TVR`), thermal conductance (`kappa`)
+* `-lead_num=2` `-lead_pos=LR`: nonlocal conductance, topological visibility, thermal conductance (`kappa`)
 * Example: `mpirun -np 4 python -m mpi4py.futures Majorana_main.py -L=1 -mu=1 -lead_num=2 -lead_pos=LR -cond`
 
 ### `-LDOS`
