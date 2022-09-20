@@ -468,7 +468,7 @@ class Nanowire:
             hamiltonian_lead=self.get_hamiltonian_lead().finalized()
             s_matrix=kwant.smatrix(hamiltonian_lead,self.args.V_bias,check_hermiticity=False)
             G={lead:self.get_conductance(s_matrix, lead) for lead in ['LL','RR','LR','RL']}
-            assert((self.args.y_max-self.args.y_min)/self.args.y_num>_eps,'The number of points on y-axis is too large. Use a smaller y_num.')
+            assert (self.args.y_max-self.args.y_min)/self.args.y_num>_eps,'The number of points on y-axis is too large. Use a smaller y_num.'
             if abs(self.args.V_bias)<_eps:
                 TV=self.get_TV()
                 kappa={lead:self.get_thermal(s_matrix, lead) for lead in ['LR','RL']}
