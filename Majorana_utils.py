@@ -250,7 +250,7 @@ class Nanowire:
             junction=self._lead(self.hamiltonian_bare,'R',zero_barrier=zero_barrier)
         return junction
 
-    def _Green_function(self,ham,delta=1e-3):
+    def _Green_function(self,ham,delta=1e-2):
         '''
         Calculate the local density of state from the retarded Green's function, G= -1/pi* imag( w+i delta-H)^(-1).
         
@@ -258,7 +258,7 @@ class Nanowire:
         ----------
         ham : np.array
                 The BdG Hamiltonian (4*wire_num,4*wire_num) in the form of np.array.
-        delta : float, default=1e-3
+        delta : float, default=1e-2
                 The inverse of lifetime, which is a positive infinitesimal in the Green's function to ensure the causality of the retarded Green's function.
         
         Returns
