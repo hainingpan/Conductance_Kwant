@@ -13,6 +13,7 @@ import sys
 from collections import defaultdict,OrderedDict
 from itertools import repeat
 from scipy.signal import find_peaks
+import warnings
    
 def parse_arguments(parser,args=None):
     '''
@@ -126,7 +127,8 @@ def wrapper(inputs):
     if args.energy:
         assert args.y=='V_bias', "y has to be v_bias to calculate LDOS."
         assert args.dissipation==0, "Disispation ({}) should be set to zero.".format(args.dissipation)
-        assert args.barrier_E==0,'Tunnel ({}) barrier should be 0.'.format(args.barrier_E)
+        if not args.barrier_E==0:
+            warnings.warn(f'Tunnel ({args.barrier_E}) barrier should be 0.')
         if args.SE:
             if LDOS is None:
                 LDOS=nw.LDOS(x,y)
@@ -379,7 +381,7 @@ def plot_LDOS(x_range,y_range,LDOS,args):
     im=ax.pcolormesh(x_range,y_range,DOS.T,cmap='inferno',shading='auto',rasterized=True,norm=colors.LogNorm(vmin=DOS.min(), vmax=DOS.max()))
     axins=ax.inset_axes([1.02,0,.05,1],transform=ax.transAxes)
     cb=plt.colorbar(im,cax=axins)
-    cb.ax.set_title(r'LDOS')
+    cb.ax.set_title(r'DOS')
     ax.set_xlabel('{}({})'.format(args.x,args.x_unit))
     ax.set_ylabel('{}({})'.format(args.y,args.y_unit))
     return fig
