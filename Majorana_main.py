@@ -14,6 +14,7 @@ from collections import defaultdict,OrderedDict
 from itertools import repeat
 from scipy.signal import find_peaks
 import warnings
+from tqdm import tqdm
    
 def parse_arguments(parser,args=None):
     '''
@@ -68,6 +69,7 @@ def parse_arguments(parser,args=None):
     parser.add_argument('-gVar','--gVar',default=0,type=float,help='disorder strength in g factor')
     parser.add_argument('-DeltaVar','--DeltaVar',default=0,type=float,help='disorder strength in SC gap (meV)')
     parser.add_argument('-coupling_SC_SM_Var','--coupling_SC_SM_Var',default=0,type=float,help='disorder strength in coupling strength between SC and SM (meV)')
+    parser.add_argument('-massVar','--massVar',default=0,type=float,help='disorder strength in effective mass (m_e)')
     parser.add_argument('-random_fn','--random_fn',default='',type=str,help='filename for the random list (for g factor, Delta, and the coupling of SC & SM)')
     parser.add_argument('-random_seed','--random_seed',default=None,type=int,help='random seed for the random list (for g factor, Delta, and the coupling of SC & SM)')
     # lead
@@ -132,6 +134,7 @@ def wrapper(inputs):
         if args.SE:
             if LDOS is None:
                 LDOS=nw.LDOS(x,y)
+            En = None
         else:
             En = nw.ED(x,y)
     else:
@@ -247,6 +250,7 @@ def filename(args):
         fn['Vzc']='Vzc{}'.format(args.Vzc) if args.Vzc<float('inf') else ''
     
     fn['gVar']='gVar{}'.format(args.gVar) if args.gVar>0 else ''
+    fn['massVar']='massVar{}'.format(args.massVar) if args.massVar>0 else ''
     fn['dissipation']='G{}'.format(args.dissipation) if args.dissipation>0 else ''
     fn['barrier_E']='' if args.barrier_relative is None else 'bE{}'.format(args.barrier_E)
     fn['barrier_E']='bE{}'.format(args.barrier_E) if args.barrier_relative is None else 'bR{}'.format(args.barrier_relative)
@@ -535,7 +539,7 @@ if __name__=='__main__':
     inputs=[(args,x,y) for x in x_range for y in y_range]
     
     with MPIPoolExecutor() as executor:
-        rs=list(executor.map(wrapper,inputs))
+        rs=list(tqdm(executor.map(wrapper,inputs),total=len(inputs)))
     # rs=list(map(wrapper,inputs))
 
     G_raw,TV_raw,kappa_raw,LDOS_raw,En_raw=zip(*rs)

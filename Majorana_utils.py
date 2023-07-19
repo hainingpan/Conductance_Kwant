@@ -41,7 +41,7 @@ _m_e=9.1093837015e-31 # kg
 _hbar=1.0545718e-34 # J.s
 _e=1.60217662e-19 # C
 _eps=1e-10
-_TV_eps=1e-5
+_TV_eps=1e-1
 _kappa_eps=1e-5
 class Nanowire:
     '''
@@ -58,7 +58,6 @@ class Nanowire:
         '''
         self.args=args
         self.t=1e3/_e*_hbar**2/(2*self.args.mass*_m_e*(self.args.a*1e-9)**2)
-        # self.t=25
         self.alpha_R=self.args.alpha/(2*self.args.a*10)*1000
         self.wire_num=self.args.L*1000/self.args.a
         assert abs(self.wire_num-round(self.args.L*1000/self.args.a))<_eps, 'The wire length ({} um) and the lattice constant ({} nm) are not commensurate.'.format(self.args.L,self.args.a)
@@ -89,6 +88,7 @@ class Nanowire:
                 self.random_list=np.loadtxt(self.args.random_fn)
             except:
                 raise ValueError('Error in the disorder file:{}'.format(self.args.random_fn))
+            
             assert len(self.random_list)==self.wire_num, 'The length of random_list ({}) is not equal to the number of the unit cell of wire ({}).'.format(len(self.random_list),self.wire_num)
         else:
             assert self.args.gVar>=0, 'gVar ({}) should be non-negative'.format(self.args.gVar)
@@ -99,12 +99,13 @@ class Nanowire:
             count_nonzero+=0 if self.args.gVar==0 else 1
             count_nonzero+=0 if self.args.DeltaVar==0 else 1
             count_nonzero+=0 if self.args.coupling_SC_SM_Var==0 else 1
+            count_nonzero+=0 if self.args.massVar==0 else 1
             # almost one of g, Delta, coupling_SC_SM is nonzero
-            assert count_nonzero<=1, 'More than one parameter is random (gVar={},DeltaVar={},coupling_SC_SM_Var={}).'.format(self.args.gVar,self.args.DeltaVar,self.args.coupling_SC_SM_Var)
+            assert count_nonzero<=1, 'More than one parameter is random (gVar={},DeltaVar={},coupling_SC_SM_Var={},massVar={}).'.format(self.args.gVar,self.args.DeltaVar,self.args.coupling_SC_SM_Var,self.args.massVar)
             rng_rand=np.random.default_rng(self.args.random_seed)
-            self.random_list=rng_rand.normal(size=self.wire_num)*max(self.args.gVar,self.args.DeltaVar,self.args.coupling_SC_SM_Var)
+            self.random_list=rng_rand.normal(size=self.wire_num)*max(self.args.gVar,self.args.DeltaVar,self.args.coupling_SC_SM_Var, self.args.massVar)
             while min(self.random_list)<0:
-                self.random_list=rng_rand.normal(size=self.wire_num)*max(self.args.gVar,self.args.DeltaVar,self.args.coupling_SC_SM_Var)
+                self.random_list=rng_rand.normal(size=self.wire_num)*max(self.args.gVar,self.args.DeltaVar,self.args.coupling_SC_SM_Var, self.args.massVar)
 
         assert self.args.x!=self.args.y, 'x-axis {} and y-axis {} are the same.'.format(self.args.x,self.args.y)
         parameter_knob=set(['mu','alpha_R','Delta0','mu_lead','barrier_E','dissipation','QD_peak','QD_L','QD_peak_R','QD_L_R','coupling_SC_SM','Vzc','pot_peak_pos','pot_sigma','pot_peak','pot_peak_R','pot_peak_pos_R','pot_sigma_R','Vz','V_bias'])
@@ -146,9 +147,12 @@ class Nanowire:
         self._mu_list()
         self._SC_Delta_list()      
         self._Vz_list()
+        self._t_list()
         for x in range(self.wire_num):
-            self.hamiltonian_bare[self.lat(x)]=(-self.mu_list[x]+2*self.t)*tzs0+self.SC_Delta_list[x]+self.Vz_list[x]*t0sx-1j*self.args.dissipation*t0s0
+            self.hamiltonian_bare[self.lat(x)]=(-self.mu_list[x]+self.t_on_list[x])*tzs0+self.SC_Delta_list[x]+self.Vz_list[x]*t0sx-1j*self.args.dissipation*t0s0
         self._QD()
+        # for x in range(self.wire_num-1):
+        #     self.hamiltonian_bare[self.lat(x+1),self.lat(x)]=-self.t_hopping_list[x]*tzs0-1j*self.alpha_R*tzsy
         self.hamiltonian_bare[self.lat.neighbors()]=-self.t*tzs0-1j*self.alpha_R*tzsy
         return self.hamiltonian_bare
         
@@ -172,6 +176,20 @@ class Nanowire:
         '''
         Generate the spatial random disorder in the effective g factor.'''
         self.Vz_list=self.args.Vz*np.ones(self.wire_num) if self.args.gVar==0 else self.random_list*self.args.Vz
+    
+    def _t_list(self):
+        '''
+        Generate the effective hopping from the mass defined on the bond where the length is one less than the wire length
+        Since mass is defined on bond, it only gets N-1 values, but for consistency, N values are generated and the last one is dropped
+        self.mass will still be reserved for the effective mass in the lead
+        while self.mass_list will be a position dependent list
+        '''
+        self.mass_list=self.args.mass*np.ones(self.wire_num) if self.args.massVar==0 else self.random_list
+        self.mass_list=self.mass_list[:-1]
+        m_list_left=np.hstack([self.args.mass,self.mass_list]) # m_{i-1/2}
+        m_list_right=np.hstack([self.mass_list,self.args.mass]) # m_{i+1/2}
+        self.t_on_list=1e3/_e*_hbar**2/(2*_m_e*(self.args.a*1e-9)**2)*(1/m_list_left+ 1/m_list_right) # 2*t for constant
+        self.t_hopping_list=1e3/_e*_hbar**2/(2*_m_e*(self.args.a*1e-9)**2)*(1/self.mass_list) # t for constant
 
     def _QD(self):
         '''
@@ -179,9 +197,9 @@ class Nanowire:
         '''
         if self.args.QD:
             for x in range(self.QD_num):
-                self.hamiltonian_bare[self.lat(x)]=(2*self.t-self.args.mu+self.args.QD_peak*np.exp(-(x*self.args.a*1e-3)**2/self.args.QD_L**2))*tzs0+self.Vz_list[x]*t0sx-1j*self.args.dissipation*t0s0
+                self.hamiltonian_bare[self.lat(x)]=(2*self.t_on_list[x]-self.args.mu+self.args.QD_peak*np.exp(-(x*self.args.a*1e-3)**2/self.args.QD_L**2))*tzs0+self.Vz_list[x]*t0sx-1j*self.args.dissipation*t0s0
             for x in range(self.QD_num_R):
-                self.hamiltonian_bare[self.lat(self.wire_num-x-1)]=(2*self.t-self.args.mu+self.args.QD_peak_R*np.exp(-(x*self.args.a*1e-3)**2/self.args.QD_L_R**2))*tzs0+self.Vz_list[x]*t0sx-1j*self.args.dissipation*t0s0
+                self.hamiltonian_bare[self.lat(self.wire_num-x-1)]=(2*self.t_on_list[x]-self.args.mu+self.args.QD_peak_R*np.exp(-(x*self.args.a*1e-3)**2/self.args.QD_L_R**2))*tzs0+self.Vz_list[x]*t0sx-1j*self.args.dissipation*t0s0
         
     def _lead(self,junction,lead_pos,zero_barrier):
         '''
