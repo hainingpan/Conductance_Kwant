@@ -311,7 +311,7 @@ class Nanowire:
         self.args.dissipation=0
         ham=self.get_hamiltonian_bare().finalized()
         self.args.dissipation=dissipation_tmp
-        return self._Green_function(ham.hamiltonian_submatrix())
+        return self._Green_function(ham.hamiltonian_submatrix(),delta=self.args.delta)
 
     def _fix_phase(self,wf,pos):
         '''

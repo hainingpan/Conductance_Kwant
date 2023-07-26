@@ -91,6 +91,8 @@ def parse_arguments(parser,args=None):
     parser.add_argument('-cmap','--cmap',default='seismic',type=str,help='cmap for the conductance spectrum')
     parser.add_argument('-vmin','--vmin',default=0,type=float,help='the min of conductance for the color bar')
     parser.add_argument('-vmax','--vmax',default=4,type=float,help='the max of conductance for the color bar')
+    parser.add_argument('-delta','--delta',default=1e-2,type=float,help='energy resolution, also appears in Green\'s function G(omega+i * delta)')
+
     # crossover
     # parser.add_argument('-alpha','--alpha',default=-1,type=float,help='crossover parameter')
     # Calculation type
