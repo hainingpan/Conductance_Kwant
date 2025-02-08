@@ -381,7 +381,7 @@ class Nanowire:
         vec_2=1j*(vec_pos-vec_neg)/np.sqrt(2)
         return {'val_p':val_pos,'wf_p':self._sumindex(vec_pos),'wf_1': self._sumindex(vec_1),'wf_2':self._sumindex(vec_2),'ansatz':y,'x':x}
 
-    def ED(self,x,y):
+    def ED(self,x,y,k=20):
         '''
         Get the eigenvalues from exact diagonlization.  Y should be `V_bias`, which is however ignored because the Hamiltonian does not depend on `V_bias`.
         
@@ -399,7 +399,7 @@ class Nanowire:
         setattr(self.args, self.args.y,y)
         if abs(self.args.V_bias)<_eps:
             ham=self.get_hamiltonian_bare().finalized().hamiltonian_submatrix()
-            return sorted(eigsh(ham,sigma=y,k=80,return_eigenvectors=False))
+            return sorted(eigsh(ham,sigma=y,k=k,return_eigenvectors=False))
         else:
             return None
 
