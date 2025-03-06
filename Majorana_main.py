@@ -459,12 +459,12 @@ def plot_wavefunction(result,args,fig=None,ax=None):
     wire=np.linspace(0,args.L,result['wf_p'].shape[0])
     if fig is None and ax is None:
         fig,ax=plt.subplots()
-    ax.plot(wire,result['wf_p'],'k',label='$|\Psi|^2$')
-    ax.plot(wire,result['wf_1'],'r',label='$|\gamma_1|^2$')
-    ax.plot(wire,result['wf_2'],'b',label='$|\gamma_2|^2$')
-    ax.set_title('E={:.5f}\n$E_{{trial}}$={:.5f}\n$\Delta E$={:e}'.format(result['val_p'],result['ansatz'],result['ansatz']-result['val_p']))
+    ax.plot(wire,result['wf_p'],'k',label=r'$|\Psi|^2$')
+    ax.plot(wire,result['wf_1'],'r',label=r'$|\gamma_1|^2$')
+    ax.plot(wire,result['wf_2'],'b',label=r'$|\gamma_2|^2$')
+    ax.set_title(r'E={:.5f}\n$E_{{trial}}$={:.5f}\n$\Delta E$={:e}'.format(result['val_p'],result['ansatz'],result['ansatz']-result['val_p']))
     ax.legend()
-    ax.set_xlabel('L ($\mu$m)')
+    ax.set_xlabel(r'L ($\mu$m)')
     return fig,ax
 
 def plot(fn):
@@ -562,7 +562,7 @@ if __name__=='__main__':
     
     with MPIPoolExecutor() as executor:
         rs=list(tqdm(executor.map(wrapper,inputs),total=len(inputs)))
-    # rs=list(map(wrapper,inputs))
+    # rs=list(tqdm(map(wrapper,inputs),total=len(inputs)))
 
     G_raw,TV_raw,kappa_raw,LDOS_raw,En_raw=zip(*rs)
     G=postprocess_G(G_raw)
