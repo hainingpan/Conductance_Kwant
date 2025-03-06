@@ -146,9 +146,9 @@ def wrapper(inputs):
         assert args.y=='V_bias', "y has to be v_bias to calculate LDOS."
         assert args.dissipation==0, "Disispation ({}) should be set to zero.".format(args.dissipation)
         assert args.barrier_E==0,'Tunnel ({}) barrier should be 0.'.format(args.barrier_E)
-        nw.wavefunction(x,y)
+        wf=nw.wavefunction(x,y)
     
-    return [G,TV,kappa,LDOS,En]
+    return [G,TV,kappa,LDOS,En,wf]
 
 def postprocess_G(G_raw):
     '''
@@ -207,6 +207,21 @@ def postprocess_LDOS(LDOS_raw):
     '''
     return np.array(list(LDOS_raw)).reshape((args.x_num,args.y_num,-1)) if args.LDOS or args.energy and args.SE else None
 
+def postprocess_wf(wf_raw):
+    '''
+    Postprocessing the original wavefunction from the `wrapper`.
+    
+    Parameters
+    ----------
+    wf_raw : tuple
+            The tuple of wavefunction, where each element in the tuple is a 1d array with `(wire_num,1)`.
+    Returns
+    -------
+    np.array
+            The 3D array of wavefunction with the dimension of (`x_num`,`y_num`,`wire_num`).
+    '''
+    return np.array(list(wf_raw)).reshape((args.x_num,args.y_num,-1)) if args.wavefunction else None
+    
 def postprocess_En(En_raw):
     '''
     Postprocessing the original energy spectrum from the `wrapper`. 
@@ -510,7 +525,7 @@ def savedata(fn):
     if args.LDOS:
         data['LDOS']=LDOS
     if args.wavefunction:
-        pass
+        data['wf']=wf
     if args.energy:
         data['energies']=energies
 
@@ -564,12 +579,13 @@ if __name__=='__main__':
         rs=list(tqdm(executor.map(wrapper,inputs),total=len(inputs)))
     # rs=list(tqdm(map(wrapper,inputs),total=len(inputs)))
 
-    G_raw,TV_raw,kappa_raw,LDOS_raw,En_raw=zip(*rs)
+    G_raw,TV_raw,kappa_raw,LDOS_raw,En_raw, wf_raw=zip(*rs)
     G=postprocess_G(G_raw)
     TV=postprocess_S(TV_raw)
     kappa=postprocess_S(kappa_raw)
     energies=postprocess_En(En_raw)
     LDOS=postprocess_LDOS(LDOS_raw)
+    wf = postprocess_wf(wf_raw)
 
     if args.energy and args.SE:
         energies=detect_peaks(LDOS)
