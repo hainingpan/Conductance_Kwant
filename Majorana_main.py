@@ -582,8 +582,6 @@ if __name__=='__main__':
     rs=list(tqdm(map(wrapper,inputs),total=len(inputs)))
 
     G_raw,TV_raw,kappa_raw,LDOS_raw,En_raw, wf_raw=zip(*rs)
-    with open('test.pickle','wb') as f:
-        pickle.dump(wf_raw,f)
     G=postprocess_G(G_raw)
     TV=postprocess_S(TV_raw)
     kappa=postprocess_S(kappa_raw)
