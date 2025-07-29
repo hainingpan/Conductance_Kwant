@@ -373,31 +373,31 @@ def plot_G_4(x_range,y_range,G,args):
         ax.text(.5,1,key,transform=ax.transAxes,va='bottom',ha='center')
     [ax.set_xlabel('{}({})'.format(args.x,args.x_unit)) for ax in axs[-1,:]]
     [ax.set_ylabel('{}({})'.format(args.y,args.y_unit)) for ax in axs[:,0]]
-
-    if len(TV['L'].shape)==1:
-        axs[2,0].plot(x_range,TV['L'],label='L',color='r')
-        axs[2,0].plot(x_range,TV['R'],label='R',color='b')
-        axs[2,0].set_ylabel('TV')
-        axs[2,0].legend()
-    elif len(TV['L'].shape)==2:
-        im=axs[2,0].pcolormesh(x_range,y_range,TV['L'].T,cmap=args.cmap,vmin=-1,vmax=1,shading='auto',rasterized=True)
-        axins=axs[2,0].inset_axes([1.02,0,.05,1],transform=axs[2,0].transAxes)
-        cb=plt.colorbar(im,cax=axins)
-        cb.ax.set_title(r'$TV$')
-        axs[2,0].set_xlabel('{}({})'.format(args.x,args.x_unit))
-        axs[2,0].set_ylabel('{}({})'.format(args.y,args.y_unit))
-
-    if len(kappa['LR'].shape)==1: 
-        axs[2,1].plot(x_range,kappa['LR'],label='LR',color='r')
-        axs[2,1].plot(x_range,kappa['RL'],label='RL',color='b')
-        axs[2,1].legend()
-    elif len(kappa['LR'].shape)==2:
-        im=axs[2,1].pcolormesh(x_range,y_range,kappa['LR'].T,cmap=args.cmap,shading='auto',rasterized=True)
-        axins=axs[2,1].inset_axes([1.02,0,.05,1],transform=axs[2,1].transAxes)
-        cb=plt.colorbar(im,cax=axins)
-        cb.ax.set_title(r'$\kappa/\kappa_0$')
-        axs[2,1].set_xlabel('{}({})'.format(args.x,args.x_unit))
-        axs[2,1].set_ylabel('{}({})'.format(args.y,args.y_unit))
+    if TV is not None:
+       if len(TV['L'].shape)==1:
+           axs[2,0].plot(x_range,TV['L'],label='L',color='r')
+           axs[2,0].plot(x_range,TV['R'],label='R',color='b')
+           axs[2,0].set_ylabel('TV')
+           axs[2,0].legend()
+       elif len(TV['L'].shape)==2:
+           im=axs[2,0].pcolormesh(x_range,y_range,TV['L'].T,cmap=args.cmap,vmin=-1,vmax=1,shading='auto',rasterized=True)
+           axins=axs[2,0].inset_axes([1.02,0,.05,1],transform=axs[2,0].transAxes)
+           cb=plt.colorbar(im,cax=axins)
+           cb.ax.set_title(r'$TV$')
+           axs[2,0].set_xlabel('{}({})'.format(args.x,args.x_unit))
+           axs[2,0].set_ylabel('{}({})'.format(args.y,args.y_unit))
+    if kappa is not None:
+       if len(kappa['LR'].shape)==1: 
+           axs[2,1].plot(x_range,kappa['LR'],label='LR',color='r')
+           axs[2,1].plot(x_range,kappa['RL'],label='RL',color='b')
+           axs[2,1].legend()
+       elif len(kappa['LR'].shape)==2:
+           im=axs[2,1].pcolormesh(x_range,y_range,kappa['LR'].T,cmap=args.cmap,shading='auto',rasterized=True)
+           axins=axs[2,1].inset_axes([1.02,0,.05,1],transform=axs[2,1].transAxes)
+           cb=plt.colorbar(im,cax=axins)
+           cb.ax.set_title(r'$\kappa/\kappa_0$')
+           axs[2,1].set_xlabel('{}({})'.format(args.x,args.x_unit))
+           axs[2,1].set_ylabel('{}({})'.format(args.y,args.y_unit))
     return fig
 
 def plot_LDOS(x_range,y_range,LDOS,args):
